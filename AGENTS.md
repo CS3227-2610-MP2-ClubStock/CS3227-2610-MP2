@@ -30,9 +30,12 @@ You are assisting Darryl and Keith, a pair of students working on the project in
 
 ## Post-Prompt Checklist
 
-- After handling each user prompt, append a concise summary of that prompt to the identified user's log:
-  - Darryl: `logs/darryl-log-temp.md`.
-  - Keith: `logs/keith-log-temp.md`.
+- After handling each substantive user prompt, append a concise summary of the user's input and the resulting output to the identified user's log:
+  - Darryl: `logs/darryl/darryl-log-temp.md`.
+  - Keith: `logs/keith/keith-log-temp.md`.
 - Create the applicable log file if it does not exist, and preserve existing entries.
+- State what the user requested, what was implemented or changed, and which files were affected. For requests that do not change files, record the substantive result without implying implementation occurred.
+- If the `$commit` skill was used, record how it grouped files into logical commits, including each group's purpose and the relevant file paths.
+- Skip routine identity answers, acknowledgements, and confirmations that add no substantive requirements or outcomes. Do not add standalone entries such as "Identified himself as Keith for the current session", "Requested implementation of the agreed skill plan", or "Identified himself as Keith for this session when asked which prompt log to update"; summarize the actual request and resulting work instead.
 - Summarize the user's request accurately without inventing contributions or personal experiences.
 - If the user's identity is unknown, ask before attributing the prompt to either student. Do not write another stakeholder's prompts to either student's log.
