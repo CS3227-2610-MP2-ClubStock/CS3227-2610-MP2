@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.2.2'
+}
+
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+def macJavaFxPlatform = providers.gradleProperty('macJavaFxPlatform').getOrElse(
+        System.getProperty('os.arch') in ['aarch64', 'arm64'] ? 'mac-aarch64' : 'mac')
+if (!(macJavaFxPlatform in ['mac', 'mac-aarch64'])) {
+    throw new GradleException('macJavaFxPlatform must be mac or mac-aarch64')
+}
+
+dependencies {
+    String javaFxVersion = '25.0.3'
+    // Both macOS architectures use the same native filenames: package only one.
+    ['base', 'controls', 'fxml', 'graphics'].each { module ->
+        ['win', macJavaFxPlatform, 'linux'].each { platform ->
+            implementation("org.openjfx:javafx-${module}:${javaFxVersion}:${platform}")
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('shadowJar') {
+    archiveBaseName = 'ClubStock'
+    mergeServiceFiles()
+}
