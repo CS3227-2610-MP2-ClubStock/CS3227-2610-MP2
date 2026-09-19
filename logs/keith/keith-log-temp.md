@@ -14,3 +14,5 @@
 - Requested more substantive post-prompt logging; updated `AGENTS.md` to require summaries linking user input to resulting changes and affected files, document file grouping when the `$commit` skill is used, and skip routine identity answers and empty confirmations.
 - Requested `$commit`; grouped `AGENTS.md`, the removal of `logs/keith-log-temp.md`, and updates to `logs/keith/keith-log-temp.md` into one documentation commit because the revised logging rules and paths belong with the consolidation of Keith's prompt log.
 - Requested that the commit message describe the log update without naming whose log was updated; selected `docs: refine prompt logging and consolidate logs`.
+- Requested that commit messages omit users identified during the session; updated `.agents/skills/commit/SKILL.md` to apply this rule to subjects, bodies, and footers, including prompt-log updates.
+- Requested `$commit`; grouped `.agents/skills/commit/SKILL.md` and `logs/keith/keith-log-temp.md` into one documentation commit covering the session-user identity rule and its related prompt records.

@@ -26,6 +26,7 @@ Do not push, amend, rebase, or otherwise rewrite history unless requested. Follo
 
 ## Messages
 
+- Do not name or otherwise identify users identified during the session in any commit subject, body, or footer. Describe the changes without attributing them to a session user, including when describing prompt-log updates.
 - Select an ordinary lowercase type automatically: `feat` for new functionality, `fix` for bug fixes, `docs` for documentation, `refactor` for restructuring without behavior changes, `test` for tests, `style` for formatting, `perf` for performance, `build` for build changes, `ci` for CI, or `chore` for maintenance.
 - Follow the prefix with a colon, a space, and a concise imperative description. Do not end the subject with a period. Omit scope unless explicitly requested.
 - Bodies and footers are optional, separated from the subject and each other by a blank line. Add a body when the reason or impact needs explanation. No mandatory SE-EDU body structure or length limits apply.
