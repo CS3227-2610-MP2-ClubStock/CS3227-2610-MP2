@@ -43,6 +43,22 @@ In this document:
 - F1.3.3: The system shall allow Exco to remove a Member only when the removal does not corrupt an unresolved Loan or LoanRequest that references that Member.
 - F1.3.4: A Member-removal operation that would corrupt an unresolved Loan or LoanRequest shall not complete.
 
+#### F1 account-model decisions
+
+The following decisions clarify the account model used by the domain and later authentication
+layers:
+
+- A Member ID is an immutable, case-sensitive login identifier. Surrounding whitespace is
+  trimmed, and blank identifiers are invalid.
+- Exco may edit a Member's name and replace the Member's password, but may not edit the Member
+  ID.
+- Member names and other required account text are trimmed and must be nonblank.
+- Passwords must contain at least eight characters and are stored only as salted
+  PBKDF2-HMAC-SHA256 hashes. The hash format and hashing service are implementation concerns
+  outside the core domain model.
+- The singleton Exco account starts without a credential and requires local first-run password
+  setup before normal authentication.
+
 ### F2: Domain model and states
 
 #### F2.1: EquipmentType
@@ -355,10 +371,8 @@ The source specifications do not require:
 
 The source specifications do not define the following matters. They are intentionally left unspecified rather than resolved by assumptions:
 
-- the Member login identifier, credential fields, credential validation, password policy, password storage, password reset, logout, or session behaviour;
+- password reset, logout, session behaviour, and the remaining credential-validation details;
 - the initial authentication or bootstrap mechanism for the pre-created Exco account before first-login password setup;
-- whether the application may contain more than one Exco account;
-- the exact Member fields Exco may edit, including whether Member IDs or passwords may change;
 - which LoanRequest statuses are considered unresolved for Member removal and whether referenced-member removal must be blocked or may preserve valid record snapshots;
 - EquipmentType creation, editing, removal, and selection of which types are offered for loan;
 - the initial condition and availability assigned to a newly added EquipmentItem;

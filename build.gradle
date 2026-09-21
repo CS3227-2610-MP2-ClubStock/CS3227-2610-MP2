@@ -30,10 +30,18 @@ dependencies {
             implementation("org.openjfx:javafx-${module}:${javaFxVersion}:${platform}")
         }
     }
+
+    testImplementation platform('org.junit:junit-bom:5.14.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
 
 tasks.named('shadowJar') {
