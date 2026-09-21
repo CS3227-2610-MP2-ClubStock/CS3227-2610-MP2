@@ -1,0 +1,4 @@
+interface:
+  display_name: "ClubStock Feature"
+  short_description: "Implement shared Member and Exco workflows"
+  default_prompt: "Use $clubstock-feature to implement the requested workflow against the shared and role specifications."

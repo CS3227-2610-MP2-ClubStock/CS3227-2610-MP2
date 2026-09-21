@@ -1,0 +1,4 @@
+interface:
+  display_name: "ClubStock Verify"
+  short_description: "Check builds and cross-role workflow behavior"
+  default_prompt: "Use $clubstock-verify to validate the current changes and report test results and any verification gaps."
