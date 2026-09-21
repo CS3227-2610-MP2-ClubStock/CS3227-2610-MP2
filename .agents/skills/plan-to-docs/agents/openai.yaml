@@ -1,0 +1,7 @@
+interface:
+  display_name: "Plan to Docs"
+  short_description: "Turn plans into design docs and GitHub issues"
+  default_prompt: "Use $plan-to-docs to turn this implementation plan into an engineering design document and traceable GitHub issues."
+
+policy:
+  allow_implicit_invocation: false
