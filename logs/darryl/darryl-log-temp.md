@@ -43,3 +43,9 @@
 - Each skill contains `SKILL.md` and `agents/openai.yaml`. Added `.agents/skills/clubstock-verify/references/workflow-scenarios.md` with requirement-linked scenarios for allocation, stock exhaustion, returns, losses, permissions, and shared views. The skills direct future work to flag affected specification conflicts rather than silently resolve them.
 - All three skills passed the skill-creator validator. Additional checks passed for UI metadata, all 22 relative links, whitespace, and unfinished placeholders across seven skill files. Application code and build configuration were unchanged, so application builds and runtime tests were not run.
 - The changes will be grouped in one commit for reusable workflow skills, covering the seven skill files and `logs/darryl/darryl-log-temp.md`, then pushed on `codex/workflow-skills`.
+
+## 2026-09-21 — Commit and publish workflow skills
+
+- Darryl requested that the reusable workflow skills be committed and their branch pushed.
+- Created `86c3be6` (`feat: add ClubStock workflow skills`) with one logical group containing the three skills, their metadata and verification scenarios, and the associated prompt-log entry. Pushed `codex/workflow-skills` to `origin` and set its upstream.
+- The unrelated untracked `.codex/` directory remains excluded. Files affected: `logs/darryl/darryl-log-temp.md`.
