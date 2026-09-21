@@ -1,0 +1,4 @@
+interface:
+  display_name: "ClubStock JavaFX UI"
+  short_description: "Build and refine role-aware JavaFX screens"
+  default_prompt: "Use $javafx-ui to build the requested ClubStock screen and verify its interactions."
