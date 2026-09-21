@@ -20,7 +20,10 @@ You are assisting Darryl and Keith, a pair of students working on the project in
 
 - Read `docs/ProjectDescription.md` for the project overview.
 - Read `docs/ProjectRequirements.md` for the agreed functional and non-functional requirements.
-- If the documents conflict, flag the discrepancy before implementing affected behavior.
+- Read `docs/Shared.md` for domain concepts, state rules, and cross-role behaviour shared by both implementations.
+- Darryl is implementing the Exco role and must also read `docs/ExcoSpec.md`.
+- Keith is implementing the Member role and must also read `docs/MemberSpec.md`.
+- If any project documents conflict, flag the discrepancy before implementing affected behavior; do not silently choose which specification takes precedence.
 
 ## Commit Conventions
 
