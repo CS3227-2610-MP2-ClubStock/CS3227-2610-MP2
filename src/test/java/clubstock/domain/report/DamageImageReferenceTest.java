@@ -40,6 +40,12 @@ class DamageImageReferenceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> new DamageImageReference("C:/reports/image.png", DamageImageFormat.PNG, 1));
         assertThrows(IllegalArgumentException.class,
+                () -> new DamageImageReference("C:..\\outside.png", DamageImageFormat.PNG, 1));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DamageImageReference("C:../outside.png", DamageImageFormat.PNG, 1));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DamageImageReference("c:relative.png", DamageImageFormat.PNG, 1));
+        assertThrows(IllegalArgumentException.class,
                 () -> new DamageImageReference("reports/../image.png", DamageImageFormat.PNG, 1));
     }
 

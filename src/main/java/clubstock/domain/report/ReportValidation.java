@@ -52,7 +52,8 @@ final class ReportValidation {
     static String requireRelativeStorageKey(String storageKey) throws IllegalArgumentException {
         String normalizedKey = requireTrimmedNonBlank(storageKey, "Damage image storage key");
         if (normalizedKey.startsWith("/") || normalizedKey.startsWith("\\")
-                || isWindowsAbsolutePath(normalizedKey) || containsParentSegment(normalizedKey)) {
+                || isWindowsDriveQualifiedPath(normalizedKey)
+                || containsParentSegment(normalizedKey)) {
             throw new IllegalArgumentException(
                     "Damage image storage key must be a relative non-traversing path.");
         }
@@ -61,16 +62,15 @@ final class ReportValidation {
     }
 
     /**
-     * Returns whether the key uses a Windows drive-qualified absolute path.
+     * Returns whether the key uses a Windows drive-qualified path.
      *
      * @param storageKey Storage key to inspect.
-     * @return True when the key starts with a drive letter and path separator.
+     * @return True when the key starts with a drive letter and colon.
      */
-    private static boolean isWindowsAbsolutePath(String storageKey) {
-        return storageKey.length() >= 3
+    private static boolean isWindowsDriveQualifiedPath(String storageKey) {
+        return storageKey.length() >= 2
                 && Character.isLetter(storageKey.charAt(0))
-                && storageKey.charAt(1) == ':'
-                && (storageKey.charAt(2) == '/' || storageKey.charAt(2) == '\\');
+                && storageKey.charAt(1) == ':';
     }
 
     /**
