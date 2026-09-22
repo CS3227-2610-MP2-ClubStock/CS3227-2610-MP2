@@ -165,3 +165,5 @@
 - Requested that the shared-backend JavaFX foundation plan be logged, moved to
   `docs/plan-shared-backend-javafx-foundation`, committed, and pushed to a matching new remote
   branch.
+- Created the branch, committed the design and initial log entry as `112b304` (`docs: add shared
+  backend JavaFX foundation plan`), and prepared the branch for remote publication.
