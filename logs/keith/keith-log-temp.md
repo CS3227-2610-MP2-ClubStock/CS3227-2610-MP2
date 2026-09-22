@@ -108,3 +108,24 @@
 - Requested moving the pending agent-instruction and prompt-log cleanup to a dedicated branch and
   committing it. Moved the changes to `chore/fix-agent-instructions` and grouped `AGENTS.md` and
   `logs/keith/keith-log-temp.md` into one documentation commit.
+
+## 2026-09-22 — SLICE-002 review, commit, and branch publication
+
+- Requested a review of the current diff against SLICE-002 using `clubstock-verify`. Inspected the
+  project specifications, build configuration, workflow scenarios, implementation, and tests;
+  focused equipment tests (22) and the full suite (43) passed. Found no correctness defects, but
+  noted missing explicit case-sensitivity tests for `EquipmentId` and `EquipmentTypeId`.
+- Requested fixes for the mentioned tests. Added case-variant inequality tests to
+  `EquipmentIdTest.java` and `EquipmentTypeIdTest.java`; the focused suite (24 tests) and full
+  suite (45 tests) passed.
+- Requested `$commit`. Grouped the SLICE-002 requirements clarification, equipment domain model,
+  and tests into commit `3dc85d1` (`feat: add equipment domain model`).
+- Requested that the session be recorded in the Keith log. Added this consolidated session section
+  to `logs/keith/keith-log-temp.md`.
+- Requested moving the work to an issue-aligned feature branch and pushing it. Created and pushed
+  `feature/4-equipment-catalogue-item-lifecycle`, tracking the remote branch at commit `3dc85d1`.
+- Requested that the log from this line onward include the whole session's prompts without
+  identity-only statements. Replaced the earlier attribution-only section with this substantive
+  session summary.
+- Requested `$commit` for the consolidated session log; the documentation update is being grouped
+  into a dedicated commit.
