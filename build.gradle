@@ -31,6 +31,7 @@ dependencies {
         }
     }
     implementation 'com.ibm.icu:icu4j:78.3'
+    implementation 'org.xerial:sqlite-jdbc:3.53.4.0'
 
     testImplementation platform('org.junit:junit-bom:5.14.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
