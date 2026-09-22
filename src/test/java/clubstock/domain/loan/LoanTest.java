@@ -44,6 +44,25 @@ class LoanTest {
     }
 
     @Test
+    void restore_returnPendingLoan_preservesOriginalTimestampAndCondition() {
+        Loan loan = Loan.restore(new LoanId("loan-1"), REQUEST_ID, MEMBER_ID, EQUIPMENT_ID,
+                STARTED_AT, END_DATE, LoanStatus.RETURN_PENDING,
+                ReportedReturnCondition.DAMAGED);
+
+        assertEquals(STARTED_AT, loan.startedAt());
+        assertEquals(LoanStatus.RETURN_PENDING, loan.status());
+        assertEquals(ReportedReturnCondition.DAMAGED,
+                loan.reportedReturnCondition().orElseThrow());
+    }
+
+    @Test
+    void restore_onLoanWithCondition_rejectsInconsistentState() {
+        assertThrows(IllegalArgumentException.class, () -> Loan.restore(new LoanId("loan-1"),
+                REQUEST_ID, MEMBER_ID, EQUIPMENT_ID, STARTED_AT, END_DATE, LoanStatus.ON_LOAN,
+                ReportedReturnCondition.GOOD));
+    }
+
+    @Test
     void start_nullValue_rejectsBeforeCreation() {
         assertThrows(IllegalArgumentException.class,
                 () -> Loan.start(null, REQUEST_ID, MEMBER_ID, EQUIPMENT_ID, END_DATE,

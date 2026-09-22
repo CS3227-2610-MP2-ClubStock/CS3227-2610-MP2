@@ -59,6 +59,33 @@ public final class Loan {
     }
 
     /**
+     * Restores a Loan from persisted lifecycle state without changing its start time.
+     *
+     * @param loanId Stable Loan identity.
+     * @param loanRequestId Source request identity.
+     * @param memberId Assigned Member identity.
+     * @param equipmentId Assigned physical item identity.
+     * @param startedAt Original Loan start instant.
+     * @param endDate Immutable Loan end date.
+     * @param status Persisted lifecycle status.
+     * @param reportedReturnCondition Persisted advisory return condition, when applicable.
+     * @return Restored Loan.
+     * @throws IllegalArgumentException If persisted state is invalid.
+     */
+    public static Loan restore(LoanId loanId, LoanRequestId loanRequestId, MemberId memberId,
+            EquipmentId equipmentId, Instant startedAt, LocalDate endDate, LoanStatus status,
+            ReportedReturnCondition reportedReturnCondition) throws IllegalArgumentException {
+        LoanValidation.requireNonNull(startedAt, "Started at");
+        LoanValidation.requireNonNull(status, "Loan status");
+        Loan loan = start(loanId, loanRequestId, memberId, equipmentId, endDate,
+                Clock.fixed(startedAt, java.time.ZoneOffset.UTC));
+        loan.status = status;
+        loan.reportedReturnCondition = reportedReturnCondition;
+        loan.validateRestoredState();
+        return loan;
+    }
+
+    /**
      * Returns this loan's immutable identity.
      *
      * @return Loan identity.
@@ -186,6 +213,21 @@ public final class Loan {
     public boolean isOverdue(LocalDate currentDate) throws IllegalArgumentException {
         LoanValidation.requireNonNull(currentDate, "Current date");
         return status == LoanStatus.ON_LOAN && currentDate.isAfter(endDate);
+    }
+
+    /**
+     * Validates the persisted relationship between Loan status and reported condition.
+     *
+     * @throws IllegalArgumentException If the relationship is invalid.
+     */
+    private void validateRestoredState() throws IllegalArgumentException {
+        boolean hasCondition = reportedReturnCondition != null;
+        if ((status == LoanStatus.ON_LOAN || status == LoanStatus.LOST_PENDING) && hasCondition) {
+            throw new IllegalArgumentException("Loan status cannot have a return condition.");
+        }
+        if (status == LoanStatus.RETURN_PENDING && !hasCondition) {
+            throw new IllegalArgumentException("Pending return must have a return condition.");
+        }
     }
 
     /**

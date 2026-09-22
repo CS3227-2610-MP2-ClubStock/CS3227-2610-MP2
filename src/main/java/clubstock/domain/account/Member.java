@@ -1,5 +1,8 @@
 package clubstock.domain.account;
 
+import java.time.Instant;
+import java.util.Optional;
+
 /**
  * Owns a Member's immutable identity, display name, and current credential hash.
  */
@@ -7,11 +10,14 @@ public final class Member {
     private final MemberId memberId;
     private String name;
     private PasswordHash passwordHash;
+    private boolean active;
+    private Instant removedAt;
 
     private Member(MemberId memberId, String name, PasswordHash passwordHash) {
         this.memberId = requireMemberId(memberId);
         this.name = AccountValidation.requireTrimmedNonBlank(name, "Member name");
         this.passwordHash = requirePasswordHash(passwordHash);
+        active = true;
     }
 
     /**
@@ -26,6 +32,30 @@ public final class Member {
      */
     public static Member create(MemberId memberId, String name, PasswordHash passwordHash) {
         return new Member(memberId, name, passwordHash);
+    }
+
+    /**
+     * Restores a Member from persisted account and removal state.
+     *
+     * @param memberId Immutable Member identity.
+     * @param name Persisted display name.
+     * @param passwordHash Persisted credential hash.
+     * @param isActive Whether the account remains active.
+     * @param removedAt Removal instant when the account is inactive.
+     * @return Restored Member.
+     * @throws IllegalArgumentException If the state combination is invalid.
+     */
+    public static Member restore(MemberId memberId, String name, PasswordHash passwordHash,
+            boolean isActive, Instant removedAt) throws IllegalArgumentException {
+        Member member = new Member(memberId, name, passwordHash);
+        if ((isActive && removedAt != null) || (!isActive && removedAt == null)) {
+            throw new IllegalArgumentException(
+                    "Active Member removal state is inconsistent.");
+        }
+
+        member.active = isActive;
+        member.removedAt = removedAt;
+        return member;
     }
 
     /**
@@ -53,6 +83,44 @@ public final class Member {
      */
     public PasswordHash passwordHash() {
         return passwordHash;
+    }
+
+    /**
+     * Returns whether this Member can authenticate.
+     *
+     * @return True when the account is active.
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * Returns the instant at which this Member was deactivated.
+     *
+     * @return Optional removal instant.
+     */
+    public Optional<Instant> removedAt() {
+        return Optional.ofNullable(removedAt);
+    }
+
+    /**
+     * Deactivates this Member at the supplied instant.
+     *
+     * @param removalInstant Deactivation instant.
+     * @throws IllegalArgumentException If the instant is null.
+     * @throws IllegalStateException If the Member is already inactive.
+     */
+    public void deactivate(Instant removalInstant)
+            throws IllegalArgumentException, IllegalStateException {
+        if (!active) {
+            throw new IllegalStateException("Member is already inactive.");
+        }
+        if (removalInstant == null) {
+            throw new IllegalArgumentException("Removal instant cannot be null.");
+        }
+
+        active = false;
+        removedAt = removalInstant;
     }
 
     /**

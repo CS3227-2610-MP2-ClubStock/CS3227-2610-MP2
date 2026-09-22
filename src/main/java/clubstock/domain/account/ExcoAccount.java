@@ -21,6 +21,24 @@ public final class ExcoAccount {
     }
 
     /**
+     * Restores an Exco account from its persisted credential state.
+     *
+     * @param passwordHash Persisted password hash, or empty for first-run setup.
+     * @return Restored Exco account.
+     * @throws IllegalArgumentException If the optional value is null.
+     */
+    public static ExcoAccount restore(Optional<PasswordHash> passwordHash)
+            throws IllegalArgumentException {
+        if (passwordHash == null) {
+            throw new IllegalArgumentException("Password hash cannot be null.");
+        }
+
+        ExcoAccount account = createForFirstRun();
+        passwordHash.ifPresent(account::completeInitialPasswordSetup);
+        return account;
+    }
+
+    /**
      * Returns whether this account still requires its initial password setup.
      *
      * @return True when no credential has been established.
