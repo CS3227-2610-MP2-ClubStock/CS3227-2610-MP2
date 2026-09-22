@@ -181,3 +181,10 @@
   approved quantity, with corresponding acceptance and query-test coverage.
 - Requested `$commit`; grouped the Member request DTO documentation correction with the
   corresponding session-log update for commit review.
+- Requested that Member request rows include the opaque Request ID needed to target
+  cancellation when otherwise identical requests exist. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` across the service contract, slice scope,
+  DTO definition, acceptance criteria, and tests, including independent cancellation of
+  duplicate-looking pending requests.
+- Requested `$commit`; grouped the Request ID contract correction with the corresponding
+  session-log update for one documentation commit.
