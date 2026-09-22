@@ -379,7 +379,9 @@ catalogue summaries, submit and decide requests, and atomically allocate items.
   clock, and transaction manager.
 - **State and data:** Submission validates an active Member and offered type, generates a
   Request ID and `requestedAt`, but does not reserve inventory. Exco rows include current
-  calculated availability. Member rows exclude unassigned item data.
+  calculated availability. Member rows include the EquipmentType ID and display name,
+  requested quantity, requested start and end dates, status, and approved quantity when
+  applicable, while excluding unassigned item data.
 - **Failure behavior:** Wrong ownership/role, missing or unoffered types, invalid quantity or
   dates, and non-pending transitions fail before mutation. Zero availability produces a
   warning flag in the submission preview but does not invalidate confirmation.
@@ -818,7 +820,9 @@ pending queue and both roles need authorized state transitions.
 #### Scope
 
 - Add Member submission preview with a zero-stock warning flag and confirmed submission.
-- Add Member own-request query and owner-only pending cancellation.
+- Add Member own-request query containing EquipmentType, requested quantity, requested start
+  and end dates, status, and approved quantity when applicable, plus owner-only pending
+  cancellation.
 - Add Exco pending queue ordered by `requestedAt` then Request ID, with current availability.
 - Add Exco-only pending rejection.
 
@@ -833,7 +837,8 @@ pending queue and both roles need authorized state transitions.
 - **LoanRequestService:** Coordinates all non-approval request use cases.
 - **Submission preview DTO:** Returns normalized input and whether zero-stock confirmation is
   required.
-- **Member request DTO:** Exposes own request state and approved quantity when applicable.
+- **Member request DTO:** Exposes EquipmentType ID and display name, requested quantity,
+  requested start and end dates, request status, and approved quantity when applicable.
 - **Pending request DTO:** Exposes the complete Exco queue data without reserving inventory.
 
 #### Acceptance criteria
@@ -841,7 +846,9 @@ pending queue and both roles need authorized state transitions.
 - [ ] Valid submission creates one pending request with generated identity/time and no item
   state changes.
 - [ ] Zero stock requires warning confirmation but remains valid.
-- [ ] Members see and cancel only their own pending requests.
+- [ ] Members see only their own requests, with EquipmentType, requested quantity, requested
+  start and end dates, status, and approved quantity when applicable, and can cancel only their
+  own pending requests.
 - [ ] Exco sees every pending request in deterministic oldest-first order and may reject it.
 - [ ] Non-pending requests reject cancellation and rejection without mutation.
 - [ ] Unoffered/missing types and inactive Members cannot create requests.
@@ -851,7 +858,9 @@ pending queue and both roles need authorized state transitions.
 - Preview and submit positive, zero-stock, invalid-quantity, reversed-date, and blank-details
   requests.
 - Submit two requests at the same clock instant and verify Request-ID tie-breaking.
-- Query as each Member and ensure cross-Member records are absent.
+- Query as each Member; verify every returned DTO contains the required EquipmentType,
+  requested quantity, requested dates, status, and conditional approved quantity, and ensure
+  cross-Member records are absent.
 - Cancel/reject in every request state and with both roles.
 - Verify that submission never changes item availability.
 

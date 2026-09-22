@@ -175,3 +175,9 @@
   damage-image source-path and interrupted-commit recovery design. Provided replacement scope,
   component, acceptance-criteria, and test-scenario text without modifying the issue.
 - Requested `$commit` for the documentation corrections and this session-log update.
+- Requested correction of the Member request DTO contract to satisfy `F4.3.2`. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` so Member request queries expose
+  EquipmentType, requested quantity, requested start/end dates, status, and conditional
+  approved quantity, with corresponding acceptance and query-test coverage.
+- Requested `$commit`; grouped the Member request DTO documentation correction with the
+  corresponding session-log update for commit review.
