@@ -59,6 +59,24 @@ layers:
 - The singleton Exco account starts without a credential and requires local first-run password
   setup before normal authentication.
 
+#### F2 equipment-model decisions
+
+The following decisions clarify the equipment catalogue and physical-item lifecycle used by the
+domain and later inventory layers:
+
+- EquipmentType IDs and Equipment IDs are immutable, case-sensitive identities. Repository-wide
+  uniqueness is enforced outside the core domain model.
+- EquipmentType names are trimmed, must be nonblank, and are compared case-insensitively using a
+  locale-independent Unicode case-folded key for repository uniqueness checks.
+- A new EquipmentType starts unoffered. A referenced EquipmentType is unoffered before hard
+  deletion, and hard deletion is permitted only when no EquipmentItem, LoanRequest, or Loan
+  references it.
+- A newly added EquipmentItem starts with authoritative condition GOOD and availability
+  UNAVAILABLE. Exco must explicitly release it before allocation.
+- An EquipmentItem held after a return or loss submission remains UNAVAILABLE until Exco
+  verification. Exco verification sets the authoritative condition and final availability;
+  LOST items remain UNAVAILABLE, while DAMAGED items may be AVAILABLE or UNAVAILABLE.
+
 ### F2: Domain model and states
 
 #### F2.1: EquipmentType
@@ -374,9 +392,6 @@ The source specifications do not define the following matters. They are intentio
 - password reset, logout, session behaviour, and the remaining credential-validation details;
 - the initial authentication or bootstrap mechanism for the pre-created Exco account before first-login password setup;
 - which LoanRequest statuses are considered unresolved for Member removal and whether referenced-member removal must be blocked or may preserve valid record snapshots;
-- EquipmentType creation, editing, removal, and selection of which types are offered for loan;
-- the initial condition and availability assigned to a newly added EquipmentItem;
-- the EquipmentItem states or workflows from which Exco may manually make an item AVAILABLE, beyond the stated LOST restriction;
 - date format, timezone, whether past requested dates are valid, and other date-validation bounds;
 - the precise date/time boundary and timezone used to determine when an ON_LOAN Loan is overdue;
 - tie-breaking when pending requests have identical requestedAt values;
