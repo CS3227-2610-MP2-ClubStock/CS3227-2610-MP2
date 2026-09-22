@@ -122,6 +122,19 @@ domain and later inventory layers:
 - F2.4.6: The system shall create exactly one individual Loan for each EquipmentItem assigned during approval.
 - F2.4.7: Loans created from multiple EquipmentItems assigned to one LoanRequest shall be independently manageable.
 
+##### Loan-model decisions
+
+- A Loan starts immediately at approval using an `Instant` captured from a supplied `Clock`;
+  its end date is copied from the source LoanRequest and cannot later be changed.
+- An `ON_LOAN` Loan is overdue only when the supplied current `LocalDate` is strictly after
+  its end date. Overdue detection does not change the Loan status; the application timezone
+  used to derive the current date is selected by the later backend layer.
+- Damage evidence is represented by an opaque relative storage key, a JPEG or PNG format, and
+  a size from 1 byte through 5 MiB. File selection, content inspection, and copying into
+  application-managed storage are outside the core domain model.
+- Damage and loss descriptions are stripped and must be nonblank. The core domain model
+  imposes no additional description format or size restriction.
+
 ### F3: Equipment discovery and inventory
 
 #### F3.1: Member equipment view
@@ -400,15 +413,14 @@ The source specifications do not define the following matters. They are intentio
 - the initial authentication or bootstrap mechanism for the pre-created Exco account before first-login password setup;
 - which LoanRequest statuses are considered unresolved for Member removal and whether referenced-member removal must be blocked or may preserve valid record snapshots;
 - date format, timezone, and date-validation bounds beyond the end-before-start rule;
-- the precise date/time boundary and timezone used to determine when an ON_LOAN Loan is overdue;
+- the application timezone used to derive the current date for overdue checks;
 - tie-breaking when pending requests have identical requestedAt values;
 - whether “active Loans” means only ON_LOAN Loans or all unresolved Loans;
 - persistence technology and detailed repository implementation;
 - approval concurrency, transaction boundaries, and ID-generation mechanisms;
 - notification wording or presentation when approval is impossible because no item is AVAILABLE;
 - rejection reasons, cancellation reasons, verification notes, and audit metadata;
-- damage-image format, validation, storage, and size limits;
-- description format, validation, and size limits for damage and loss reports;
+- damage-image file selection, content inspection, and application-managed storage layout;
 - whether completed Loans or assigned Equipment IDs remain visible to Members;
 - a workflow for reversing or rejecting a RETURN_PENDING report;
 - recovery transitions from LOST or COMPLETED;

@@ -145,3 +145,17 @@
 - Requested implementation using `clubstock-feature`. Added the shared LoanRequest ID, status,
   validation, lifecycle entity, and focused tests under `src/main/java/clubstock/domain/request/`
   and `src/test/java/clubstock/domain/request/`. Full `test`, `build`, and `javadoc` checks passed.
+
+## 2026-09-22 — SLICE-004 Loan lifecycle and reports
+
+- Requested an implementation plan for SLICE-004 following `docs/plans/core-domain-model.md`.
+  Reviewed the shared, Member, and Exco requirements plus the existing domain slices; produced a
+  plan for individual Loan transitions, overdue detection, advisory return/loss reports, image
+  metadata validation, requirements reconciliation, and focused verification. No files changed.
+- Requested implementation with `clubstock-feature` on an issue-aligned branch. Created
+  `feature/6-loan-lifecycle-reports`; added the Loan and report domain models and tests under
+  `src/main/java/clubstock/domain/{loan,report}/` and `src/test/java/clubstock/domain/{loan,report}/`,
+  updated `docs/ProjectRequirements.md`, and verified the result with Gradle `test`, `build`, and
+  `javadoc` checks.
+- Requested `$commit`; grouped the SLICE-004 domain implementation, focused tests, requirements
+  clarification, and this prompt-log update into one logical feature commit.
