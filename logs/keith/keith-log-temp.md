@@ -188,3 +188,9 @@
   duplicate-looking pending requests.
 - Requested `$commit`; grouped the Request ID contract correction with the corresponding
   session-log update for one documentation commit.
+- Requested explicit actionable fields for the Exco pending-request DTO and safe evidence
+  handling after ambiguous database commits. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` to enumerate the Request ID and all `F4.4.4`
+  queue fields with duplicate-looking-request coverage, and to delete finalized evidence only
+  after confirmed rollback or confirmed absence of a committed reference while retaining
+  ambiguous outcomes for startup reconciliation.

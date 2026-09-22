@@ -261,12 +261,16 @@ Loan references it.
 
 - **Responsibility:** Make one JDBC transaction the boundary of each state-changing use case.
 - **Interface:** Execute a callback with repositories bound to one connection and either
-  commit its complete result or roll it back.
+  commit its complete result or roll it back. A failed execution distinguishes
+  `CONFIRMED_ROLLBACK` from `COMMIT_OUTCOME_UNKNOWN` so resource-owning workflows can perform
+  safe compensation.
 - **Collaborators:** Every command service and the SQLite database adapter.
 - **State and data:** Read-only queries use read operations; writes acquire their transaction
   before re-reading preconditions so stale UI state cannot authorize a transition.
-- **Failure behavior:** Domain, authorization, constraint, or I/O failures roll back. Services
-  discard mutated aggregate instances after rollback and never return them to controllers.
+- **Failure behavior:** Domain, authorization, constraint, or pre-commit I/O failures roll back.
+  A commit error is reported as `CONFIRMED_ROLLBACK` only when non-durability is established;
+  otherwise it is `COMMIT_OUTCOME_UNKNOWN`. Services discard mutated aggregate instances after
+  either failure and never infer rollback solely from an exception returned by `commit()`.
 
 ### Interactions and data flow
 
@@ -379,10 +383,12 @@ catalogue summaries, submit and decide requests, and atomically allocate items.
 - **Collaborators:** Session manager, Member/type/item/request repositories, UUID generator,
   clock, and transaction manager.
 - **State and data:** Submission validates an active Member and offered type, generates a
-  Request ID and `requestedAt`, but does not reserve inventory. Exco rows include current
-  calculated availability. Member rows include the opaque Request ID, EquipmentType ID and
-  display name, requested quantity, requested start and end dates, status, and approved
-  quantity when applicable, while excluding unassigned item data.
+  Request ID and `requestedAt`, but does not reserve inventory. Exco rows include the opaque
+  Request ID, Member ID and display name, EquipmentType ID and display name, requested
+  quantity, current calculated availability, requested start and end dates, `requestedAt`, and
+  optional details. Member rows include the opaque Request ID, EquipmentType ID and display
+  name, requested quantity, requested start and end dates, status, and approved quantity when
+  applicable, while excluding unassigned item data.
 - **Failure behavior:** Wrong ownership/role, missing or unoffered types, invalid quantity or
   dates, and non-pending transitions fail before mutation. Zero availability produces a
   warning flag in the submission preview but does not invalidate confirmation.
@@ -444,8 +450,9 @@ damage evidence, and complete Exco verification atomically.
 
 - **Responsibility:** Validate and copy damage evidence into application-owned storage.
 - **Interface:** Stage a selected source path, whether absolute or relative, validate and copy
-  its contents, finalize the copy under a generated relative key, discard staged/finalized
-  files after rollback, and resolve a stored reference for Exco view.
+  its contents, finalize the copy under a generated relative key, discard abandoned staged
+  files, conditionally delete finalized files after transaction failure, and resolve a stored
+  reference for Exco view.
 - **Collaborators:** Member Loan workflow, `DamageImageReference`, transaction manager, and
   startup cleanup.
 - **State and data:** Accept decoded JPEG or PNG content from 1 byte through 5 MiB. A selected
@@ -454,7 +461,10 @@ damage evidence, and complete Exco verification atomically.
   relative, non-traversing storage keys only.
 - **Failure behavior:** Missing, oversized, unsupported, or malformed source files are rejected;
   an absolute source path from a desktop file picker is valid. Absolute or traversing persisted
-  storage keys are rejected. A failure never removes an existing committed image.
+  storage keys are rejected. A finalized file is deleted only after rollback is confirmed or a
+  committed-reference check confirms that no damage report references it. An ambiguous commit
+  outcome retains the finalized file for startup reconciliation. A failure never removes an
+  image referenced by a committed report.
 
 ### `MemberLoanService`
 
@@ -467,11 +477,14 @@ damage evidence, and complete Exco verification atomically.
   description; loss requires a description. Each command changes Loan status and item
   availability together.
 - **Failure behavior:** Wrong owner, non-`ON_LOAN` status, repeated branch submission, missing
-  evidence, and image/database failure leave both records unchanged. For damaged returns, the
-  file is finalized before database commit and removed when normal rollback handling runs. At
-  startup, recovery removes abandoned staged files and reconciles finalized managed images
-  against committed damage-report references, deleting unreferenced finalized files while
-  preserving every referenced image.
+  evidence, image failure, and database failure with confirmed rollback leave both records
+  unchanged. For damaged returns, the file is finalized before database commit. After a commit
+  error, cleanup deletes the finalized file only when rollback is confirmed or an independent
+  committed-reference query confirms that the report was not committed. If the commit outcome
+  or reference check remains ambiguous, cleanup retains the finalized file. At startup,
+  recovery removes abandoned staged files and reconciles finalized managed images against
+  committed damage-report references, deleting unreferenced finalized files while preserving
+  every referenced image.
 
 ### `VerificationService`
 
@@ -491,10 +504,12 @@ damage evidence, and complete Exco verification atomically.
 Loan queries join the stored typed references into presentation DTOs. A Member return/loss
 command reloads and checks both ownership and current state, holds the item, creates applicable
 evidence, and commits. Exco later loads the pending queue and completes the Loan plus item
-outcome in one transaction. Other Loans created from the same request are never touched. On
-startup, image recovery derives the live finalized-image set from committed damage reports and
-removes generated managed files that have no committed reference, including files left by a
-process interruption between image finalization and database commit.
+outcome in one transaction. Other Loans created from the same request are never touched. A
+confirmed rollback permits immediate deletion of newly finalized evidence; an ambiguous commit
+error retains it unless an independent committed-reference query proves that no report row was
+committed. On startup, image recovery derives the live finalized-image set from committed damage
+reports and removes generated managed files that have no committed reference, including files
+left by a process interruption between image finalization and database commit.
 
 ### Acceptance criteria
 
@@ -503,8 +518,10 @@ process interruption between image finalization and database commit.
 - Good, damaged, and lost submissions enforce their distinct evidence requirements.
 - No report changes authoritative item condition before Exco verification.
 - Exco may disagree with the reported return condition and choose either damaged availability.
-- Database and image failures cannot produce a partial lifecycle transition or broken report
-  reference.
+- Confirmed rollback and image failures cannot produce a partial lifecycle transition or broken
+  report reference.
+- An ambiguous commit outcome never deletes finalized evidence that may be referenced by a
+  committed damage report; unresolved files are retained for startup reconciliation.
 - Startup recovery removes abandoned staged files and unreferenced finalized managed images
   without deleting an image referenced by a committed damage report.
 
@@ -641,7 +658,8 @@ Members, inventory, requests, Loans, and reports.
 - **Domain restoration APIs:** Recreate valid persisted states without event replay.
 - **SchemaMigrator/SqliteDatabase:** Initialize versioned storage safely.
 - **Repository ports/adapters:** Store and query typed aggregates without leaking JDBC.
-- **TransactionManager/UnitOfWork:** Commit or roll back one complete use case.
+- **TransactionManager/UnitOfWork:** Commit or roll back one complete use case and distinguish a
+  confirmed rollback from an ambiguous commit outcome for safe external-resource cleanup.
 - **Application errors and ID generator:** Standardize failure mapping and internal IDs.
 
 #### Acceptance criteria
@@ -651,6 +669,8 @@ Members, inventory, requests, Loans, and reports.
 - [ ] Invalid rows and future schema versions fail explicitly without data replacement.
 - [ ] Unique IDs, type names, references, and report cardinality are constrained.
 - [ ] A forced mid-operation failure rolls back all database changes.
+- [ ] A failed transaction reports `CONFIRMED_ROLLBACK` only when non-durability is established;
+  otherwise a commit error reports `COMMIT_OUTCOME_UNKNOWN`.
 - [ ] Tests use temporary paths and pass on the existing three-platform build matrix.
 
 #### Test scenarios
@@ -660,6 +680,8 @@ Members, inventory, requests, Loans, and reports.
 - Attempt duplicate identities, duplicate folded type names, broken foreign keys, and duplicate
   reports.
 - Inject an exception after several writes and verify the pre-transaction snapshot remains.
+- Simulate confirmed rollback and indeterminate commit failures and verify their transaction
+  outcomes remain distinguishable to callers.
 - Open malformed, read-only, and unsupported-version databases and verify safe failure.
 
 #### Dependencies
@@ -824,7 +846,9 @@ pending queue and both roles need authorized state transitions.
 - Add Member own-request query containing the opaque Request ID, EquipmentType, requested
   quantity, requested start and end dates, status, and approved quantity when applicable, plus
   owner-only pending cancellation by Request ID.
-- Add Exco pending queue ordered by `requestedAt` then Request ID, with current availability.
+- Add Exco pending queue ordered by `requestedAt` then Request ID, containing the opaque Request
+  ID, Member, EquipmentType, requested quantity, current availability, requested dates,
+  `requestedAt`, and optional details.
 - Add Exco-only pending rejection.
 
 #### Out of scope
@@ -841,7 +865,9 @@ pending queue and both roles need authorized state transitions.
 - **Member request DTO:** Exposes the opaque Request ID, EquipmentType ID and display name,
   requested quantity, requested start and end dates, request status, and approved quantity
   when applicable.
-- **Pending request DTO:** Exposes the complete Exco queue data without reserving inventory.
+- **Pending request DTO:** Exposes the opaque Request ID, Member ID and display name,
+  EquipmentType ID and display name, requested quantity, current available quantity, requested
+  start and end dates, `requestedAt`, and optional details without reserving inventory.
 
 #### Acceptance criteria
 
@@ -851,7 +877,8 @@ pending queue and both roles need authorized state transitions.
 - [ ] Members see only their own requests, with the opaque Request ID, EquipmentType, requested
   quantity, requested start and end dates, status, and approved quantity when applicable, and
   can cancel only their own pending request identified by that Request ID.
-- [ ] Exco sees every pending request in deterministic oldest-first order and may reject it.
+- [ ] Exco sees every pending request in deterministic oldest-first order; each row contains the
+  opaque Request ID and every field required by `F4.4.4`, and may be rejected by Request ID.
 - [ ] Non-pending requests reject cancellation and rejection without mutation.
 - [ ] Unoffered/missing types and inactive Members cannot create requests.
 
@@ -864,6 +891,10 @@ pending queue and both roles need authorized state transitions.
   EquipmentType, requested quantity, requested dates, status, and conditional approved
   quantity, and ensure cross-Member records are absent.
 - Submit duplicate-looking pending requests, cancel one by its Request ID, and verify the other
+  remains pending and unchanged.
+- Query duplicate-looking pending requests as Exco; verify that each DTO contains a distinct
+  Request ID plus Member, EquipmentType, quantity, current availability, requested dates,
+  `requestedAt`, and optional details, then reject one by its Request ID and verify the other
   remains pending and unchanged.
 - Cancel/reject in every request state and with both roles.
 - Verify that submission never changes item availability.
@@ -1026,8 +1057,10 @@ loss, preserve required evidence without affecting sibling Loans.
   storage, cleanup, and reference resolution.
 - Add Member commands for good return, damaged return, and report lost.
 - Persist Loan/item transitions and reports in coordinated transactions.
-- Ensure rollback cleans new managed files and startup removes both abandoned staging files and
-  finalized managed images that have no committed damage-report reference.
+- Ensure confirmed rollback cleans new managed files, ambiguous commit outcomes retain finalized
+  evidence unless a committed-reference check proves it unreferenced, and startup removes both
+  abandoned staging files and finalized managed images that have no committed damage-report
+  reference.
 
 #### Out of scope
 
@@ -1041,8 +1074,9 @@ loss, preserve required evidence without affecting sibling Loans.
 - **ManagedDamageImageStore:** Owns safe evidence validation and storage.
 - **MemberLoanService:** Authorizes and executes the three submission branches.
 - **Damage/Loss repositories:** Enforce one applicable report per Loan.
-- **Image/transaction coordination:** Prevents committed broken references and failed-operation
-  leftovers.
+- **Image/transaction coordination:** Deletes finalized evidence only after confirmed rollback
+  or confirmed absence of a committed reference, retains evidence after an ambiguous commit
+  outcome, and relies on startup reconciliation for safe eventual cleanup.
 
 #### Acceptance criteria
 
@@ -1051,7 +1085,10 @@ loss, preserve required evidence without affecting sibling Loans.
 - [ ] Damaged return requires decoded JPEG/PNG evidence within 1 byte–5 MiB and a description.
 - [ ] Lost submission requires a description and does not set authoritative condition `LOST`.
 - [ ] Repeat, cross-branch, and sibling-Loan mutations are rejected.
-- [ ] Database/image failures leave no partial state or committed missing-file reference.
+- [ ] Confirmed rollback and image failures leave no partial state or committed missing-file
+  reference.
+- [ ] If commit durability is ambiguous, cleanup retains the finalized image unless an
+  independent query confirms that no committed damage report references it.
 - [ ] Startup recovery removes staged and finalized files without committed references while
   retaining every finalized image referenced by a committed damage report.
 
@@ -1061,7 +1098,12 @@ loss, preserve required evidence without affecting sibling Loans.
 - Attempt actions as another Member and after every non-`ON_LOAN` status.
 - Test empty, oversized, mislabeled, malformed, PNG, and JPEG source files; accept valid
   absolute and relative source paths, and reject absolute or traversing persisted storage keys.
-- Inject staging, finalization, repository, and commit failures and inspect normal cleanup.
+- Inject staging, finalization, repository, and confirmed-rollback failures and inspect normal
+  cleanup.
+- Simulate `commit()` reporting an error after durably committing the report; verify cleanup
+  preserves the finalized evidence and the committed reference remains resolvable.
+- Simulate an ambiguous commit outcome with no committed report and an unavailable reference
+  check; verify cleanup retains the finalized file until startup reconciliation removes it.
 - Simulate interruption after finalization but before commit, then verify startup reconciliation
   deletes the unreferenced finalized file and preserves every committed referenced image.
 - Submit for one of several Loans from a request and verify siblings remain unchanged.
