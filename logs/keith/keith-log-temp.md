@@ -159,3 +159,38 @@
   `javadoc` checks.
 - Requested `$commit`; grouped the SLICE-004 domain implementation, focused tests, requirements
   clarification, and this prompt-log update into one logical feature commit.
+
+## 2026-09-22 — Shared backend plan publication
+
+- Requested that the shared-backend JavaFX foundation plan be logged, moved to
+  `docs/plan-shared-backend-javafx-foundation`, committed, and pushed to a matching new remote
+  branch.
+- Created the branch, committed the design and initial log entry as `112b304` (`docs: add shared
+  backend JavaFX foundation plan`), and prepared the branch for remote publication.
+- Requested two corrections to the managed damage-image design. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` to allow absolute or relative source paths
+  while restricting persisted storage keys, and required startup reconciliation of finalized
+  images against committed damage-report references after interrupted commits.
+- Requested copy-ready wording for manually reconciling GitHub issue #18 with the corrected
+  damage-image source-path and interrupted-commit recovery design. Provided replacement scope,
+  component, acceptance-criteria, and test-scenario text without modifying the issue.
+- Requested `$commit` for the documentation corrections and this session-log update.
+- Requested correction of the Member request DTO contract to satisfy `F4.3.2`. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` so Member request queries expose
+  EquipmentType, requested quantity, requested start/end dates, status, and conditional
+  approved quantity, with corresponding acceptance and query-test coverage.
+- Requested `$commit`; grouped the Member request DTO documentation correction with the
+  corresponding session-log update for commit review.
+- Requested that Member request rows include the opaque Request ID needed to target
+  cancellation when otherwise identical requests exist. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` across the service contract, slice scope,
+  DTO definition, acceptance criteria, and tests, including independent cancellation of
+  duplicate-looking pending requests.
+- Requested `$commit`; grouped the Request ID contract correction with the corresponding
+  session-log update for one documentation commit.
+- Requested explicit actionable fields for the Exco pending-request DTO and safe evidence
+  handling after ambiguous database commits. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` to enumerate the Request ID and all `F4.4.4`
+  queue fields with duplicate-looking-request coverage, and to delete finalized evidence only
+  after confirmed rollback or confirmed absence of a committed reference while retaining
+  ambiguous outcomes for startup reconciliation.
