@@ -136,3 +136,12 @@
   `com/ibm/icu/lang/UCharacter.class`.
 - Requested `$commit` for the Unicode case-folding fix and its related documentation and test
   updates; the changes are being grouped into one fix commit.
+
+## 2026-09-22 — SLICE-003 LoanRequest lifecycle
+
+- Requested review of `SLICE-003` in `docs/plans/core-domain-model.md` before implementation.
+  Confirmed the only policy gap was past-date and optional-details handling; adopted the slice
+  decisions and recorded them in `docs/ProjectRequirements.md`.
+- Requested implementation using `clubstock-feature`. Added the shared LoanRequest ID, status,
+  validation, lifecycle entity, and focused tests under `src/main/java/clubstock/domain/request/`
+  and `src/test/java/clubstock/domain/request/`. Full `test`, `build`, and `javadoc` checks passed.
