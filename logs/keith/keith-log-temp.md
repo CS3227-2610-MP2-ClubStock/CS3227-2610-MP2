@@ -167,3 +167,11 @@
   branch.
 - Created the branch, committed the design and initial log entry as `112b304` (`docs: add shared
   backend JavaFX foundation plan`), and prepared the branch for remote publication.
+- Requested two corrections to the managed damage-image design. Updated
+  `docs/plans/shared-backend-javafx-foundation.md` to allow absolute or relative source paths
+  while restricting persisted storage keys, and required startup reconciliation of finalized
+  images against committed damage-report references after interrupted commits.
+- Requested copy-ready wording for manually reconciling GitHub issue #18 with the corrected
+  damage-image source-path and interrupted-commit recovery design. Provided replacement scope,
+  component, acceptance-criteria, and test-scenario text without modifying the issue.
+- Requested `$commit` for the documentation corrections and this session-log update.

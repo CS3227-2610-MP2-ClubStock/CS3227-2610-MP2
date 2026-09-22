@@ -440,14 +440,18 @@ damage evidence, and complete Exco verification atomically.
 ### `ManagedDamageImageStore`
 
 - **Responsibility:** Validate and copy damage evidence into application-owned storage.
-- **Interface:** Stage a selected source file, finalize it under a generated relative key,
-  discard staged/finalized files after rollback, and resolve a stored reference for Exco view.
+- **Interface:** Stage a selected source path, whether absolute or relative, validate and copy
+  its contents, finalize the copy under a generated relative key, discard staged/finalized
+  files after rollback, and resolve a stored reference for Exco view.
 - **Collaborators:** Member Loan workflow, `DamageImageReference`, transaction manager, and
   startup cleanup.
-- **State and data:** Accept decoded JPEG or PNG content from 1 byte through 5 MiB. Generated
-  names, not original filenames, become storage keys. Database rows store relative keys only.
-- **Failure behavior:** Missing, oversized, unsupported, malformed, absolute, or traversing
-  input is rejected. A failure never removes an existing committed image.
+- **State and data:** Accept decoded JPEG or PNG content from 1 byte through 5 MiB. A selected
+  source path identifies an external file only for validation and copying and is never
+  persisted. Generated names, not original filenames, become storage keys. Database rows store
+  relative, non-traversing storage keys only.
+- **Failure behavior:** Missing, oversized, unsupported, or malformed source files are rejected;
+  an absolute source path from a desktop file picker is valid. Absolute or traversing persisted
+  storage keys are rejected. A failure never removes an existing committed image.
 
 ### `MemberLoanService`
 
@@ -461,8 +465,10 @@ damage evidence, and complete Exco verification atomically.
   availability together.
 - **Failure behavior:** Wrong owner, non-`ON_LOAN` status, repeated branch submission, missing
   evidence, and image/database failure leave both records unchanged. For damaged returns, the
-  file is finalized before database commit and removed if the transaction rolls back; startup
-  removes unreferenced staged files.
+  file is finalized before database commit and removed when normal rollback handling runs. At
+  startup, recovery removes abandoned staged files and reconciles finalized managed images
+  against committed damage-report references, deleting unreferenced finalized files while
+  preserving every referenced image.
 
 ### `VerificationService`
 
@@ -482,7 +488,10 @@ damage evidence, and complete Exco verification atomically.
 Loan queries join the stored typed references into presentation DTOs. A Member return/loss
 command reloads and checks both ownership and current state, holds the item, creates applicable
 evidence, and commits. Exco later loads the pending queue and completes the Loan plus item
-outcome in one transaction. Other Loans created from the same request are never touched.
+outcome in one transaction. Other Loans created from the same request are never touched. On
+startup, image recovery derives the live finalized-image set from committed damage reports and
+removes generated managed files that have no committed reference, including files left by a
+process interruption between image finalization and database commit.
 
 ### Acceptance criteria
 
@@ -493,6 +502,8 @@ outcome in one transaction. Other Loans created from the same request are never 
 - Exco may disagree with the reported return condition and choose either damaged availability.
 - Database and image failures cannot produce a partial lifecycle transition or broken report
   reference.
+- Startup recovery removes abandoned staged files and unreferenced finalized managed images
+  without deleting an image referenced by a committed damage report.
 
 ## Major Feature 5: JavaFX Authentication and Role Shell
 
@@ -998,15 +1009,18 @@ loss, preserve required evidence without affecting sibling Loans.
 
 #### Scope
 
-- Add managed JPEG/PNG inspection, staging, final storage, cleanup, and reference resolution.
+- Add managed JPEG/PNG inspection, absolute-or-relative source selection, staging, final
+  storage, cleanup, and reference resolution.
 - Add Member commands for good return, damaged return, and report lost.
 - Persist Loan/item transitions and reports in coordinated transactions.
-- Ensure rollback cleans new managed files and startup removes abandoned staging files.
+- Ensure rollback cleans new managed files and startup removes both abandoned staging files and
+  finalized managed images that have no committed damage-report reference.
 
 #### Out of scope
 
 - Return/loss screens and Exco verification.
-- Video or other image formats, external image paths, report edits, disputes, or recovery.
+- Video or other image formats, persisted references to files outside managed storage, report
+  edits, disputes, or recovery.
 - Additional descriptions, notes, or audit metadata beyond the required reports.
 
 #### Components
@@ -1025,13 +1039,18 @@ loss, preserve required evidence without affecting sibling Loans.
 - [ ] Lost submission requires a description and does not set authoritative condition `LOST`.
 - [ ] Repeat, cross-branch, and sibling-Loan mutations are rejected.
 - [ ] Database/image failures leave no partial state or committed missing-file reference.
+- [ ] Startup recovery removes staged and finalized files without committed references while
+  retaining every finalized image referenced by a committed damage report.
 
 #### Test scenarios
 
 - Submit every valid branch and inspect Loan, item, and report state.
 - Attempt actions as another Member and after every non-`ON_LOAN` status.
-- Test empty, oversized, mislabeled, malformed, PNG, JPEG, absolute, and traversal inputs.
-- Inject staging, finalization, repository, and commit failures and inspect cleanup.
+- Test empty, oversized, mislabeled, malformed, PNG, and JPEG source files; accept valid
+  absolute and relative source paths, and reject absolute or traversing persisted storage keys.
+- Inject staging, finalization, repository, and commit failures and inspect normal cleanup.
+- Simulate interruption after finalization but before commit, then verify startup reconciliation
+  deletes the unreferenced finalized file and preserves every committed referenced image.
 - Submit for one of several Loans from a request and verify siblings remain unchanged.
 
 #### Dependencies
