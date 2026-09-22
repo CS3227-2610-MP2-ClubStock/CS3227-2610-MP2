@@ -30,6 +30,7 @@ dependencies {
             implementation("org.openjfx:javafx-${module}:${javaFxVersion}:${platform}")
         }
     }
+    implementation 'com.ibm.icu:icu4j:78.3'
 
     testImplementation platform('org.junit:junit-bom:5.14.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'

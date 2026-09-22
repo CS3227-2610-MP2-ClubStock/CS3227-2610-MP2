@@ -28,4 +28,24 @@ class EquipmentTypeNameTest {
         assertEquals("hockey stick", upperCaseName.comparisonKey());
         assertEquals(upperCaseName.comparisonKey(), lowerCaseName.comparisonKey());
     }
+
+    @Test
+    void comparisonKey_greekSigmaContextVariantsShareUnicodeFoldedKey() {
+        EquipmentTypeName uppercaseName = new EquipmentTypeName("ΟΣ");
+        EquipmentTypeName medialSigmaName = new EquipmentTypeName("οσ");
+        EquipmentTypeName finalSigmaName = new EquipmentTypeName("ος");
+
+        assertEquals("οσ", uppercaseName.comparisonKey());
+        assertEquals(uppercaseName.comparisonKey(), medialSigmaName.comparisonKey());
+        assertEquals(uppercaseName.comparisonKey(), finalSigmaName.comparisonKey());
+    }
+
+    @Test
+    void comparisonKey_multiCharacterCaseMappingVariantsShareUnicodeFoldedKey() {
+        EquipmentTypeName titleCaseName = new EquipmentTypeName("Straße");
+        EquipmentTypeName uppercaseName = new EquipmentTypeName("STRASSE");
+
+        assertEquals("strasse", titleCaseName.comparisonKey());
+        assertEquals(titleCaseName.comparisonKey(), uppercaseName.comparisonKey());
+    }
 }

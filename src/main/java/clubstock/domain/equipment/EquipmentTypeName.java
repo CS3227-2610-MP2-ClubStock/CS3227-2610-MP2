@@ -1,6 +1,6 @@
 package clubstock.domain.equipment;
 
-import java.util.Locale;
+import com.ibm.icu.lang.UCharacter;
 
 /**
  * Represents an equipment type's display name and stable comparison key.
@@ -20,11 +20,11 @@ public record EquipmentTypeName(String value) {
     }
 
     /**
-     * Returns a locale-independent lowercase key for case-insensitive uniqueness checks.
+     * Returns a locale-independent Unicode case-folded key for case-insensitive uniqueness checks.
      *
-     * @return Locale-independent lowercase comparison key.
+     * @return Locale-independent Unicode case-folded comparison key.
      */
     public String comparisonKey() {
-        return value.toLowerCase(Locale.ROOT);
+        return UCharacter.foldCase(value, UCharacter.FOLD_CASE_DEFAULT);
     }
 }

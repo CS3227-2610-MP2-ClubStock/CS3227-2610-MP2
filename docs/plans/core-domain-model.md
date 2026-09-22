@@ -223,8 +223,8 @@ including authoritative condition and allocation availability.
 
 - **Responsibility:** Preserve display capitalization while producing a stable
   case-insensitive comparison key.
-- **Interface:** Exposes the trimmed display value and a `Locale.ROOT` lowercase comparison
-  key.
+- **Interface:** Exposes the trimmed display value and a locale-independent Unicode
+  case-folded comparison key.
 - **Collaborators:** `EquipmentType` and the later repository uniqueness check.
 - **Failure behavior:** Rejects null or blank names.
 

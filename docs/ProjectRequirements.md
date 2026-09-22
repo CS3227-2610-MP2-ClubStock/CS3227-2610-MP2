@@ -67,7 +67,7 @@ domain and later inventory layers:
 - EquipmentType IDs and Equipment IDs are immutable, case-sensitive identities. Repository-wide
   uniqueness is enforced outside the core domain model.
 - EquipmentType names are trimmed, must be nonblank, and are compared case-insensitively using a
-  locale-independent key for repository uniqueness checks.
+  locale-independent Unicode case-folded key for repository uniqueness checks.
 - A new EquipmentType starts unoffered. A referenced EquipmentType is unoffered before hard
   deletion, and hard deletion is permitted only when no EquipmentItem, LoanRequest, or Loan
   references it.

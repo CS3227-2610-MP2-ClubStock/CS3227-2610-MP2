@@ -129,3 +129,10 @@
   session summary.
 - Requested `$commit` for the consolidated session log; the documentation update is being grouped
   into a dedicated commit.
+- Requested implementation of the Unicode case-folding PR fix. Added ICU4J 78.3, changed
+  `EquipmentTypeName.comparisonKey()` to full locale-independent Unicode folding, added Greek
+  sigma and multi-character mapping tests, and updated the requirements and core-domain plan.
+  The focused name suite passed 5 tests, the full suite passed 47 tests, and the fat JAR included
+  `com/ibm/icu/lang/UCharacter.class`.
+- Requested `$commit` for the Unicode case-folding fix and its related documentation and test
+  updates; the changes are being grouped into one fix commit.
