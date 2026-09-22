@@ -105,6 +105,13 @@ domain and later inventory layers:
 - F2.3.3: A LoanRequest status shall be one of PENDING, APPROVED, REJECTED, or CANCELLED.
 - F2.3.4: A PENDING LoanRequest shall reference an EquipmentType and shall not be tied to a specific EquipmentItem or Equipment ID.
 
+##### LoanRequest-model decisions
+
+- Past requested start dates are valid, and a requested start date equal to the end date is valid;
+  only an end date before the start date is invalid.
+- Optional request details are stripped; null or blank input is stored as absent. The core domain
+  model imposes no additional details format or size restriction.
+
 #### F2.4: Loan
 
 - F2.4.1: A Loan shall represent one specific EquipmentItem assigned to one Member.
@@ -392,7 +399,7 @@ The source specifications do not define the following matters. They are intentio
 - password reset, logout, session behaviour, and the remaining credential-validation details;
 - the initial authentication or bootstrap mechanism for the pre-created Exco account before first-login password setup;
 - which LoanRequest statuses are considered unresolved for Member removal and whether referenced-member removal must be blocked or may preserve valid record snapshots;
-- date format, timezone, whether past requested dates are valid, and other date-validation bounds;
+- date format, timezone, and date-validation bounds beyond the end-before-start rule;
 - the precise date/time boundary and timezone used to determine when an ON_LOAN Loan is overdue;
 - tie-breaking when pending requests have identical requestedAt values;
 - whether “active Loans” means only ON_LOAN Loans or all unresolved Loans;
@@ -400,7 +407,6 @@ The source specifications do not define the following matters. They are intentio
 - approval concurrency, transaction boundaries, and ID-generation mechanisms;
 - notification wording or presentation when approval is impossible because no item is AVAILABLE;
 - rejection reasons, cancellation reasons, verification notes, and audit metadata;
-- optional request-details format, validation, and size limits;
 - damage-image format, validation, storage, and size limits;
 - description format, validation, and size limits for damage and loss reports;
 - whether completed Loans or assigned Equipment IDs remain visible to Members;
