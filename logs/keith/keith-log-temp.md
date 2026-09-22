@@ -159,3 +159,9 @@
   `javadoc` checks.
 - Requested `$commit`; grouped the SLICE-004 domain implementation, focused tests, requirements
   clarification, and this prompt-log update into one logical feature commit.
+
+## 2026-09-22 — Shared backend plan publication
+
+- Requested that the shared-backend JavaFX foundation plan be logged, moved to
+  `docs/plan-shared-backend-javafx-foundation`, committed, and pushed to a matching new remote
+  branch.
