@@ -1962,7 +1962,7 @@ Owner and milestone are recorded here; GitHub assignees/milestone metadata are n
 
 #### Acceptance criteria
 
-- [ ] Exercise Exco account creation, Member login, request, approval, report and verification through real UI.
+- [ ] Exercise Exco creation of a Member account, then Member login, request, approval, report and verification through real UI.
 - [ ] Cover zero-stock warning, cancellation/rejection, partial approval and independent item handling.
 - [ ] Verify cross-Member isolation, assigned-ID privacy, role switching and restart persistence.
 - [ ] Exercise evidence/repeated-action/transaction failures and record results with linked defects.
