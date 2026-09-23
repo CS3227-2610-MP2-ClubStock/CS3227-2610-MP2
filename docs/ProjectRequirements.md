@@ -407,7 +407,13 @@ The source specifications do not require:
 
 ## 5. Unspecified points requiring clarification
 
-The source specifications do not define the following matters. They are intentionally left unspecified rather than resolved by assumptions:
+The source specifications originally left the following matters unspecified. Confirmed
+project decisions now resolve a subset in the
+[core-domain design](plans/core-domain-model.md) and
+[shared application design](plans/shared-application-design.md), including authentication,
+sessions, persistence, unresolved references, active Loans and managed evidence. Consult
+those decisions before treating an item below as open. Any remaining unspecified product
+behavior still requires clarification rather than an implementation assumption:
 
 - password reset, logout, session behaviour, and the remaining credential-validation details;
 - the initial authentication or bootstrap mechanism for the pre-created Exco account before first-login password setup;

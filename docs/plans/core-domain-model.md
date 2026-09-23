@@ -8,6 +8,13 @@
 | Document ID | `core-domain-model` |
 | Target repository | `CS3227-2610-MP2-ClubStock/CS3227-2610-MP2` |
 
+## Status in the active roadmap
+
+The core domain is implemented and retained as the baseline for the
+[parallel implementation roadmap](parallel-role-implementation.md). Repository-state
+statements and delivery issues below describe the original domain-design stage; they
+are historical context, not a request to recreate implemented classes or tests.
+
 ## Summary and Goals
 
 This design implements phase 1 of `docs/ProposedProjectPlan.md`: a framework-independent
