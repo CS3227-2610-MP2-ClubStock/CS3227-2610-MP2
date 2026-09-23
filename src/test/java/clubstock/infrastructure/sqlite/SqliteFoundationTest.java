@@ -833,6 +833,60 @@ class SqliteFoundationTest {
         assertEquals(ApplicationErrorCode.PERSISTENCE_FAILURE, failure.errorCode());
     }
 
+    @Test
+    void completedReturnWithLostItem_rejectsCommitAndRollsBack(@TempDir Path tempDirectory) {
+        SqliteDatabase database = new SqliteDatabase(tempDirectory.resolve("clubstock.db"));
+        database.initialize();
+        seedMemberReference(database, "RETURN_PENDING_GOOD");
+        Loan originalLoan = database.read(unitOfWork -> unitOfWork.loans().findAll().getFirst());
+        EquipmentItem originalItem = database.read(unitOfWork -> unitOfWork.equipmentItems()
+                .findById(originalLoan.equipmentId()).orElseThrow());
+
+        ApplicationException failure = assertThrows(ApplicationException.class, () ->
+                database.write(unitOfWork -> {
+                    Loan loan = unitOfWork.loans().findById(originalLoan.loanId()).orElseThrow();
+                    EquipmentItem item = unitOfWork.equipmentItems()
+                            .findById(loan.equipmentId()).orElseThrow();
+                    loan.completeReturn();
+                    item.confirmLost();
+                    unitOfWork.loans().update(loan);
+                    unitOfWork.equipmentItems().update(item);
+                    return null;
+                }));
+
+        assertEquals(ApplicationErrorCode.PERSISTENCE_FAILURE, failure.errorCode());
+        assertEquals(TransactionOutcome.CONFIRMED_ROLLBACK,
+                failure.transactionOutcome().orElseThrow());
+        Loan restoredLoan = database.read(unitOfWork ->
+                unitOfWork.loans().findById(originalLoan.loanId()).orElseThrow());
+        EquipmentItem restoredItem = database.read(unitOfWork -> unitOfWork.equipmentItems()
+                .findById(originalItem.equipmentId()).orElseThrow());
+        assertEquals(originalLoan.status(), restoredLoan.status());
+        assertEquals(originalLoan.reportedReturnCondition(), restoredLoan.reportedReturnCondition());
+        assertEquals(originalItem.condition(), restoredItem.condition());
+        assertEquals(originalItem.availability(), restoredItem.availability());
+        assertEquals(originalItem.isVerificationPending(), restoredItem.isVerificationPending());
+        database.initialize();
+    }
+
+    @Test
+    void initialize_lostItemWithoutCompletedLoss_fails(@TempDir Path tempDirectory)
+            throws Exception {
+        Path databasePath = tempDirectory.resolve("clubstock.db");
+        SqliteDatabase database = new SqliteDatabase(databasePath);
+        database.initialize();
+        seedMemberReference(database, "COMPLETED_GOOD");
+
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
+                Statement statement = connection.createStatement()) {
+            statement.executeUpdate("UPDATE equipment_items SET condition = 'LOST',"
+                    + " availability = 'UNAVAILABLE'");
+        }
+
+        ApplicationException failure = assertThrows(ApplicationException.class, database::initialize);
+        assertEquals(ApplicationErrorCode.PERSISTENCE_FAILURE, failure.errorCode());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"PENDING", "ON_LOAN", "RETURN_PENDING_GOOD",
         "RETURN_PENDING_DAMAGED", "LOST_PENDING"})

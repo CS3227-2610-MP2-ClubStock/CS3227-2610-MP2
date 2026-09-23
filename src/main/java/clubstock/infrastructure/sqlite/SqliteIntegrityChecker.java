@@ -194,6 +194,13 @@ final class SqliteIntegrityChecker {
                         + " AND (i.condition <> 'LOST' OR i.availability <> 'UNAVAILABLE')",
                 "Completed loss item is not lost and unavailable.");
         assertNoRows(connection,
+                "SELECT 1 FROM equipment_items i WHERE i.condition = 'LOST'"
+                        + " AND NOT EXISTS (SELECT 1 FROM loans l"
+                        + " JOIN loss_reports d ON d.loan_id = l.loan_id"
+                        + " WHERE l.equipment_id = i.equipment_id AND l.status = 'COMPLETED'"
+                        + " AND l.reported_return_condition IS NULL)",
+                "Lost equipment has no completed loss report.");
+        assertNoRows(connection,
                 "SELECT 1 FROM equipment_items i WHERE i.is_retired = 1"
                         + " AND EXISTS (SELECT 1 FROM loans l WHERE l.equipment_id = i.equipment_id"
                         + " AND l.status IN ('ON_LOAN', 'RETURN_PENDING', 'LOST_PENDING'))",
