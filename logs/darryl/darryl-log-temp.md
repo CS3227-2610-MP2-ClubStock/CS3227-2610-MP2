@@ -49,3 +49,16 @@
 - Darryl requested that the reusable workflow skills be committed and their branch pushed.
 - Created `86c3be6` (`feat: add ClubStock workflow skills`) with one logical group containing the three skills, their metadata and verification scenarios, and the associated prompt-log entry. Pushed `codex/workflow-skills` to `origin` and set its upstream.
 - The unrelated untracked `.codex/` directory remains excluded. Files affected: `logs/darryl/darryl-log-temp.md`.
+
+## 2026-09-23 — Create a local iterative feature workflow
+
+- Darryl supplied lecture material on agentic workflows, skill testing, hooks, and safety, then requested a reusable feature-iteration flow covering task understanding, implementation, quality review, tests, reflection evidence, and manual JavaFX acceptance. The design uses an explicit `$clubstock-iteration` orchestrator, the existing feature/UI/verification skills, a new quality-review skill, deterministic local Gradle checks, and two human gates. Hooks remain optional guardrails rather than workflow sequencing.
+- Darryl required all new workflow material to remain local while leaving the previously published skills unchanged. Added narrow `.gitignore` rules, created ignored `clubstock-iteration` and `clubstock-quality-review` skills, and added ignored iteration templates, state-transition scripts, activation cases, synthetic fixtures, and a local `verifyIteration` Gradle init layer under `.clubstock-workflow/`.
+- Both skills passed the skill-creator validator. PowerShell parsing passed; state-machine tests confirmed both approval gates block without explicit evidence; the verifier passed compilation, Checkstyle, PMD, SpotBugs, Javadoc, and packaging on the starter while reporting `test NO-SOURCE`; separate ignored fixtures correctly blocked an empty catch and an intentional failing JUnit test.
+- Existing published skill files and `build.gradle` were unchanged. No commit, push, hook, or application feature change was made. Tracked files affected: `.gitignore` and this prompt log; all new workflow implementation files are ignored locally.
+
+## 2026-09-23 — Commit local workflow exclusions
+
+- Darryl requested use of the project-specific commit skill for the current tracked changes.
+- The changes were grouped into one maintenance commit whose purpose is to prevent local workflow assets from entering ordinary Git staging while preserving the required prompt history.
+- Commit group paths: `.gitignore` and `logs/darryl/darryl-log-temp.md`. The ignored local skills and `.clubstock-workflow/` contents remain outside version control, and the unrelated `.codex/` directory remains untracked.
