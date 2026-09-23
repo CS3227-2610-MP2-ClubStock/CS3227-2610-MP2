@@ -86,3 +86,11 @@
 - Darryl requested the project commit workflow for the remaining tracked maintenance changes. The commit will group the local workflow ignore-path rename and chronological prompt-log correction, while leaving generated `.codex/` metadata untracked.
 - Darryl requested the Milestone A handoff plan be executed. Pushed the existing two commits on `codex/milestone-a-shell` to `origin` without staging generated `.codex/` or `bin/` directories. Draft PR creation is pending an authenticated GitHub browser session; it will describe the delivered FXML shell and the remaining #23 authentication/session integration dependency without closing the issue.
 - Darryl requested the ambiguous Milestone A shell commit subject be rewritten to name its delivered components, and asked for the commit skill to prevent recurrence. The branch will be rewritten with `feat: add FXML role selection and Exco authentication shell`; the commit skill now requires concrete behavior or component descriptions instead of milestone, task, or issue labels as the primary subject text.
+
+## 2026-09-24 — Fix Exco authentication label mnemonics
+
+- Darryl requested a fix for the reviewed FXML forward `labelFor` references in the Exco login and setup screens. The labels now receive their associations in controller initialization after field injection, preserving the screen layout while allowing keyboard mnemonics to focus the correct password fields. The fix will be committed separately with the affected FXML, controllers, verification coverage, and this prompt log.
+- The focused JavaFX FXML regression test passed, including the actual post-injection label associations, and the Shadow JAR packaging task passed. The separate fix commit groups `exco-login.fxml`, `exco-setup.fxml`, their controllers, `FxmlResourceTest.java`, and this log.
+## 2026-09-24 — Reuse implementation workflow across projects
+
+- Darryl asked whether the local `$implement` workflow can be used in another project. Explained that ClubStock-specific scripts and references should not be copied directly; recommended a generic user-level or per-project skill with project-specific verification references, and identified the relevant installation locations.

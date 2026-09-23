@@ -21,7 +21,7 @@
             <Label text="Welcome back" styleClass="screen-title"/>
             <Label text="Sign in to manage ClubStock equipment and loan workflows."
                    styleClass="supporting-text" wrapText="true"/>
-            <Label text="_Password" mnemonicParsing="true" labelFor="$passwordField"
+            <Label fx:id="passwordLabel" text="_Password" mnemonicParsing="true"
                    styleClass="field-label"/>
             <PasswordField fx:id="passwordField" promptText="Enter the Exco password"/>
             <Label fx:id="errorLabel" accessibleRoleDescription="Sign-in error"

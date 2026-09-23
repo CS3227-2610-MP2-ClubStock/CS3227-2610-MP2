@@ -21,11 +21,11 @@
             <Label text="Set up the Exco password" styleClass="screen-title" wrapText="true"/>
             <Label text="This first-run setup is required once for the pre-created Exco account. Use at least eight characters and include a non-whitespace character."
                    styleClass="supporting-text" wrapText="true"/>
-            <Label text="_Password" mnemonicParsing="true" labelFor="$passwordField"
+            <Label fx:id="passwordLabel" text="_Password" mnemonicParsing="true"
                    styleClass="field-label"/>
             <PasswordField fx:id="passwordField" promptText="Enter a password"
                            accessibleHelp="At least eight characters"/>
-            <Label text="_Confirm password" mnemonicParsing="true" labelFor="$confirmationField"
+            <Label fx:id="confirmationLabel" text="_Confirm password" mnemonicParsing="true"
                    styleClass="field-label"/>
             <PasswordField fx:id="confirmationField" promptText="Enter the password again"/>
             <Label fx:id="errorLabel" accessibleRoleDescription="Setup error"

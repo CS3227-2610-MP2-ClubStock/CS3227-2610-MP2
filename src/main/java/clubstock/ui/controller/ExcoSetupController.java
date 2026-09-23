@@ -18,7 +18,11 @@ public final class ExcoSetupController {
     private final ExcoAuthenticationAction authenticationAction;
     private final NavigationService navigation;
     @FXML
+    private Label passwordLabel;
+    @FXML
     private PasswordField passwordField;
+    @FXML
+    private Label confirmationLabel;
     @FXML
     private PasswordField confirmationField;
     @FXML
@@ -37,6 +41,12 @@ public final class ExcoSetupController {
         }
         this.authenticationAction = authenticationAction;
         this.navigation = navigation;
+    }
+
+    @FXML
+    private void initialize() {
+        passwordLabel.setLabelFor(passwordField);
+        confirmationLabel.setLabelFor(confirmationField);
     }
 
     @FXML
