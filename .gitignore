@@ -2,3 +2,8 @@
 build/
 *.class
 
+# Local ClubStock Codex workflow
+/.agents/skills/clubstock-iteration/
+/.agents/skills/clubstock-quality-review/
+/.clubstock-workflow/
+
