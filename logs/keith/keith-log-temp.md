@@ -237,3 +237,10 @@
 ## 2026-09-23 — SLICE-001 integrity review fixes
 
 - Requested fixes for the SLICE-001 review findings. Added commit-time and startup checks that reject duplicate Loans for the same request/item and inactive Members with pending requests or unresolved Loans. Added regression coverage for rollback, persisted invalid states, resolved-history removal, and valid item reuse across requests. Updated `SqliteIntegrityChecker.java`, `SqliteFoundationTest.java`, and this log. All 140 tests passed; build, Javadoc, shadow-JAR packaging, and `git diff --check` passed.
+
+## 2026-09-23 — Parallel implementation roadmap and issue migration
+
+- Requested assessment and replacement of the sequential shared-backend plan while retaining implemented SLICE-001. Created branch `docs/parallel-role-implementation`; added the parallel roadmap and shared design reference; updated `ProposedProjectPlan.md`, project requirements, core-domain status and the Developer Guide; removed the superseded foundation plan.
+- Requested `$plan-to-docs` issue replacement. Created issues #23–#36 with behavior scopes, ownership, milestones, interface/fixture prerequisites, integration criteria, test scenarios and traceability in `docs/plans/parallel-role-implementation.md`. Closed #13–#20 as superseded/not planned with successor links; preserved closed SLICE-001 issue #12. Applied existing `enhancement` labels and `documentation` to #36; left GitHub assignee/milestone fields unset.
+- Requested `$commit`. Committed the roadmap and supporting documentation changes as `40b1ceb` (`docs: replace sequential foundation with parallel roadmap`).
+- Requested a summary of this chat for Keith; appended this entry to `logs/keith/keith-log-temp.md`.

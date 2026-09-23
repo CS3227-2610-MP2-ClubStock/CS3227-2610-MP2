@@ -19,8 +19,19 @@ Use `./gradlew shadowJar -PmacJavaFxPlatform=mac` for Intel macOS or
 These commands overwrite the same output JAR, so copy it before building another variant.
 Other architectures require matching native libraries.
 
-Application source and a launcher have not been added yet. The Fat JAR currently
-packages dependencies only and is not runnable. When implementing the GUI, add
-sources under `src/main/java` and resources under `src/main/resources`, apply the
-Gradle `application` plugin, and configure its `mainClass` to a launcher that does
-not extend JavaFX `Application`, as described in the guide.
+## Current implementation and roadmap
+
+`src/main/java/Launcher.java` starts the JavaFX `Main` application. The Gradle
+`application` plugin uses `Launcher` as its main class, and the application still
+shows the Hello World demonstration screen. Use `./gradlew run` to launch it.
+
+The core domain and SLICE-001 SQLite foundation exist under `clubstock.domain`,
+`clubstock.application` and `clubstock.infrastructure`. Persistence tests use temporary
+databases. The demonstration UI does not yet compose those services or open an
+application database; authentication and feature screens are planned work.
+
+Follow the [parallel implementation roadmap](plans/parallel-role-implementation.md)
+for ownership and delivery. The [shared application design](plans/shared-application-design.md)
+defines the planned data directory, authentication, evidence storage and packaging
+verification. Those future startup and `--verify-install` behaviors must not be treated
+as available until implemented. Update this guide as the real shell and features land.
