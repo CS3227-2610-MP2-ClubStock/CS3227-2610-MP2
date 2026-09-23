@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Instant;
+
 import org.junit.jupiter.api.Test;
 
 class MemberTest {
@@ -85,6 +87,29 @@ class MemberTest {
 
         assertThrows(IllegalArgumentException.class, () -> member.replacePasswordHash(null));
         assertSame(originalHash, member.passwordHash());
+    }
+
+    @Test
+    void restore_inactiveAccount_preservesRemovalState() {
+        Instant removedAt = Instant.parse("2026-09-22T10:15:30Z");
+
+        Member member = Member.restore(new MemberId("member-1"), "Member One",
+                new PasswordHash("hash-1"), false, removedAt);
+
+        assertEquals(false, member.isActive());
+        assertEquals(removedAt, member.removedAt().orElseThrow());
+    }
+
+    @Test
+    void deactivate_activeAccount_recordsInstantAndRejectsRepeat() {
+        Member member = Member.create(new MemberId("member-1"), "Member One",
+                new PasswordHash("hash-1"));
+        Instant removedAt = Instant.parse("2026-09-22T10:15:30Z");
+
+        member.deactivate(removedAt);
+
+        assertThrows(IllegalStateException.class, () -> member.deactivate(removedAt.plusSeconds(1)));
+        assertEquals(removedAt, member.removedAt().orElseThrow());
     }
 
     @Test

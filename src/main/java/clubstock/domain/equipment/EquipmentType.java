@@ -28,6 +28,21 @@ public final class EquipmentType {
     }
 
     /**
+     * Restores an equipment type from persisted state.
+     *
+     * @param equipmentTypeId Stable equipment category identity.
+     * @param name Persisted display name.
+     * @param isOffered Whether Members can browse and request the type.
+     * @return Restored equipment type.
+     */
+    public static EquipmentType restore(EquipmentTypeId equipmentTypeId, EquipmentTypeName name,
+            boolean isOffered) {
+        EquipmentType type = new EquipmentType(equipmentTypeId, name);
+        type.offered = isOffered;
+        return type;
+    }
+
+    /**
      * Returns this equipment type's immutable identity.
      *
      * @return Equipment category identity.

@@ -76,6 +76,55 @@ public final class LoanRequest {
     }
 
     /**
+     * Restores a request from persisted state without recording a new submission time.
+     *
+     * @param loanRequestId Stable request identity.
+     * @param memberId Requesting Member identity.
+     * @param equipmentTypeId Requested equipment type identity.
+     * @param requestedQuantity Original requested quantity.
+     * @param requestedStartDate Informational start date.
+     * @param requestedEndDate Requested end date.
+     * @param details Persisted optional details.
+     * @param requestedAt Original submission instant.
+     * @param status Persisted lifecycle status.
+     * @param approvedQuantity Persisted approved quantity, or null when not approved.
+     * @return Restored request.
+     * @throws IllegalArgumentException If persisted state is invalid.
+     */
+    public static LoanRequest restore(LoanRequestId loanRequestId, MemberId memberId,
+            EquipmentTypeId equipmentTypeId, int requestedQuantity, LocalDate requestedStartDate,
+            LocalDate requestedEndDate, String details, Instant requestedAt,
+            LoanRequestStatus status, Integer approvedQuantity) throws IllegalArgumentException {
+        RequestValidation.requireNonNull(requestedAt, "Requested at");
+        RequestValidation.requireNonNull(status, "Loan request status");
+        LoanRequest request = submit(loanRequestId, memberId, equipmentTypeId, requestedQuantity,
+                requestedStartDate, requestedEndDate, details,
+                Clock.fixed(requestedAt, java.time.ZoneOffset.UTC));
+        request.status = status;
+        request.approvedQuantity = approvedQuantity;
+        request.validateRestoredApprovalState();
+        return request;
+    }
+
+    /**
+     * Validates the persisted relationship between request status and approved quantity.
+     *
+     * @throws IllegalArgumentException If the relationship is invalid.
+     */
+    private void validateRestoredApprovalState() throws IllegalArgumentException {
+        boolean hasApprovedQuantity = approvedQuantity != null;
+        if (status == LoanRequestStatus.APPROVED) {
+            if (!hasApprovedQuantity || approvedQuantity <= 0
+                    || approvedQuantity > requestedQuantity) {
+                throw new IllegalArgumentException("Approved request state is inconsistent.");
+            }
+        } else if (hasApprovedQuantity) {
+            throw new IllegalArgumentException(
+                    "Only an approved request may have an approved quantity.");
+        }
+    }
+
+    /**
      * Returns this request's immutable identity.
      *
      * @return Loan request identity.

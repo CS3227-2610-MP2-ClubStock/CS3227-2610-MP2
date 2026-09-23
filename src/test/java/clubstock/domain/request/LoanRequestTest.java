@@ -44,6 +44,25 @@ class LoanRequestTest {
     }
 
     @Test
+    void restore_approvedRequest_preservesOriginalTimestampAndQuantity() {
+        LoanRequest request = LoanRequest.restore(new LoanRequestId("request-1"), MEMBER_ID,
+                EQUIPMENT_TYPE_ID, 3, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 3),
+                "Details", REQUESTED_AT, LoanRequestStatus.APPROVED, 2);
+
+        assertEquals(REQUESTED_AT, request.requestedAt());
+        assertEquals(LoanRequestStatus.APPROVED, request.status());
+        assertEquals(2, request.approvedQuantity().orElseThrow());
+    }
+
+    @Test
+    void restore_nonApprovedRequestWithQuantity_rejectsInconsistentState() {
+        assertThrows(IllegalArgumentException.class, () -> LoanRequest.restore(
+                new LoanRequestId("request-1"), MEMBER_ID, EQUIPMENT_TYPE_ID, 3,
+                LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 3), null, REQUESTED_AT,
+                LoanRequestStatus.PENDING, 1));
+    }
+
+    @Test
     void submit_pastAndSameDayDates_areAccepted() {
         LoanRequest pastRequest = submitRequest(LocalDate.of(2025, 12, 1),
                 LocalDate.of(2025, 12, 2), "details");

@@ -194,3 +194,46 @@
   queue fields with duplicate-looking-request coverage, and to delete finalized evidence only
   after confirmed rollback or confirmed absence of a committed reference while retaining
   ambiguous outcomes for startup reconciliation.
+
+## 2026-09-23 — SLICE-001 shared persistence foundation
+
+- Requested assessment and implementation of SLICE-001 from
+  `docs/plans/shared-backend-javafx-foundation.md`, guided by `clubstock-feature`; clarified the
+  initial scope as a foundation-only persistence layer with repository contracts deferred to the
+  relevant workflow slices.
+- Implemented the SQLite persistence foundation, application error/transaction contracts,
+  versioned schema and migrations, repository ports, UUID generation, integrity validation,
+  rollback-outcome handling, and domain restoration/soft-removal APIs. Affected `build.gradle`,
+  `src/main/java/clubstock/{application,domain,infrastructure}/`, and
+  `src/main/resources/clubstock/infrastructure/sqlite/migration/`.
+- Added persistence and domain integration tests covering round-trips, restart, constraints,
+  rollback, invalid/future schemas, duplicate identities, and ambiguous commit outcomes. Gradle
+  test/build/Javadoc/shadow-JAR verification passed (with only the existing default-package
+  `Launcher`/`Main` Javadoc warnings), and `git diff --check` passed.
+- Requested a code review of the SLICE-001 diff guided by `clubstock-verify`. Found gaps in
+  cross-record Loan/request/item consistency, startup validation of malformed rows, and report
+  branch validation; fixed them in `SqliteDatabase.java`, `SqliteUnitOfWork.java`,
+  `SqliteIntegrityChecker.java`, and the V001 SQLite migration. `./gradlew classes` and
+  `./gradlew shadowJar` passed; tests were not run.
+- Requested fixes for the SLICE-001 review findings. Prevented deletion of offered equipment
+  types and made SQLite read transactions reject writes. Expanded
+  `SqliteFoundationTest.java` to cover these cases, lifecycle round-trips, multi-table rollback,
+  folded-name and foreign-key constraints, report constraints, and malformed/read-only databases.
+  Updated `SqliteDatabase.java`, `SqliteUnitOfWork.java`, `EquipmentTypeRepository.java`, and
+  `SqliteFoundationTest.java`; the full `./gradlew test` suite passed.
+- Requested that the SLICE-001 review fixes be logged under Keith. Changed startup to seed the
+  singleton Exco account only for a fresh database and to reject unversioned databases with an
+  existing schema, while retaining the startup write-access check. Unexpected callback failures
+  now report rollback outcomes. Added regression coverage in `SqliteFoundationTest.java`. Updated
+  `SchemaMigrator.java`, `SqliteDatabase.java`, `SqliteFoundationTest.java`, and this log; focused
+  SQLite tests and the full test suite passed.
+- Requested fixes for the SLICE-001 code-review findings: permit retirement of available items,
+  preserve transaction outcome after connection-close failure, and reject malformed numeric rows.
+  Updated `EquipmentItem.java`, `TransactionOutcome.java`, `TransactionManager.java`,
+  `SqliteDatabase.java`, and `SqliteUnitOfWork.java`; added regression tests in
+  `EquipmentItemTest.java` and `SqliteFoundationTest.java`. `./gradlew build` passed with 123
+  tests and `git diff --check` passed.
+
+## 2026-09-23 — SLICE-001 integrity review fixes
+
+- Requested fixes for the SLICE-001 review findings. Added commit-time and startup checks that reject duplicate Loans for the same request/item and inactive Members with pending requests or unresolved Loans. Added regression coverage for rollback, persisted invalid states, resolved-history removal, and valid item reuse across requests. Updated `SqliteIntegrityChecker.java`, `SqliteFoundationTest.java`, and this log. All 140 tests passed; build, Javadoc, shadow-JAR packaging, and `git diff --check` passed.

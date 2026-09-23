@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Instant;
+
 import org.junit.jupiter.api.Test;
 
 class EquipmentItemTest {
@@ -117,6 +119,65 @@ class EquipmentItemTest {
         assertThrows(IllegalStateException.class, item::confirmLost);
         assertEquals(EquipmentCondition.GOOD, item.condition());
         assertEquals(EquipmentAvailability.AVAILABLE, item.availability());
+    }
+
+    @Test
+    void restore_retiredUnavailableItem_preservesRemovalState() {
+        Instant retiredAt = Instant.parse("2026-09-22T10:15:30Z");
+
+        EquipmentItem item = EquipmentItem.restore(new EquipmentId("item-1"),
+                new EquipmentTypeId("type-1"), EquipmentCondition.GOOD,
+                EquipmentAvailability.UNAVAILABLE, false, true, retiredAt);
+
+        assertEquals(true, item.isRetired());
+        assertEquals(retiredAt, item.retiredAt().orElseThrow());
+        assertThrows(IllegalStateException.class, item::release);
+    }
+
+    @Test
+    void retire_availableItem_makesUnavailableAndPreservesCondition() {
+        EquipmentItem item = createItem("item-1");
+        item.release();
+        Instant retiredAt = Instant.parse("2026-09-22T10:15:30Z");
+
+        item.retire(retiredAt);
+
+        assertEquals(EquipmentAvailability.UNAVAILABLE, item.availability());
+        assertEquals(EquipmentCondition.GOOD, item.condition());
+        assertEquals(true, item.isRetired());
+        assertEquals(retiredAt, item.retiredAt().orElseThrow());
+        assertThrows(IllegalStateException.class, () -> item.retire(retiredAt));
+        assertThrows(IllegalStateException.class, item::release);
+    }
+
+    @Test
+    void retire_unresolvedItem_rejectsWithoutMutation() {
+        EquipmentItem item = createItem("item-1");
+        item.release();
+        item.allocate();
+        Instant retiredAt = Instant.parse("2026-09-22T10:15:30Z");
+
+        assertThrows(IllegalStateException.class, () -> item.retire(retiredAt));
+        assertEquals(EquipmentAvailability.ON_LOAN, item.availability());
+        assertEquals(false, item.isRetired());
+        assertEquals(true, item.retiredAt().isEmpty());
+
+        item.holdForVerification();
+        assertThrows(IllegalStateException.class, () -> item.retire(retiredAt));
+        assertEquals(EquipmentAvailability.UNAVAILABLE, item.availability());
+        assertEquals(true, item.isVerificationPending());
+        assertEquals(false, item.isRetired());
+        assertEquals(true, item.retiredAt().isEmpty());
+    }
+
+    @Test
+    void retire_nullInstant_preservesAvailableState() {
+        EquipmentItem item = createItem("item-1");
+        item.release();
+
+        assertThrows(IllegalArgumentException.class, () -> item.retire(null));
+        assertEquals(EquipmentAvailability.AVAILABLE, item.availability());
+        assertEquals(false, item.isRetired());
     }
 
     @Test
