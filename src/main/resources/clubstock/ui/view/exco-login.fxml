@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/25"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="clubstock.ui.controller.ExcoLoginController"
+           styleClass="app-background">
+    <padding>
+        <Insets top="36" right="36" bottom="36" left="36"/>
+    </padding>
+    <VBox alignment="CENTER_LEFT" maxWidth="520" spacing="14" styleClass="surface-card">
+        <children>
+            <Label text="EXCO ACCESS" styleClass="eyebrow"/>
+            <Label text="Welcome back" styleClass="screen-title"/>
+            <Label text="Sign in to manage ClubStock equipment and loan workflows."
+                   styleClass="supporting-text" wrapText="true"/>
+            <Label text="_Password" mnemonicParsing="true" labelFor="$passwordField"
+                   styleClass="field-label"/>
+            <PasswordField fx:id="passwordField" promptText="Enter the Exco password"/>
+            <Label fx:id="errorLabel" accessibleRoleDescription="Sign-in error"
+                   minHeight="24" styleClass="error-text" wrapText="true"/>
+            <HBox spacing="12">
+                <children>
+                    <Button text="_Sign in" mnemonicParsing="true" defaultButton="true"
+                            onAction="#login" styleClass="primary-button"/>
+                    <Button text="_Back" mnemonicParsing="true" cancelButton="true"
+                            onAction="#goBack" styleClass="secondary-button"/>
+                </children>
+            </HBox>
+        </children>
+    </VBox>
+</StackPane>
