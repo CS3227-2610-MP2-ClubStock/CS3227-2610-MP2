@@ -244,3 +244,18 @@
 - Requested `$plan-to-docs` issue replacement. Created issues #23–#36 with behavior scopes, ownership, milestones, interface/fixture prerequisites, integration criteria, test scenarios and traceability in `docs/plans/parallel-role-implementation.md`. Closed #13–#20 as superseded/not planned with successor links; preserved closed SLICE-001 issue #12. Applied existing `enhancement` labels and `documentation` to #36; left GitHub assignee/milestone fields unset.
 - Requested `$commit`. Committed the roadmap and supporting documentation changes as `40b1ceb` (`docs: replace sequential foundation with parallel roadmap`).
 - Requested a summary of this chat for Keith; appended this entry to `logs/keith/keith-log-temp.md`.
+
+## 2026-09-24 — Issue #23 authentication and Member login
+
+- Requested implementation of issue #23 from SLICE-001 of `docs/plans/parallel-role-implementation.md`, with the shared application requirements checked, and asked for login-related requests in PR #39 to be reviewed without merging that PR into the current branch. Reviewed the PR context and implemented on `feature/23-authentication-sessions-member-login`, based on the reviewed PR head.
+- Added shared account authentication and role sessions, PBKDF2 password hashing, one-time Exco setup/login, Member sign-in, logout and UI wiring. Updated `ApplicationContext`, Member login FXML/controller, the UI authentication gateway and `docs/DeveloperGuide.md`; added authentication and UI tests and removed the temporary ServiceLoader/fallback wiring. Changes covered 24 files under `src/main`, `src/test`, and `docs/DeveloperGuide.md`.
+- `./gradlew test shadowJar` and `git diff --check` passed. Requested `$commit`; grouped implementation, tests, and documentation into `f25c781` (`feat: add account authentication and Member login`).
+
+## 2026-09-24 — JavaFX authentication UI review fixes
+
+- Requested a review of the current diff against `origin/master`, noting JavaFX CSS warnings for unsupported `-fx-font-weight` values in `clubstock.css`. Asked to identify the affected files before implementing each fix.
+- Implemented the denied-navigation session reset in `JavaFxNavigator.java`, then committed it as `9903896` (`fix: clear session after denied navigation`).
+- Requested the second fix after committing the previous change. Corrected the role-shell style class declarations in `exco-home.fxml` and `member-home.fxml`; committed as `9d93209` (`fix: apply role shell styles`).
+- Requested review of the prior fix and a file plan for the next iteration, then asked to commit and implement it. Replaced unsupported font weights in `clubstock.css` with supported values; committed as `3dce296` (`fix: use supported JavaFX font weights`).
+- Requested review of that change and a plan for the next iteration, then asked for implementation. Changed the root font family in `clubstock.css` to a portable JavaFX family. The packaged CSS parser reported zero stylesheet errors, `./gradlew shadowJar` and `git diff --check` passed, and the user visually inspected the result. Committed as `97bad7d` (`fix: use a portable JavaFX font family`).
+- Requested that the prompts in this chat be logged and the log changes committed. Grouped the authentication implementation summary and this review history in a documentation commit containing `logs/keith/keith-log-temp.md` only.
