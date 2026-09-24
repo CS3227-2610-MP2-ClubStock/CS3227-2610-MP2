@@ -18,6 +18,9 @@ public enum Route {
     MEMBER_LOGIN("/clubstock/ui/view/member-login.fxml", "Member sign in", null),
     /** Exco-protected shell. */
     EXCO_HOME("/clubstock/ui/view/exco-home.fxml", "Exco home", UserRole.EXCO),
+    /** Exco-protected Member-account administration screen. */
+    MEMBER_ADMINISTRATION("/clubstock/ui/view/member-administration.fxml",
+            "Manage Members", UserRole.EXCO),
     /** Member-protected shell. */
     MEMBER_HOME("/clubstock/ui/view/member-home.fxml", "Member home", UserRole.MEMBER);
 

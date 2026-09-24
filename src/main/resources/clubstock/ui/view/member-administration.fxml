@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="clubstock.ui.controller.MemberAdministrationController"
+            styleClass="role-shell, exco-shell">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="shell-bar">
+            <padding>
+                <Insets top="16" right="24" bottom="16" left="24"/>
+            </padding>
+            <children>
+                <VBox HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="ClubStock" styleClass="shell-brand"/>
+                        <Label text="EXCO · MEMBER ADMINISTRATION" styleClass="shell-role"/>
+                    </children>
+                </VBox>
+                <Button text="_Back to workspace" mnemonicParsing="true" onAction="#goBack"
+                        styleClass="secondary-button"/>
+            </children>
+        </HBox>
+    </top>
+    <center>
+        <VBox maxWidth="1080" spacing="18" styleClass="admin-content">
+            <padding>
+                <Insets top="24" right="32" bottom="32" left="32"/>
+            </padding>
+            <children>
+                <VBox spacing="6">
+                    <children>
+                        <Label text="Manage Member accounts" styleClass="screen-title"/>
+                        <Label text="Create, update, reset passwords, or safely remove Member accounts. Removed accounts stay recorded and cannot sign in."
+                               styleClass="supporting-text" wrapText="true"/>
+                    </children>
+                </VBox>
+                <TableView fx:id="membersTable" prefHeight="220" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="memberIdColumn" prefWidth="210" text="Member ID"/>
+                        <TableColumn fx:id="memberNameColumn" prefWidth="300" text="Name"/>
+                        <TableColumn fx:id="memberStatusColumn" prefWidth="140" text="Status"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="No Member accounts have been created."/>
+                    </placeholder>
+                </TableView>
+                <Button text="_Refresh list" mnemonicParsing="true" onAction="#refreshMembers"
+                        styleClass="secondary-button"/>
+                <Separator/>
+                <GridPane hgap="28" vgap="16">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                    </columnConstraints>
+                    <children>
+                        <VBox spacing="10" GridPane.columnIndex="0">
+                            <children>
+                                <Label text="Create Member" styleClass="section-title"/>
+                                <Label text="Member ID" styleClass="field-label"/>
+                                <TextField fx:id="newMemberIdField" promptText="e.g. member-001"/>
+                                <Label text="Member name" styleClass="field-label"/>
+                                <TextField fx:id="newMemberNameField" promptText="Full name"/>
+                                <Label text="Initial password" styleClass="field-label"/>
+                                <PasswordField fx:id="newMemberPasswordField" promptText="At least 8 characters"/>
+                                <Button text="_Create Member" mnemonicParsing="true" onAction="#createMember"
+                                        styleClass="primary-button"/>
+                            </children>
+                        </VBox>
+                        <VBox spacing="10" GridPane.columnIndex="1">
+                            <children>
+                                <Label text="Selected Member" styleClass="section-title"/>
+                                <Label fx:id="selectedMemberLabel" text="No Member selected"
+                                       styleClass="selected-member-id"/>
+                                <Label text="Member name" styleClass="field-label"/>
+                                <TextField fx:id="selectedMemberNameField" promptText="Select a Member first"/>
+                                <Button text="_Save name" mnemonicParsing="true" onAction="#saveName"
+                                        styleClass="secondary-button"/>
+                                <Label text="Replacement password" styleClass="field-label"/>
+                                <PasswordField fx:id="replacementPasswordField" promptText="At least 8 characters"/>
+                                <Button text="Replace _password" mnemonicParsing="true" onAction="#replacePassword"
+                                        styleClass="secondary-button"/>
+                                <CheckBox fx:id="deactivateConfirmation"
+                                          text="I understand this prevents the Member from signing in." wrapText="true"/>
+                                <Button text="_Remove Member" mnemonicParsing="true" onAction="#deactivateMember"
+                                        styleClass="danger-button"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </GridPane>
+                <Label fx:id="statusLabel" styleClass="error-text" wrapText="true"/>
+            </children>
+        </VBox>
+    </center>
+</BorderPane>

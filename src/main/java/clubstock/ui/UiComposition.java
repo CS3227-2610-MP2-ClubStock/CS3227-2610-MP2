@@ -1,5 +1,6 @@
 package clubstock.ui;
 
+import clubstock.application.member.MemberAccountService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
@@ -10,6 +11,7 @@ import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
+import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.ControllerFactory;
 import clubstock.ui.navigation.FxmlViewLoader;
@@ -29,11 +31,12 @@ public final class UiComposition {
      *
      * @param stage Primary stage.
      * @param authentication Authentication/session boundary.
+     * @param memberAccountService Exco Member-account administration service.
      * @return Configured navigator.
      */
     public static JavaFxNavigator createNavigator(Stage stage,
-            AuthenticationGateway authentication) {
-        if (stage == null || authentication == null) {
+            AuthenticationGateway authentication, MemberAccountService memberAccountService) {
+        if (stage == null || authentication == null || memberAccountService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -57,7 +60,9 @@ public final class UiComposition {
         controllerFactory.register(MemberLoginController.class,
                 () -> new MemberLoginController(memberAction, navigator));
         controllerFactory.register(ExcoHomeController.class,
-                () -> new ExcoHomeController(logoutAction));
+                () -> new ExcoHomeController(logoutAction, navigator));
+        controllerFactory.register(MemberAdministrationController.class,
+                () -> new MemberAdministrationController(memberAccountService, navigator));
         controllerFactory.register(MemberHomeController.class,
                 () -> new MemberHomeController(logoutAction));
         return navigator;

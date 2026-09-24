@@ -24,6 +24,7 @@ import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.MemberHomeController;
+import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberLoginController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.Route;
@@ -37,6 +38,7 @@ class FxmlResourceTest {
             Route.EXCO_LOGIN, ExcoLoginController.class,
             Route.MEMBER_LOGIN, MemberLoginController.class,
             Route.EXCO_HOME, ExcoHomeController.class,
+            Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class,
             Route.MEMBER_HOME, MemberHomeController.class);
 
     @Test
@@ -91,6 +93,23 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("onAction=\"#login\""));
         assertTrue(fxml.contains("onAction=\"#goBack\""));
         assertFalse(fxml.contains("not available in this build yet"));
+    }
+
+    @Test
+    void memberAdministrationRouteContainsSafeAccountControls() throws IOException {
+        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_ADMINISTRATION.resourcePath());
+        assertNotNull(resource);
+        String fxml;
+        try (InputStream stream = resource.openStream()) {
+            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        assertTrue(fxml.contains("fx:id=\"membersTable\""));
+        assertTrue(fxml.contains("fx:id=\"newMemberIdField\""));
+        assertTrue(fxml.contains("fx:id=\"newMemberPasswordField\""));
+        assertTrue(fxml.contains("onAction=\"#deactivateMember\""));
+        assertTrue(fxml.contains("deactivateConfirmation"));
+        assertFalse(fxml.contains("passwordHash"));
     }
 
     private static void assertCredentialLabelBindings(Route route, String labelId,

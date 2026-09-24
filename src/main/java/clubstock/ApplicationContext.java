@@ -9,6 +9,7 @@ import clubstock.application.ApplicationException;
 import clubstock.application.auth.AuthenticationService;
 import clubstock.application.auth.Pbkdf2PasswordHasher;
 import clubstock.application.auth.SessionManager;
+import clubstock.application.member.MemberAccountService;
 import clubstock.application.port.TransactionManager;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
 import clubstock.ui.auth.AuthenticationGateway;
@@ -26,16 +27,18 @@ public final class ApplicationContext {
     private final TransactionManager transactionManager;
     private final SessionManager sessionManager;
     private final AuthenticationGateway authentication;
+    private final MemberAccountService memberAccountService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
-            AuthenticationGateway authentication) {
+            AuthenticationGateway authentication, MemberAccountService memberAccountService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
         this.transactionManager = transactionManager;
         this.sessionManager = sessionManager;
         this.authentication = authentication;
+        this.memberAccountService = memberAccountService;
     }
 
     /**
@@ -62,12 +65,16 @@ public final class ApplicationContext {
         Path normalizedDirectory = dataDirectory.toAbsolutePath().normalize();
         SqliteDatabase database = initializeDatabase(normalizedDirectory);
         SessionManager sessionManager = new SessionManager();
+        Pbkdf2PasswordHasher passwordHasher = new Pbkdf2PasswordHasher();
         AuthenticationService authenticationService = new AuthenticationService(database,
-                new Pbkdf2PasswordHasher(), sessionManager);
+                passwordHasher, sessionManager);
         AuthenticationGateway authentication = new AuthenticationGatewayAdapter(
                 authenticationService);
-        return new ApplicationContext(normalizedDirectory, Clock.systemDefaultZone(),
-                ZoneId.systemDefault(), database, sessionManager, authentication);
+        Clock clock = Clock.systemDefaultZone();
+        MemberAccountService memberAccountService = new MemberAccountService(database, sessionManager,
+                passwordHasher, clock);
+        return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
+                sessionManager, authentication, memberAccountService);
     }
 
     /**
@@ -122,6 +129,15 @@ public final class ApplicationContext {
      */
     public SessionManager sessionManager() {
         return sessionManager;
+    }
+
+    /**
+     * Returns the Exco Member-account administration service.
+     *
+     * @return Shared Member-account administration service.
+     */
+    public MemberAccountService memberAccountService() {
+        return memberAccountService;
     }
 
     private static Path resolveDataDirectory() {

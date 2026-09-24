@@ -98,6 +98,35 @@
     -fx-text-fill: #a12626;
 }
 
+.success-text {
+    -fx-font-weight: 600;
+    -fx-text-fill: #176b4d;
+}
+
+.admin-content {
+    -fx-background-color: transparent;
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #172033;
+}
+
+.selected-member-id {
+    -fx-font-weight: 700;
+    -fx-text-fill: #315a9a;
+}
+
+.danger-button {
+    -fx-background-color: #a12626;
+    -fx-text-fill: white;
+}
+
+.danger-button:hover {
+    -fx-background-color: #861d1d;
+}
+
 .role-shell {
     -fx-background-color: #f3f6fb;
 }
