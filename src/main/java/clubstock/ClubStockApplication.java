@@ -30,7 +30,7 @@ public final class ClubStockApplication extends Application {
             JavaFxNavigator navigator = UiComposition.createNavigator(stage,
                     applicationContext.authentication(), applicationContext.memberAccountService(),
                     applicationContext.inventoryService(), applicationContext.memberCatalogService(),
-                    applicationContext.excoRequestService());
+                    applicationContext.excoRequestService(), applicationContext.approvalService());
             navigator.show(Route.ROLE_SELECTION);
             stage.show();
         } catch (RuntimeException exception) {

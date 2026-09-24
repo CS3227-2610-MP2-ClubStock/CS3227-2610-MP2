@@ -15,6 +15,7 @@ import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.request.ExcoRequestService;
+import clubstock.application.request.ApprovalService;
 import clubstock.application.port.TransactionManager;
 import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
@@ -38,12 +39,14 @@ public final class ApplicationContext {
     private final InventoryService inventoryService;
     private final MemberCatalogService memberCatalogService;
     private final ExcoRequestService excoRequestService;
+    private final ApprovalService approvalService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
-            MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService) {
+            MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService,
+            ApprovalService approvalService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -55,6 +58,7 @@ public final class ApplicationContext {
         this.inventoryService = inventoryService;
         this.memberCatalogService = memberCatalogService;
         this.excoRequestService = excoRequestService;
+        this.approvalService = approvalService;
     }
 
     /**
@@ -95,9 +99,11 @@ public final class ApplicationContext {
                 sessionManager, availabilityPolicy);
         ExcoRequestService excoRequestService = new ExcoRequestService(database, sessionManager,
                 availabilityPolicy);
+        ApprovalService approvalService = new ApprovalService(database, sessionManager,
+                availabilityPolicy, new UuidIdGenerator(), clock);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
-                inventoryService, memberCatalogService, excoRequestService);
+                inventoryService, memberCatalogService, excoRequestService, approvalService);
     }
 
     /**
@@ -197,6 +203,11 @@ public final class ApplicationContext {
      */
     public ExcoRequestService excoRequestService() {
         return excoRequestService;
+    }
+
+    /** Returns the Exco request-approval and item-allocation service. */
+    public ApprovalService approvalService() {
+        return approvalService;
     }
 
     private static Path resolveDataDirectory() {

@@ -146,6 +146,8 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("fx:id=\"availableQuantityColumn\""));
         assertTrue(fxml.contains("fx:id=\"detailsColumn\""));
         assertTrue(fxml.contains("fx:id=\"emptyQueueLabel\""));
+        assertTrue(fxml.contains("fx:id=\"approveRequestButton\""));
+        assertTrue(fxml.contains("onAction=\"#approveSelectedRequest\""));
         assertTrue(fxml.contains("onAction=\"#rejectSelectedRequest\""));
         assertTrue(fxml.contains("onAction=\"#refreshRequests\""));
         assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));

@@ -7,6 +7,8 @@ import java.util.List;
 import clubstock.application.ApplicationException;
 import clubstock.application.request.ExcoPendingRequest;
 import clubstock.application.request.ExcoRequestService;
+import clubstock.application.request.ApprovalService;
+import clubstock.application.request.ApprovalSelection;
 import clubstock.application.request.PendingRequestSelection;
 import clubstock.ui.navigation.NavigationService;
 import clubstock.ui.navigation.Route;
@@ -21,6 +23,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
@@ -31,6 +35,7 @@ public final class ExcoRequestQueueController {
     private static final String UNEXPECTED_ERROR =
             "Pending-request administration could not be completed. Please try again.";
     private final ExcoRequestService excoRequestService;
+    private final ApprovalService approvalService;
     private final NavigationService navigation;
     @FXML
     private TableView<ExcoPendingRequest> requestsTable;
@@ -55,6 +60,8 @@ public final class ExcoRequestQueueController {
     @FXML
     private Button rejectRequestButton;
     @FXML
+    private Button approveRequestButton;
+    @FXML
     private Label emptyQueueLabel;
     @FXML
     private Label statusLabel;
@@ -67,11 +74,12 @@ public final class ExcoRequestQueueController {
      * @param navigation Navigation boundary.
      */
     public ExcoRequestQueueController(ExcoRequestService excoRequestService,
-            NavigationService navigation) {
-        if (excoRequestService == null || navigation == null) {
+            ApprovalService approvalService, NavigationService navigation) {
+        if (excoRequestService == null || approvalService == null || navigation == null) {
             throw new IllegalArgumentException("Exco request queue dependencies cannot be null.");
         }
         this.excoRequestService = excoRequestService;
+        this.approvalService = approvalService;
         this.navigation = navigation;
     }
 
@@ -102,6 +110,7 @@ public final class ExcoRequestQueueController {
         requestsTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, previous, current) -> selectRequest(current));
         rejectRequestButton.setDisable(true);
+        approveRequestButton.setDisable(true);
         refreshQueue();
     }
 
@@ -124,6 +133,41 @@ public final class ExcoRequestQueueController {
                 reject(new PendingRequestSelection(selectedRequest.loanRequestId())));
     }
 
+    /** Opens explicit available-equipment selection for the chosen pending request. */
+    @FXML
+    private void approveSelectedRequest() {
+        if (selectedRequest == null) {
+            showError("Select a pending request first.");
+            return;
+        }
+        try {
+            List<String> availableIds = approvalService.listAvailableEquipmentIds(
+                    selectedRequest.loanRequestId());
+            if (availableIds.isEmpty()) {
+                showError("No available items can be selected for this request.");
+                return;
+            }
+            ListView<String> items = new ListView<>(FXCollections.observableArrayList(availableIds));
+            items.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            items.setPrefHeight(220.0);
+            Alert dialog = new Alert(AlertType.CONFIRMATION);
+            ButtonType approve = new ButtonType("Approve selected items", ButtonData.OK_DONE);
+            dialog.setTitle("Approve LoanRequest");
+            dialog.setHeaderText("Select up to " + selectedRequest.requestedQuantity()
+                    + " available item(s)");
+            dialog.setContentText("The request closes after approval, including partial approval.");
+            dialog.getDialogPane().setContent(items);
+            dialog.getButtonTypes().setAll(ButtonType.CANCEL, approve);
+            dialog.showAndWait().filter(response -> response == approve).ifPresent(response ->
+                    approve(new ApprovalSelection(selectedRequest.loanRequestId(),
+                            List.copyOf(items.getSelectionModel().getSelectedItems()))));
+        } catch (ApplicationException exception) {
+            showError(exception.displayMessage());
+        } catch (RuntimeException exception) {
+            showError(UNEXPECTED_ERROR);
+        }
+    }
+
     /**
      * Reloads the pending-request queue from shared state.
      */
@@ -140,6 +184,7 @@ public final class ExcoRequestQueueController {
             emptyQueueLabel.setManaged(requests.isEmpty());
             selectedRequest = null;
             rejectRequestButton.setDisable(true);
+            approveRequestButton.setDisable(true);
             clearStatus();
             return true;
         } catch (ApplicationException exception) {
@@ -172,9 +217,23 @@ public final class ExcoRequestQueueController {
         }
     }
 
+    private void approve(ApprovalSelection selection) {
+        try {
+            approvalService.approve(selection);
+            if (refreshQueue()) {
+                showSuccess("LoanRequest approved and equipment allocated.");
+            }
+        } catch (ApplicationException exception) {
+            showError(exception.displayMessage());
+        } catch (RuntimeException exception) {
+            showError(UNEXPECTED_ERROR);
+        }
+    }
+
     private void selectRequest(ExcoPendingRequest request) {
         selectedRequest = request;
         rejectRequestButton.setDisable(request == null);
+        approveRequestButton.setDisable(request == null);
     }
 
     private void showError(String message) {

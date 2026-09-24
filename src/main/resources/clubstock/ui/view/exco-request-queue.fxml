@@ -53,6 +53,9 @@
                         </columns>
                     </TableView>
                     <HBox alignment="CENTER_LEFT" spacing="12.0">
+                        <Button fx:id="approveRequestButton" mnemonicParsing="true"
+                                onAction="#approveSelectedRequest" styleClass="primary-button"
+                                text="_Approve selected request" />
                         <Button fx:id="rejectRequestButton" mnemonicParsing="true"
                                 onAction="#rejectSelectedRequest" styleClass="danger-button"
                                 text="_Reject selected request" />

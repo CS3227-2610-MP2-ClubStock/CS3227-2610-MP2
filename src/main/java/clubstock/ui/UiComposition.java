@@ -4,6 +4,7 @@ import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.request.ExcoRequestService;
+import clubstock.application.request.ApprovalService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
@@ -44,10 +45,10 @@ public final class UiComposition {
     public static JavaFxNavigator createNavigator(Stage stage,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             InventoryService inventoryService, MemberCatalogService memberCatalogService,
-            ExcoRequestService excoRequestService) {
+            ExcoRequestService excoRequestService, ApprovalService approvalService) {
         if (stage == null || authentication == null || memberAccountService == null
                 || inventoryService == null || memberCatalogService == null
-                || excoRequestService == null) {
+                || excoRequestService == null || approvalService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -77,7 +78,7 @@ public final class UiComposition {
         controllerFactory.register(InventoryAdministrationController.class,
                 () -> new InventoryAdministrationController(inventoryService, navigator));
         controllerFactory.register(ExcoRequestQueueController.class,
-                () -> new ExcoRequestQueueController(excoRequestService, navigator));
+                () -> new ExcoRequestQueueController(excoRequestService, approvalService, navigator));
         controllerFactory.register(MemberHomeController.class,
                 () -> new MemberHomeController(logoutAction, memberCatalogService));
         return navigator;
