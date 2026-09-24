@@ -52,5 +52,5 @@ tasks.named('shadowJar') {
 }
 
 application {
-    mainClass.set("Launcher")
+    mainClass.set("clubstock.Launcher")
 }

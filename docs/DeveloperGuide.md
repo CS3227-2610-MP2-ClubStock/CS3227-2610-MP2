@@ -21,17 +21,23 @@ Other architectures require matching native libraries.
 
 ## Current implementation and roadmap
 
-`src/main/java/Launcher.java` starts the JavaFX `Main` application. The Gradle
-`application` plugin uses `Launcher` as its main class, and the application still
-shows the Hello World demonstration screen. Use `./gradlew run` to launch it.
+`src/main/java/clubstock/Launcher.java` starts `ClubStockApplication` from a separate,
+non-`Application` main class. The Gradle `application` plugin uses `clubstock.Launcher`
+as its main class. Use `./gradlew run` to launch it.
 
 The core domain and SLICE-001 SQLite foundation exist under `clubstock.domain`,
 `clubstock.application` and `clubstock.infrastructure`. Persistence tests use temporary
-databases. The demonstration UI does not yet compose those services or open an
-application database; authentication and feature screens are planned work.
+databases. The FXML shell now initializes `clubstock.db` under `${user.home}/.clubstock`,
+or the directory selected by the `clubstock.dataDir` system property, and provides role
+selection, Exco setup/login views, guarded role hosts, logout wiring and shared CSS.
+
+The shell consumes authentication through `AuthenticationGateway`. Until Keith's shared
+authentication/session implementation and Member-login view are integrated, startup uses a safe
+unavailable adapter: the shell can be inspected, but real Exco or Member authentication is not yet
+available. The Member-login FXML is an explicit non-authenticating integration placeholder.
 
 Follow the [parallel implementation roadmap](plans/parallel-role-implementation.md)
 for ownership and delivery. The [shared application design](plans/shared-application-design.md)
-defines the planned data directory, authentication, evidence storage and packaging
-verification. Those future startup and `--verify-install` behaviors must not be treated
-as available until implemented. Update this guide as the real shell and features land.
+defines authentication, evidence storage and packaging verification. The noninteractive
+`--verify-install` mode and comprehensive cross-platform packaging checks remain future work and
+must not be treated as available until implemented.

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="clubstock.ui.controller.ExcoHomeController"
+            styleClass="role-shell, exco-shell">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="shell-bar">
+            <padding>
+                <Insets top="16" right="24" bottom="16" left="24"/>
+            </padding>
+            <children>
+                <VBox HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="ClubStock" styleClass="shell-brand"/>
+                        <Label text="EXCO WORKSPACE" styleClass="shell-role"/>
+                    </children>
+                </VBox>
+                <Button text="_Log out" mnemonicParsing="true" onAction="#logout"
+                        styleClass="secondary-button"/>
+            </children>
+        </HBox>
+    </top>
+    <center>
+        <StackPane fx:id="contentHost" styleClass="content-host">
+            <padding>
+                <Insets top="32" right="32" bottom="32" left="32"/>
+            </padding>
+            <children>
+                <VBox alignment="CENTER_LEFT" maxWidth="720" spacing="12" styleClass="surface-card">
+                    <children>
+                        <Label text="Exco home" styleClass="screen-title"/>
+                        <Label text="You are signed in with the Exco role. Member administration, inventory, requests, loans, and verification screens will appear in this workspace as their milestones are completed."
+                               styleClass="supporting-text" wrapText="true"/>
+                    </children>
+                </VBox>
+            </children>
+        </StackPane>
+    </center>
+</BorderPane>

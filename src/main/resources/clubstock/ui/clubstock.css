@@ -1,0 +1,122 @@
+.root {
+    -fx-font-family: "Segoe UI", "Inter", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #172033;
+    -fx-focus-color: #1463ff;
+    -fx-faint-focus-color: rgba(20, 99, 255, 0.22);
+}
+
+.app-background,
+.content-host {
+    -fx-background-color: linear-gradient(to bottom right, #edf3ff, #f7f9fc 58%, #eef8f4);
+}
+
+.surface-card {
+    -fx-background-color: white;
+    -fx-background-radius: 18px;
+    -fx-border-color: #dce3ef;
+    -fx-border-radius: 18px;
+    -fx-padding: 32px;
+    -fx-effect: dropshadow(gaussian, rgba(32, 52, 84, 0.14), 28, 0.12, 0, 10);
+}
+
+.app-title {
+    -fx-font-size: 34px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #102a56;
+}
+
+.screen-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: 750;
+    -fx-text-fill: #172033;
+}
+
+.eyebrow,
+.shell-role {
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #315a9a;
+}
+
+.supporting-text {
+    -fx-font-size: 14px;
+    -fx-line-spacing: 3px;
+    -fx-text-fill: #526077;
+}
+
+.field-label {
+    -fx-font-weight: 700;
+    -fx-text-fill: #27364e;
+}
+
+.password-field,
+.text-field {
+    -fx-background-color: #f9fbff;
+    -fx-border-color: #b9c6d9;
+    -fx-border-radius: 9px;
+    -fx-background-radius: 9px;
+    -fx-padding: 11px 12px;
+}
+
+.password-field:focused,
+.text-field:focused,
+.button:focused {
+    -fx-border-color: #1463ff;
+    -fx-border-width: 2px;
+}
+
+.button {
+    -fx-background-radius: 9px;
+    -fx-border-radius: 9px;
+    -fx-cursor: hand;
+    -fx-font-weight: 700;
+    -fx-padding: 10px 18px;
+}
+
+.primary-button {
+    -fx-background-color: #174ea6;
+    -fx-text-fill: white;
+}
+
+.primary-button:hover {
+    -fx-background-color: #123f88;
+}
+
+.secondary-button {
+    -fx-background-color: white;
+    -fx-border-color: #9eacc0;
+    -fx-text-fill: #243650;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #edf3fb;
+}
+
+.error-text {
+    -fx-font-weight: 650;
+    -fx-text-fill: #a12626;
+}
+
+.role-shell {
+    -fx-background-color: #f3f6fb;
+}
+
+.shell-bar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent #dce3ef transparent;
+}
+
+.shell-brand {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #102a56;
+}
+
+.member-shell .shell-role {
+    -fx-text-fill: #176b4d;
+}
+
+.exco-shell .shell-role {
+    -fx-text-fill: #315a9a;
+}
