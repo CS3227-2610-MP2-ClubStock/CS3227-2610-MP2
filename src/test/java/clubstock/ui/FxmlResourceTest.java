@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
+import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberLoginController;
@@ -39,6 +40,7 @@ class FxmlResourceTest {
             Route.MEMBER_LOGIN, MemberLoginController.class,
             Route.EXCO_HOME, ExcoHomeController.class,
             Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class,
+            Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class,
             Route.MEMBER_HOME, MemberHomeController.class);
 
     @Test
@@ -115,6 +117,26 @@ class FxmlResourceTest {
         assertFalse(fxml.contains("newMemberIdField"));
         assertFalse(fxml.contains("createMemberPane"));
         assertFalse(fxml.contains("passwordHash"));
+    }
+
+    @Test
+    void inventoryAdministrationRouteContainsExcoInventoryControls() throws IOException {
+        URL resource = FxmlResourceTest.class.getResource(Route.INVENTORY_ADMINISTRATION.resourcePath());
+        assertNotNull(resource);
+        String fxml;
+        try (InputStream stream = resource.openStream()) {
+            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        assertTrue(fxml.contains("fx:id=\"typesTable\""));
+        assertTrue(fxml.contains("fx:id=\"itemsTable\""));
+        assertTrue(fxml.contains("onAction=\"#openCreateTypeDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openManageTypeDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openAddItemDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openManageItemDialog\""));
+        assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));
+        assertFalse(fxml.contains("labelFor="));
+        assertFalse(fxml.contains("Member catalogue"));
     }
 
     private static void assertCredentialLabelBindings(Route route, String labelId,

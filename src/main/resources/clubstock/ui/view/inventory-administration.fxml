@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="clubstock.ui.controller.InventoryAdministrationController"
+            styleClass="role-shell,exco-shell">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="shell-bar">
+            <padding>
+                <Insets bottom="16.0" left="24.0" right="24.0" top="16.0" />
+            </padding>
+            <Button mnemonicParsing="true" onAction="#goBack" styleClass="secondary-button" text="_Back" />
+            <VBox spacing="2.0">
+                <Label styleClass="screen-title" text="Inventory administration" />
+                <Label styleClass="supporting-text" text="Manage equipment types and individual physical items." />
+            </VBox>
+        </HBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="content-scroll">
+            <content>
+                <VBox maxWidth="1180.0" spacing="18.0" styleClass="admin-content">
+                    <padding>
+                        <Insets bottom="32.0" left="32.0" right="32.0" top="24.0" />
+                    </padding>
+                    <Label styleClass="section-title" text="Equipment types" />
+                    <Label styleClass="supporting-text"
+                           text="Only offered types are visible to Members. Select a type before managing it or adding an item." />
+                    <HBox alignment="CENTER_RIGHT" spacing="12.0">
+                        <Button mnemonicParsing="true" onAction="#openCreateTypeDialog"
+                                styleClass="primary-button" text="Create equipment _type" />
+                        <Button fx:id="manageTypeButton" mnemonicParsing="true"
+                                onAction="#openManageTypeDialog" styleClass="secondary-button"
+                                text="_Manage selected type" />
+                        <Button fx:id="addItemButton" mnemonicParsing="true"
+                                onAction="#openAddItemDialog" styleClass="secondary-button"
+                                text="_Add item to selected type" />
+                    </HBox>
+                    <TableView fx:id="typesTable" prefHeight="230.0">
+                        <columns>
+                            <TableColumn fx:id="typeIdColumn" prefWidth="340.0" text="Type ID" />
+                            <TableColumn fx:id="typeNameColumn" prefWidth="310.0" text="Name" />
+                            <TableColumn fx:id="typeOfferedColumn" prefWidth="140.0" text="Member visibility" />
+                            <TableColumn fx:id="availableQuantityColumn" prefWidth="150.0" text="Available" />
+                        </columns>
+                    </TableView>
+                    <Label styleClass="section-title" text="Physical equipment items" />
+                    <Label styleClass="supporting-text"
+                           text="New items are GOOD and UNAVAILABLE until Exco explicitly releases them." />
+                    <HBox alignment="CENTER_RIGHT" spacing="12.0">
+                        <Button fx:id="manageItemButton" mnemonicParsing="true"
+                                onAction="#openManageItemDialog" styleClass="secondary-button"
+                                text="Manage selected _item" />
+                    </HBox>
+                    <TableView fx:id="itemsTable" prefHeight="260.0">
+                        <columns>
+                            <TableColumn fx:id="itemIdColumn" prefWidth="250.0" text="Equipment ID" />
+                            <TableColumn fx:id="itemTypeColumn" prefWidth="250.0" text="Equipment type" />
+                            <TableColumn fx:id="itemConditionColumn" prefWidth="130.0" text="Condition" />
+                            <TableColumn fx:id="itemAvailabilityColumn" prefWidth="150.0" text="Availability" />
+                            <TableColumn fx:id="itemRetiredColumn" prefWidth="110.0" text="State" />
+                        </columns>
+                    </TableView>
+                    <HBox alignment="CENTER_LEFT" spacing="12.0">
+                        <Button mnemonicParsing="true" onAction="#refreshInventory"
+                                styleClass="secondary-button" text="_Refresh" />
+                        <Label fx:id="statusLabel" styleClass="error-text" wrapText="true" />
+                    </HBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

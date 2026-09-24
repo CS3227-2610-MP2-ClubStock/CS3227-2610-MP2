@@ -9,8 +9,11 @@ import clubstock.application.ApplicationException;
 import clubstock.application.auth.AuthenticationService;
 import clubstock.application.auth.Pbkdf2PasswordHasher;
 import clubstock.application.auth.SessionManager;
+import clubstock.application.inventory.AvailabilityPolicy;
+import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.port.TransactionManager;
+import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.AuthenticationGatewayAdapter;
@@ -28,10 +31,13 @@ public final class ApplicationContext {
     private final SessionManager sessionManager;
     private final AuthenticationGateway authentication;
     private final MemberAccountService memberAccountService;
+    private final AvailabilityPolicy availabilityPolicy;
+    private final InventoryService inventoryService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
-            AuthenticationGateway authentication, MemberAccountService memberAccountService) {
+            AuthenticationGateway authentication, MemberAccountService memberAccountService,
+            AvailabilityPolicy availabilityPolicy, InventoryService inventoryService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -39,6 +45,8 @@ public final class ApplicationContext {
         this.sessionManager = sessionManager;
         this.authentication = authentication;
         this.memberAccountService = memberAccountService;
+        this.availabilityPolicy = availabilityPolicy;
+        this.inventoryService = inventoryService;
     }
 
     /**
@@ -73,8 +81,12 @@ public final class ApplicationContext {
         Clock clock = Clock.systemDefaultZone();
         MemberAccountService memberAccountService = new MemberAccountService(database, sessionManager,
                 passwordHasher, clock);
+        AvailabilityPolicy availabilityPolicy = new AvailabilityPolicy();
+        InventoryService inventoryService = new InventoryService(database, sessionManager,
+                new UuidIdGenerator(), availabilityPolicy, clock);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
-                sessionManager, authentication, memberAccountService);
+                sessionManager, authentication, memberAccountService, availabilityPolicy,
+                inventoryService);
     }
 
     /**
@@ -138,6 +150,24 @@ public final class ApplicationContext {
      */
     public MemberAccountService memberAccountService() {
         return memberAccountService;
+    }
+
+    /**
+     * Returns the shared availability calculation policy for cross-role catalogue use.
+     *
+     * @return Shared transactional availability policy.
+     */
+    public AvailabilityPolicy availabilityPolicy() {
+        return availabilityPolicy;
+    }
+
+    /**
+     * Returns the Exco inventory administration service.
+     *
+     * @return Shared inventory administration service.
+     */
+    public InventoryService inventoryService() {
+        return inventoryService;
     }
 
     private static Path resolveDataDirectory() {

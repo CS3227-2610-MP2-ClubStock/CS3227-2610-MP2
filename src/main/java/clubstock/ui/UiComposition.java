@@ -1,6 +1,7 @@
 package clubstock.ui;
 
 import clubstock.application.member.MemberAccountService;
+import clubstock.application.inventory.InventoryService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
@@ -12,6 +13,7 @@ import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
 import clubstock.ui.controller.MemberAdministrationController;
+import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.ControllerFactory;
 import clubstock.ui.navigation.FxmlViewLoader;
@@ -32,11 +34,14 @@ public final class UiComposition {
      * @param stage Primary stage.
      * @param authentication Authentication/session boundary.
      * @param memberAccountService Exco Member-account administration service.
+     * @param inventoryService Exco inventory administration service.
      * @return Configured navigator.
      */
     public static JavaFxNavigator createNavigator(Stage stage,
-            AuthenticationGateway authentication, MemberAccountService memberAccountService) {
-        if (stage == null || authentication == null || memberAccountService == null) {
+            AuthenticationGateway authentication, MemberAccountService memberAccountService,
+            InventoryService inventoryService) {
+        if (stage == null || authentication == null || memberAccountService == null
+                || inventoryService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -63,6 +68,8 @@ public final class UiComposition {
                 () -> new ExcoHomeController(logoutAction, navigator));
         controllerFactory.register(MemberAdministrationController.class,
                 () -> new MemberAdministrationController(memberAccountService, navigator));
+        controllerFactory.register(InventoryAdministrationController.class,
+                () -> new InventoryAdministrationController(inventoryService, navigator));
         controllerFactory.register(MemberHomeController.class,
                 () -> new MemberHomeController(logoutAction));
         return navigator;

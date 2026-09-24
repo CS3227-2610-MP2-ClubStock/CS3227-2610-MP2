@@ -21,6 +21,9 @@ public enum Route {
     /** Exco-protected Member-account administration screen. */
     MEMBER_ADMINISTRATION("/clubstock/ui/view/member-administration.fxml",
             "Manage Members", UserRole.EXCO),
+    /** Exco-protected inventory administration screen. */
+    INVENTORY_ADMINISTRATION("/clubstock/ui/view/inventory-administration.fxml",
+            "Manage inventory", UserRole.EXCO),
     /** Member-protected shell. */
     MEMBER_HOME("/clubstock/ui/view/member-home.fxml", "Member home", UserRole.MEMBER);
 

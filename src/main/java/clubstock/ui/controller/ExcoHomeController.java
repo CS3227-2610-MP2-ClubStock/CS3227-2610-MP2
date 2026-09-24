@@ -37,4 +37,12 @@ public final class ExcoHomeController {
     private void manageMembers() {
         navigation.show(Route.MEMBER_ADMINISTRATION);
     }
+
+    /**
+     * Opens Exco equipment type and item administration.
+     */
+    @FXML
+    private void manageInventory() {
+        navigation.show(Route.INVENTORY_ADMINISTRATION);
+    }
 }
