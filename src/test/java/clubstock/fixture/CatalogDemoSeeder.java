@@ -8,6 +8,11 @@ import clubstock.application.port.UnitOfWork;
 import clubstock.domain.account.Member;
 import clubstock.domain.account.MemberId;
 import clubstock.domain.account.PasswordHash;
+import clubstock.domain.equipment.EquipmentId;
+import clubstock.domain.equipment.EquipmentItem;
+import clubstock.domain.equipment.EquipmentType;
+import clubstock.domain.equipment.EquipmentTypeId;
+import clubstock.domain.equipment.EquipmentTypeName;
 
 /**
  * Creates an isolated Member account for exercising the development catalogue.
@@ -16,6 +21,16 @@ public final class CatalogDemoSeeder {
     private static final Path DEMO_DATA_DIRECTORY = Path.of("build", "clubstock-demo");
     private static final MemberId DEMO_MEMBER_ID = new MemberId("demo-member");
     private static final String DEMO_PASSWORD = "demo-password";
+    private static final EquipmentTypeId DEMO_AVAILABLE_TYPE_ID =
+            new EquipmentTypeId("demo-type-available");
+    private static final EquipmentTypeId DEMO_ZERO_STOCK_TYPE_ID =
+            new EquipmentTypeId("demo-type-zero-stock");
+    private static final EquipmentTypeId DEMO_UNOFFERED_TYPE_ID =
+            new EquipmentTypeId("demo-type-unoffered");
+    private static final EquipmentId DEMO_AVAILABLE_ITEM_ONE_ID =
+            new EquipmentId("demo-available-item-1");
+    private static final EquipmentId DEMO_AVAILABLE_ITEM_TWO_ID =
+            new EquipmentId("demo-available-item-2");
 
     private CatalogDemoSeeder() {
     }
@@ -42,7 +57,11 @@ public final class CatalogDemoSeeder {
             throw new IllegalArgumentException("Application context cannot be null.");
         }
 
-        return context.transactionManager().write(unitOfWork -> insertIfAbsent(unitOfWork));
+        return context.transactionManager().write(unitOfWork -> {
+            boolean isMemberInserted = insertMemberIfAbsent(unitOfWork);
+            seedDemoInventory(unitOfWork);
+            return isMemberInserted;
+        });
     }
 
     /**
@@ -51,7 +70,7 @@ public final class CatalogDemoSeeder {
      * @param unitOfWork Active database unit of work.
      * @return True if the Member was inserted; false if it already existed.
      */
-    private static boolean insertIfAbsent(UnitOfWork unitOfWork) {
+    private static boolean insertMemberIfAbsent(UnitOfWork unitOfWork) {
         if (unitOfWork.members().findById(DEMO_MEMBER_ID).isPresent()) {
             return false;
         }
@@ -60,5 +79,59 @@ public final class CatalogDemoSeeder {
         Member member = Member.create(DEMO_MEMBER_ID, "Demo Member", passwordHash);
         unitOfWork.members().insert(member);
         return true;
+    }
+
+    /**
+     * Adds stable demo type and item records without replacing existing rows.
+     *
+     * @param unitOfWork Active database unit of work.
+     */
+    private static void seedDemoInventory(UnitOfWork unitOfWork) {
+        insertTypeIfAbsent(unitOfWork, DEMO_AVAILABLE_TYPE_ID, "Demo Available Equipment", true);
+        insertTypeIfAbsent(unitOfWork, DEMO_ZERO_STOCK_TYPE_ID, "Demo Zero Stock", true);
+        insertTypeIfAbsent(unitOfWork, DEMO_UNOFFERED_TYPE_ID, "Demo Unoffered Equipment", false);
+        insertAvailableItemIfAbsent(unitOfWork, DEMO_AVAILABLE_ITEM_ONE_ID,
+                DEMO_AVAILABLE_TYPE_ID);
+        insertAvailableItemIfAbsent(unitOfWork, DEMO_AVAILABLE_ITEM_TWO_ID,
+                DEMO_AVAILABLE_TYPE_ID);
+    }
+
+    /**
+     * Creates a stable type fixture only when its identity is absent.
+     *
+     * @param unitOfWork Active database unit of work.
+     * @param equipmentTypeId Stable demo type identity.
+     * @param name Fixture display name.
+     * @param isOffered Whether Members can browse this fixture type.
+     */
+    private static void insertTypeIfAbsent(UnitOfWork unitOfWork,
+            EquipmentTypeId equipmentTypeId, String name, boolean isOffered) {
+        if (unitOfWork.equipmentTypes().findById(equipmentTypeId).isPresent()) {
+            return;
+        }
+
+        EquipmentType type = EquipmentType.create(equipmentTypeId, new EquipmentTypeName(name));
+        if (isOffered) {
+            type.offer();
+        }
+        unitOfWork.equipmentTypes().insert(type);
+    }
+
+    /**
+     * Creates a released physical item fixture only when its identity is absent.
+     *
+     * @param unitOfWork Active database unit of work.
+     * @param equipmentId Stable demo item identity.
+     * @param equipmentTypeId Type identity for the item.
+     */
+    private static void insertAvailableItemIfAbsent(UnitOfWork unitOfWork,
+            EquipmentId equipmentId, EquipmentTypeId equipmentTypeId) {
+        if (unitOfWork.equipmentItems().findById(equipmentId).isPresent()) {
+            return;
+        }
+
+        EquipmentItem item = EquipmentItem.create(equipmentId, equipmentTypeId);
+        item.release();
+        unitOfWork.equipmentItems().insert(item);
     }
 }
