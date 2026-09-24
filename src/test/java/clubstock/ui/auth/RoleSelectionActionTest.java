@@ -73,6 +73,10 @@ class RoleSelectionActionTest {
         }
 
         @Override
+        public void authenticateMember(String memberId, char[] password) {
+        }
+
+        @Override
         public Optional<AuthenticatedPrincipal> currentPrincipal() {
             return Optional.empty();
         }

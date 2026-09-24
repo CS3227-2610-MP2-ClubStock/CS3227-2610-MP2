@@ -116,6 +116,15 @@ class ExcoAuthenticationActionTest {
         }
 
         @Override
+        public void authenticateMember(String memberId, char[] password) {
+            events.add("member-login");
+            failIfConfigured();
+            if (establishPrincipal) {
+                principal = AuthenticatedPrincipal.member(memberId);
+            }
+        }
+
+        @Override
         public Optional<AuthenticatedPrincipal> currentPrincipal() {
             return Optional.ofNullable(principal);
         }

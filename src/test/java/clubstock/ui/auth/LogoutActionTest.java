@@ -51,6 +51,11 @@ class LogoutActionTest {
         }
 
         @Override
+        public void authenticateMember(String memberId, char[] password) {
+            principal = AuthenticatedPrincipal.member(memberId);
+        }
+
+        @Override
         public Optional<AuthenticatedPrincipal> currentPrincipal() {
             return Optional.ofNullable(principal);
         }

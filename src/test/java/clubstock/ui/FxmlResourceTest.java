@@ -76,6 +76,22 @@ class FxmlResourceTest {
         assertCredentialLabelBindings(Route.EXCO_SETUP, "confirmationLabel", "confirmationField");
     }
 
+    @Test
+    void memberLoginRouteContainsBothCredentialsAndActions() throws IOException {
+        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_LOGIN.resourcePath());
+        assertNotNull(resource);
+        String fxml;
+        try (InputStream stream = resource.openStream()) {
+            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        assertTrue(fxml.contains("fx:id=\"memberIdField\""));
+        assertTrue(fxml.contains("fx:id=\"passwordField\""));
+        assertTrue(fxml.contains("onAction=\"#login\""));
+        assertTrue(fxml.contains("onAction=\"#goBack\""));
+        assertFalse(fxml.contains("not available in this build yet"));
+    }
+
     private static void assertCredentialLabelBindings(Route route, String labelId,
             String fieldId) throws IOException {
         URL resource = FxmlResourceTest.class.getResource(route.resourcePath());
