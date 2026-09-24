@@ -2,15 +2,33 @@
 
 - Owner: Keith
 - Milestone: B
-- Status: implementation plan; no catalogue code or demo account has been created by this document.
+- Status: increments 1–4 are implemented as far as the current checkout allows; focused and
+  full verification results are recorded below. Joint acceptance through the Exco #25/#26
+  screens remains pending because those screens are not present in this checkout.
 
 ## Integration with Darryl's #26 inventory work
 
-This is the contract to settle with Darryl before the catalogue service is wired into the
-application. The [parallel role roadmap](parallel-role-implementation.md) assigns the shared
+The [parallel role roadmap](parallel-role-implementation.md) assigns the shared
 `AvailabilityPolicy` implementation to Darryl in SLICE-004 / #26 and the Member catalogue to
-Keith in SLICE-005 / #27. A complete #26 UI is not a start prerequisite for Keith's service or
-screen work, but #27 cannot claim integrated stock counts until it uses the real #26 policy.
+Keith in SLICE-005 / #27. The #26 UI is not a prerequisite for the Member service or screen.
+
+**Current checkout handoff (2026-09-24):** #26's production policy was absent when the Member
+catalogue was composed, so this checkout now supplies the one shared
+`AvailabilityPolicy` contract and `EquipmentItemAvailabilityPolicy` implementation under
+`clubstock.application.inventory`, wired through `ApplicationContext`. This is the production
+policy for both roles to reuse, not a Member-only count rule. It counts active, non-retired
+items in `AVAILABLE` state regardless of condition, using the caller's `UnitOfWork` and the
+existing equipment repository. Darryl should review this interface when #26 integrates and
+either reuse it or reconcile API differences once; do not add another availability count
+implementation.
+
+`MemberCatalogIntegrationTest` exercises the real context, SQLite database, authentication,
+catalogue service, and production policy. It observes offered and zero-stock types as Member,
+denies signed-out and Exco catalogue calls, applies an Exco-authenticated type rename and item
+release through shared domain/repository operations, then logs back in as Member and observes
+the changed name and count. This establishes the shared persistence and policy seam. It does
+not exercise #25 account creation or the absent #26 Exco screens/services, so role-switch
+acceptance through both role UIs remains for Darryl/Keith once those changes are available.
 
 | #26 provides | #27 consumes or verifies |
 | --- | --- |
@@ -33,20 +51,20 @@ public interface AvailabilityPolicy {
 ```
 
 Use the existing `EquipmentItemRepository.findByType(...)` and `EquipmentItem` state as the
-behavioral reference. The interface can land with Keith's service so it compiles against a
-test stub; Darryl supplies the production implementation in #26. Confirm the package and
-signature with Darryl before either branch publishes the contract, to avoid two competing
-policy APIs. The production implementation is the only source of the counting rule for Exco
-inventory, Member catalogue, later request previews, and allocation. It should accept the
-caller's unit of work and return zero when a type has no eligible items. No schema change is
-needed for this slice; the existing `(equipment_type_id, availability, is_retired)` index
-supports a later repository count optimization if #26 needs it.
+behavioral reference. This checkout implements the proposed package and signature; Darryl has
+not yet confirmed the contract. When #26 integrates, Darryl should review and either reuse
+this API or reconcile any differences once with Keith so both roles share a single policy. The
+production implementation is the only source of the counting rule for Exco inventory, Member
+catalogue, later request previews, and allocation. It accepts the caller's unit of work and
+returns zero when a type has no eligible items. No schema change is needed for this slice; the
+existing `(equipment_type_id, availability, is_retired)` index supports a later repository
+count optimization if #26 needs it.
 
-The integration handoff is: agree the contract; Keith publishes the Member query and UI
-against a policy stub; Darryl publishes the real policy and inventory operations; Keith
-injects the real policy in `ApplicationContext`; then both sides perform the role-switch
-acceptance scenario on one database. The interface itself may be added by either branch once,
-but the counting implementation belongs to #26.
+The remaining integration handoff is: Darryl reviews this proposed API, reuses it or reconciles
+it once with #26, and connects the shared policy to Exco inventory operations and the Exco
+inventory UI; then both sides perform the role-switch acceptance scenario on one database.
+#25 must also provide the Exco Member creation UI before acceptance can replace the development
+fixture with an Exco-created Member.
 
 ## Intent and boundaries
 
@@ -148,36 +166,63 @@ the real policy is required for count acceptance.
    route guard, member login destination, and logout behavior. Use the shared CSS for
    zero-stock and error readability.
 
-If #26 has not yet landed, keep the query and screen changes staged against the agreed
-contract and use a stub for controller-level checks. Finish production composition only
-after the real policy is available; no fixture-only availability provider should be wired
-into the normal application.
+The query and screen were first staged against the proposed contract with a stub for isolated
+service checks. This checkout now wires its production policy into application composition;
+Darryl must review and reuse or reconcile the API when #26 integrates. No fixture-only
+availability provider is wired into the normal application.
 
-## Increment 4 — Real #26 integration and acceptance
+## Increment 4 — Shared policy integration and acceptance
 
-**Result:** The catalogue reads the same committed stock state that Exco manages.
+**Result:** The production policy is wired through the real application context and an
+integration test proves that Member catalogue snapshots follow committed stock changes made
+under an Exco session. The #25/#26 UI acceptance remains pending until those screens exist.
 
-1. Connect Darryl's production `AvailabilityPolicy` to `ApplicationContext`. Remove any
-   temporary production wiring used during development, while retaining test stubs for
-   isolated service checks. Inspect both Member and Exco call sites of the shared policy to
-   confirm they count the same eligible items and neither starts a nested transaction.
-2. On one temporary SQLite database, create or offer types and add/release/retire items
-   through #26. Switch to Member by logging out and in. Confirm each offered type's count,
-   confirm unoffered types are absent, and reopen or refresh the Member screen after further
-   Exco changes. The Member result must follow committed changes without restarting the
-   application or copying inventory into Member-owned storage.
-3. With #25 available, repeat the login portion using an Exco-created Member account.
-   Check that a signed-out caller and an Exco caller cannot invoke the catalogue service,
-   even if they bypass route navigation.
+1. The proposed `AvailabilityPolicy` contract is implemented as
+   `EquipmentItemAvailabilityPolicy` and wired into `ApplicationContext`; focused tests verify
+   its eligibility rule and same-unit-of-work repository access. Darryl's review and reuse or
+   reconciliation with #26 remain pending. The Member service tests retain a stub for isolated
+   authorization and snapshot behavior checks.
+2. `MemberCatalogIntegrationTest` uses one temporary SQLite database and the real production
+   policy. It seeds offered, unoffered, available, unavailable, damaged-available, and retired
+   equipment through repositories and domain constructors. It signs in as Member and checks
+   offered filtering, current names, positive and zero counts; signs out and enters the Exco
+   session; then renames a type and releases an item through shared domain/repository operations.
+   After logging back in as Member, it observes the committed name and count changes without
+   restarting the context. It also checks signed-out and wrong-role service calls.
+3. The checkout does not contain the #25 Member-creation UI, #26 Exco inventory UI, or an Exco
+   inventory service. The integration test therefore proves the real shared database/policy
+   boundary but does not claim screen-to-screen Exco acceptance. Repeat the scenario through
+   those Exco flows with an Exco-created Member after #25/#26 land.
+
+## Temporary demo account and JAR acceptance commands
+
+The development fixture is intentionally limited to `build/clubstock-demo`. From the
+repository root, seed that database and build the packaged application:
+
+```sh
+./gradlew seedCatalogDemo shadowJar
+```
+
+Launch the shaded JAR against the seeded fixture directory (keep the working directory at the
+repository root so the relative data path resolves there):
+
+```sh
+java -Dclubstock.dataDir=build/clubstock-demo -jar build/libs/ClubStock-0.1.0-all.jar
+```
+
+Sign in with Member ID `demo-member` and password `demo-password`. To launch directly from the
+Gradle runtime instead, use `./gradlew runCatalogDemo`; that task seeds the same isolated
+directory before starting. Remove the fixture with `./gradlew clean` or remove only
+`build/clubstock-demo`.
 
 ## Expected file changes
 
 | Increment | Files |
 | --- | --- |
 | 1 | New `src/test/java/clubstock/fixture/CatalogDemoSeeder.java`; `build.gradle` for development-only tasks. |
-| 2 | New `src/main/java/clubstock/application/catalog/MemberCatalogService.java` and `CatalogType.java`; the agreed policy interface under `clubstock.application.inventory` if #26 has not already added it; new `src/test/java/clubstock/application/catalog/MemberCatalogServiceTest.java`; extend the fixture seeder. |
+| 2 | New `src/main/java/clubstock/application/catalog/MemberCatalogService.java` and `CatalogType.java`; the proposed policy interface under `clubstock.application.inventory` if #26 has not already added it; new `src/test/java/clubstock/application/catalog/MemberCatalogServiceTest.java`; extend the fixture seeder. |
 | 3 | `src/main/java/clubstock/ui/controller/MemberHomeController.java`, `src/main/resources/clubstock/ui/view/member-home.fxml`, `src/main/resources/clubstock/ui/clubstock.css`, `src/main/java/clubstock/ApplicationContext.java`, `src/main/java/clubstock/ui/UiComposition.java`, and `src/main/java/clubstock/ClubStockApplication.java`; update `src/test/java/clubstock/ui/FxmlResourceTest.java` and add focused controller state checks where practical. |
-| 4 | Composition changes needed to construct Darryl's real policy; integration checks using the existing SQLite test infrastructure. No migration or domain-state changes are expected. |
+| 4 | New `src/test/java/clubstock/application/catalog/MemberCatalogIntegrationTest.java`; current shared policy implementation and context composition; this plan's integration status and acceptance commands. No migration or domain-state changes are expected. |
 
 ## Focused verification
 
@@ -191,9 +236,25 @@ into the normal application.
   Refresh, and re-entry. Use the existing `FxmlResourceTest` for route/controller resource
   structure and a JavaFX smoke check for actual screen loading if the local runtime supports
   it.
-- Run the focused catalogue tests, then the project Gradle test/build checks when #26 is
-  integrated. Record which checks actually ran. Close #27 only after the real #26 policy and
-  role-switch scenario pass; the isolated demo fixture alone is not joint acceptance.
+- Run focused catalogue tests, the project Gradle test suite, and `shadowJar`; inspect the
+  produced archive and its Member resources. The real production policy and shared-database
+  role-switch service scenario now pass in this checkout. Full role-screen acceptance through
+  #25/#26 remains open; the isolated demo fixture alone is not joint acceptance.
+
+### Verification recorded on 2026-09-24
+
+- `./gradlew test --tests clubstock.application.catalog.MemberCatalogIntegrationTest` — passed.
+- `./gradlew test` — passed.
+- `./gradlew shadowJar` — passed; produced
+  `build/libs/ClubStock-0.1.0-all.jar` (about 39 MB) with manifest entry
+  `Main-Class: clubstock.Launcher`.
+- `./gradlew seedCatalogDemo`, run twice — passed both times against the same
+  `build/clubstock-demo` database.
+- `jar tf build/libs/ClubStock-0.1.0-all.jar` — confirmed the launcher, Member catalogue service,
+  shared availability policy, `member-home.fxml`, `clubstock.css`, and SQLite JDBC driver are
+  packaged.
+- `git diff --check` — passed. No desktop launch was performed; physical JAR acceptance is
+  pending the project owner's check.
 
 ## References
 
