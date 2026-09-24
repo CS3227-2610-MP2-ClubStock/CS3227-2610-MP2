@@ -75,3 +75,13 @@ tasks.register('runCatalogDemo', JavaExec) {
     workingDir = projectDir
     systemProperty 'clubstock.dataDir', catalogDemoDataDirectory.get().asFile.absolutePath
 }
+
+tasks.register('runCatalogDemoJar', JavaExec) {
+    group = 'application'
+    description = 'Seeds and runs the packaged ClubStock JAR with isolated catalogue demo data.'
+    dependsOn tasks.named('seedCatalogDemo'), tasks.named('shadowJar')
+    classpath = files(tasks.named('shadowJar').flatMap { it.archiveFile })
+    mainClass.set(application.mainClass)
+    workingDir = projectDir
+    systemProperty 'clubstock.dataDir', catalogDemoDataDirectory.get().asFile.absolutePath
+}

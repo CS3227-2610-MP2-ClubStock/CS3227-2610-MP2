@@ -3,6 +3,8 @@ package clubstock.fixture;
 import java.nio.file.Path;
 
 import clubstock.ApplicationContext;
+import clubstock.application.ApplicationErrorCode;
+import clubstock.application.ApplicationException;
 import clubstock.application.auth.Pbkdf2PasswordHasher;
 import clubstock.application.port.UnitOfWork;
 import clubstock.domain.account.Member;
@@ -47,7 +49,7 @@ public final class CatalogDemoSeeder {
     }
 
     /**
-     * Inserts the demo Member only when its fixed identity is absent.
+     * Inserts the demo Member or verifies that the existing account can use the fixture login.
      *
      * @param context Application context that owns the isolated database.
      * @return True if the Member was inserted; false if it already existed.
@@ -65,13 +67,22 @@ public final class CatalogDemoSeeder {
     }
 
     /**
-     * Creates the active demo Member inside the caller's write transaction when it is absent.
+     * Creates the active demo Member or rejects stale fixture credentials.
      *
      * @param unitOfWork Active database unit of work.
      * @return True if the Member was inserted; false if it already existed.
      */
     private static boolean insertMemberIfAbsent(UnitOfWork unitOfWork) {
-        if (unitOfWork.members().findById(DEMO_MEMBER_ID).isPresent()) {
+        Member existingMember = unitOfWork.members().findById(DEMO_MEMBER_ID).orElse(null);
+        if (existingMember != null) {
+            if (!existingMember.isActive()) {
+                throw staleDemoAccount();
+            }
+            boolean hasExpectedPassword = new Pbkdf2PasswordHasher().matches(
+                    DEMO_PASSWORD.toCharArray(), existingMember.passwordHash());
+            if (!hasExpectedPassword) {
+                throw staleDemoAccount();
+            }
             return false;
         }
 
@@ -79,6 +90,17 @@ public final class CatalogDemoSeeder {
         Member member = Member.create(DEMO_MEMBER_ID, "Demo Member", passwordHash);
         unitOfWork.members().insert(member);
         return true;
+    }
+
+    /**
+     * Returns an actionable failure for an existing account that cannot use the demo login.
+     *
+     * @return Fixture mismatch failure.
+     */
+    private static ApplicationException staleDemoAccount() {
+        return new ApplicationException(ApplicationErrorCode.CONFLICT,
+                "The demo Member account no longer matches its fixture credentials."
+                        + " Remove build/clubstock-demo and seed it again.", null);
     }
 
     /**

@@ -196,8 +196,15 @@ under an Exco session. The #25/#26 UI acceptance remains pending until those scr
 
 ## Temporary demo account and JAR acceptance commands
 
-The development fixture is intentionally limited to `build/clubstock-demo`. From the
-repository root, seed that database and build the packaged application:
+The development fixture is intentionally limited to `build/clubstock-demo`. The simplest
+packaged demo launch from the repository root seeds the account, builds the JAR, and selects
+that database in one command:
+
+```sh
+./gradlew runCatalogDemoJar
+```
+
+To launch the packaged JAR manually, seed the database and build the artifact first:
 
 ```sh
 ./gradlew seedCatalogDemo shadowJar
@@ -212,7 +219,11 @@ java -Dclubstock.dataDir=build/clubstock-demo -jar build/libs/ClubStock-0.1.0-al
 
 Sign in with Member ID `demo-member` and password `demo-password`. To launch directly from the
 Gradle runtime instead, use `./gradlew runCatalogDemo`; that task seeds the same isolated
-directory before starting. Remove the fixture with `./gradlew clean` or remove only
+directory before starting. Running `java -jar` without the `clubstock.dataDir` option or
+double-clicking the JAR opens the normal `${user.home}/.clubstock` database, which does not
+contain the demo account. If the demo account already exists with a different credential or
+is inactive, reseeding now reports the mismatch instead of claiming it is ready. Remove the
+fixture with `./gradlew clean` or remove only
 `build/clubstock-demo`.
 
 ## Expected file changes

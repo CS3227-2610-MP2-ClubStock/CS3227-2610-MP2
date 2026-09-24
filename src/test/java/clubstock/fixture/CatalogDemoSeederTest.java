@@ -3,6 +3,7 @@ package clubstock.fixture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -11,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import clubstock.ApplicationContext;
+import clubstock.application.ApplicationErrorCode;
+import clubstock.application.ApplicationException;
+import clubstock.application.auth.Pbkdf2PasswordHasher;
 import clubstock.domain.account.Member;
 import clubstock.domain.account.MemberId;
 import clubstock.domain.equipment.EquipmentAvailability;
@@ -44,6 +48,30 @@ class CatalogDemoSeederTest {
         assertEquals(firstSeed.passwordHash(), repeatedSeed.passwordHash());
         assertTrue(repeatedSeed.isActive());
         assertDemoInventory(context);
+    }
+
+    @Test
+    void seed_rejectsExistingAccountWithDifferentPasswordWithoutAddingInventory() {
+        ApplicationContext context = ApplicationContext.create(temporaryDirectory);
+        Member staleMember = Member.create(new MemberId("demo-member"), "Demo Member",
+                new Pbkdf2PasswordHasher().hash("different-password".toCharArray()));
+        context.transactionManager().write(unitOfWork -> {
+            unitOfWork.members().insert(staleMember);
+            return null;
+        });
+
+        ApplicationException failure = assertThrows(ApplicationException.class,
+                () -> CatalogDemoSeeder.seed(context));
+
+        assertEquals(ApplicationErrorCode.CONFLICT, failure.errorCode());
+        assertTrue(failure.displayMessage().contains("Remove build/clubstock-demo"));
+        context.transactionManager().read(unitOfWork -> {
+            assertEquals(staleMember.passwordHash(), unitOfWork.members()
+                    .findById(staleMember.memberId()).orElseThrow().passwordHash());
+            assertTrue(unitOfWork.equipmentTypes().findAll().isEmpty());
+            assertTrue(unitOfWork.equipmentItems().findAll().isEmpty());
+            return null;
+        });
     }
 
     /**
