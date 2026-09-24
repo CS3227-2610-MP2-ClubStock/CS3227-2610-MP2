@@ -54,3 +54,34 @@ tasks.named('shadowJar') {
 application {
     mainClass.set("clubstock.Launcher")
 }
+
+def catalogDemoDataDirectory = layout.buildDirectory.dir('clubstock-demo')
+
+tasks.register('seedCatalogDemo', JavaExec) {
+    group = 'application'
+    description = 'Creates the temporary Member account used to exercise the catalogue.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass.set('clubstock.fixture.CatalogDemoSeeder')
+    workingDir = projectDir
+}
+
+tasks.register('runCatalogDemo', JavaExec) {
+    group = 'application'
+    description = 'Seeds and runs ClubStock with isolated catalogue demo data.'
+    dependsOn tasks.named('seedCatalogDemo')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set(application.mainClass)
+    workingDir = projectDir
+    systemProperty 'clubstock.dataDir', catalogDemoDataDirectory.get().asFile.absolutePath
+}
+
+tasks.register('runCatalogDemoJar', JavaExec) {
+    group = 'application'
+    description = 'Seeds and runs the packaged ClubStock JAR with isolated catalogue demo data.'
+    dependsOn tasks.named('seedCatalogDemo'), tasks.named('shadowJar')
+    classpath = files(tasks.named('shadowJar').flatMap { it.archiveFile })
+    mainClass.set(application.mainClass)
+    workingDir = projectDir
+    systemProperty 'clubstock.dataDir', catalogDemoDataDirectory.get().asFile.absolutePath
+}

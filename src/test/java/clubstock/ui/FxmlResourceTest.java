@@ -68,6 +68,8 @@ class FxmlResourceTest {
         assertTrue(css.contains(".error-text"));
         assertTrue(css.contains(".member-shell"));
         assertTrue(css.contains(".exco-shell"));
+        assertTrue(css.contains(".catalog-list-view"));
+        assertTrue(css.contains(".zero-stock-status"));
     }
 
     @Test
@@ -91,6 +93,26 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("onAction=\"#login\""));
         assertTrue(fxml.contains("onAction=\"#goBack\""));
         assertFalse(fxml.contains("not available in this build yet"));
+    }
+
+    @Test
+    void memberHomeRouteContainsSafeCatalogueAndRefreshBindings() throws IOException {
+        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_HOME.resourcePath());
+        assertNotNull(resource);
+        String fxml;
+        try (InputStream stream = resource.openStream()) {
+            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        assertTrue(fxml.contains("fx:id=\"catalogListView\""));
+        assertTrue(fxml.contains("Offered equipment types and available quantities"));
+        assertTrue(fxml.contains("No equipment is currently offered"));
+        assertTrue(fxml.contains("fx:id=\"errorLabel\""));
+        assertTrue(fxml.contains("onAction=\"#refresh\""));
+        assertTrue(fxml.contains("onAction=\"#logout\""));
+        assertFalse(fxml.contains("Equipment ID"));
+        assertFalse(fxml.contains("EquipmentItem"));
+        assertFalse(fxml.contains("equipmentId"));
     }
 
     private static void assertCredentialLabelBindings(Route route, String labelId,

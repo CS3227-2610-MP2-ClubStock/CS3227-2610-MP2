@@ -1,5 +1,6 @@
 package clubstock.ui;
 
+import clubstock.application.catalog.MemberCatalogService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
@@ -29,11 +30,12 @@ public final class UiComposition {
      *
      * @param stage Primary stage.
      * @param authentication Authentication/session boundary.
+     * @param memberCatalogService Context-owned Member catalogue query.
      * @return Configured navigator.
      */
     public static JavaFxNavigator createNavigator(Stage stage,
-            AuthenticationGateway authentication) {
-        if (stage == null || authentication == null) {
+            AuthenticationGateway authentication, MemberCatalogService memberCatalogService) {
+        if (stage == null || authentication == null || memberCatalogService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -59,7 +61,7 @@ public final class UiComposition {
         controllerFactory.register(ExcoHomeController.class,
                 () -> new ExcoHomeController(logoutAction));
         controllerFactory.register(MemberHomeController.class,
-                () -> new MemberHomeController(logoutAction));
+                () -> new MemberHomeController(logoutAction, memberCatalogService));
         return navigator;
     }
 }

@@ -9,6 +9,9 @@ import clubstock.application.ApplicationException;
 import clubstock.application.auth.AuthenticationService;
 import clubstock.application.auth.Pbkdf2PasswordHasher;
 import clubstock.application.auth.SessionManager;
+import clubstock.application.catalog.MemberCatalogService;
+import clubstock.application.inventory.AvailabilityPolicy;
+import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
 import clubstock.application.port.TransactionManager;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
 import clubstock.ui.auth.AuthenticationGateway;
@@ -26,16 +29,21 @@ public final class ApplicationContext {
     private final TransactionManager transactionManager;
     private final SessionManager sessionManager;
     private final AuthenticationGateway authentication;
+    /**
+     * Shared Member catalogue query bound to the context's transaction and session managers.
+     */
+    private final MemberCatalogService memberCatalogService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
-            AuthenticationGateway authentication) {
+            AuthenticationGateway authentication, MemberCatalogService memberCatalogService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
         this.transactionManager = transactionManager;
         this.sessionManager = sessionManager;
         this.authentication = authentication;
+        this.memberCatalogService = memberCatalogService;
     }
 
     /**
@@ -66,8 +74,12 @@ public final class ApplicationContext {
                 new Pbkdf2PasswordHasher(), sessionManager);
         AuthenticationGateway authentication = new AuthenticationGatewayAdapter(
                 authenticationService);
+        AvailabilityPolicy availabilityPolicy = new EquipmentItemAvailabilityPolicy();
+        MemberCatalogService memberCatalogService = new MemberCatalogService(database,
+                sessionManager, availabilityPolicy);
         return new ApplicationContext(normalizedDirectory, Clock.systemDefaultZone(),
-                ZoneId.systemDefault(), database, sessionManager, authentication);
+                ZoneId.systemDefault(), database, sessionManager, authentication,
+                memberCatalogService);
     }
 
     /**
@@ -122,6 +134,15 @@ public final class ApplicationContext {
      */
     public SessionManager sessionManager() {
         return sessionManager;
+    }
+
+    /**
+     * Returns the Member catalogue query shared by all Member screens.
+     *
+     * @return Context-owned catalogue service.
+     */
+    public MemberCatalogService memberCatalogService() {
+        return memberCatalogService;
     }
 
     private static Path resolveDataDirectory() {
