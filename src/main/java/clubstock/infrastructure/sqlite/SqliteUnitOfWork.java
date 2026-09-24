@@ -547,7 +547,7 @@ final class SqliteUnitOfWork implements UnitOfWork {
         public List<LoanRequest> findPendingOrderedByRequestedAt() {
             try (Statement statement = connection.createStatement();
                     ResultSet resultSet = statement.executeQuery(requestSelect(
-                            "WHERE status = 'PENDING' ORDER BY requested_at, loan_request_id"))) {
+                            "WHERE status = 'PENDING' ORDER BY julianday(requested_at), loan_request_id"))) {
                 return list(resultSet, SqliteUnitOfWork::mapLoanRequest);
             } catch (SQLException exception) {
                 throw persistenceFailure("Pending loan requests could not be read.", exception);
