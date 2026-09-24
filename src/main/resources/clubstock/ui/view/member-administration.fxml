@@ -5,6 +5,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -38,11 +39,13 @@
         </HBox>
     </top>
     <center>
-        <VBox maxWidth="1080" spacing="18" styleClass="admin-content">
-            <padding>
-                <Insets top="24" right="32" bottom="32" left="32"/>
-            </padding>
-            <children>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="content-scroll">
+            <content>
+                <VBox maxWidth="1080" spacing="18" styleClass="admin-content">
+                    <padding>
+                        <Insets top="24" right="32" bottom="32" left="32"/>
+                    </padding>
+                    <children>
                 <VBox spacing="6">
                     <children>
                         <Label text="Manage Member accounts" styleClass="screen-title"/>
@@ -104,7 +107,9 @@
                     </children>
                 </GridPane>
                 <Label fx:id="statusLabel" styleClass="error-text" wrapText="true"/>
-            </children>
-        </VBox>
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
     </center>
 </BorderPane>

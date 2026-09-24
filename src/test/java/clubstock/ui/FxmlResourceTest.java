@@ -109,6 +109,8 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("fx:id=\"newMemberPasswordField\""));
         assertTrue(fxml.contains("onAction=\"#deactivateMember\""));
         assertTrue(fxml.contains("deactivateConfirmation"));
+        assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));
+        assertTrue(fxml.contains("hbarPolicy=\"NEVER\""));
         assertFalse(fxml.contains("passwordHash"));
     }
 

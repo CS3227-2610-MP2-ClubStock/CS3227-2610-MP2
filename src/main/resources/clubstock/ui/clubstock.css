@@ -107,6 +107,12 @@
     -fx-background-color: transparent;
 }
 
+.content-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
 .section-title {
     -fx-font-size: 18px;
     -fx-font-weight: 700;
