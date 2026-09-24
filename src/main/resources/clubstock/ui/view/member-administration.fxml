@@ -15,6 +15,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25"
@@ -66,13 +67,17 @@
                 <Button text="_Refresh list" mnemonicParsing="true" onAction="#refreshMembers"
                         styleClass="secondary-button"/>
                 <Separator/>
-                <GridPane hgap="28" vgap="16">
-                    <columnConstraints>
-                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                    </columnConstraints>
+                <HBox spacing="12">
                     <children>
-                        <VBox spacing="10" GridPane.columnIndex="0">
+                        <Button text="Create _Member" mnemonicParsing="true" onAction="#showCreateForm"
+                                styleClass="primary-button"/>
+                        <Button text="_Edit selected Member" mnemonicParsing="true" onAction="#showEditForm"
+                                styleClass="secondary-button"/>
+                    </children>
+                </HBox>
+                <StackPane>
+                    <children>
+                        <VBox fx:id="createMemberPane" maxWidth="520" spacing="10" styleClass="account-form-card">
                             <children>
                                 <Label text="Create Member" styleClass="section-title"/>
                                 <Label text="Member ID" styleClass="field-label"/>
@@ -85,7 +90,8 @@
                                         styleClass="primary-button"/>
                             </children>
                         </VBox>
-                        <VBox spacing="10" GridPane.columnIndex="1">
+                        <VBox fx:id="editMemberPane" maxWidth="520" spacing="10" styleClass="account-form-card"
+                              managed="false" visible="false">
                             <children>
                                 <Label text="Selected Member" styleClass="section-title"/>
                                 <Label fx:id="selectedMemberLabel" text="No Member selected"
@@ -105,7 +111,7 @@
                             </children>
                         </VBox>
                     </children>
-                </GridPane>
+                </StackPane>
                 <Label fx:id="statusLabel" styleClass="error-text" wrapText="true"/>
                     </children>
                 </VBox>

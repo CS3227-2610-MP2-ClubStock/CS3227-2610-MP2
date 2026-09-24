@@ -16,6 +16,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 
 /**
  * Presents Exco Member-account administration while delegating account rules to the service.
@@ -48,6 +49,10 @@ public final class MemberAdministrationController {
     @FXML
     private CheckBox deactivateConfirmation;
     @FXML
+    private VBox createMemberPane;
+    @FXML
+    private VBox editMemberPane;
+    @FXML
     private Label statusLabel;
     private MemberSummary selectedMember;
 
@@ -79,6 +84,7 @@ public final class MemberAdministrationController {
                 member.getValue().active() ? "Active" : "Inactive"));
         membersTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, previous, current) -> selectMember(current));
+        showCreateForm();
         refreshMembers();
     }
 
@@ -91,6 +97,29 @@ public final class MemberAdministrationController {
         execute(() -> memberAccountService.createMember(newMemberIdField.getText(),
                 newMemberNameField.getText(), password), "Member account created.", true);
         newMemberPasswordField.clear();
+    }
+
+    /**
+     * Shows the new-Member form without changing the selected account.
+     */
+    @FXML
+    private void showCreateForm() {
+        setVisiblePane(createMemberPane, true);
+        setVisiblePane(editMemberPane, false);
+        newMemberIdField.requestFocus();
+    }
+
+    /**
+     * Shows the selected-Member editing form when a Member is selected.
+     */
+    @FXML
+    private void showEditForm() {
+        if (requireSelection() == null) {
+            return;
+        }
+        setVisiblePane(createMemberPane, false);
+        setVisiblePane(editMemberPane, true);
+        selectedMemberNameField.requestFocus();
     }
 
     /**
@@ -205,6 +234,11 @@ public final class MemberAdministrationController {
         selectedMemberNameField.clear();
         replacementPasswordField.clear();
         deactivateConfirmation.setSelected(false);
+    }
+
+    private static void setVisiblePane(VBox pane, boolean visible) {
+        pane.setVisible(visible);
+        pane.setManaged(visible);
     }
 
     private void showError(String message) {
