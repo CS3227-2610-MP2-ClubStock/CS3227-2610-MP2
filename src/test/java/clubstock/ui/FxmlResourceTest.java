@@ -105,16 +105,15 @@ class FxmlResourceTest {
         }
 
         assertTrue(fxml.contains("fx:id=\"membersTable\""));
-        assertTrue(fxml.contains("fx:id=\"newMemberIdField\""));
-        assertTrue(fxml.contains("fx:id=\"newMemberPasswordField\""));
-        assertTrue(fxml.contains("onAction=\"#deactivateMember\""));
-        assertTrue(fxml.contains("deactivateConfirmation"));
-        assertTrue(fxml.contains("fx:id=\"createMemberPane\""));
-        assertTrue(fxml.contains("fx:id=\"editMemberPane\""));
-        assertTrue(fxml.contains("onAction=\"#showCreateForm\""));
-        assertTrue(fxml.contains("onAction=\"#showEditForm\""));
+        assertTrue(fxml.contains("fx:id=\"editMemberButton\""));
+        assertTrue(fxml.contains("onAction=\"#openCreateDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openEditDialog\""));
+        assertTrue(fxml.indexOf("onAction=\"#openCreateDialog\"")
+                < fxml.indexOf("fx:id=\"membersTable\""));
         assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));
         assertTrue(fxml.contains("hbarPolicy=\"NEVER\""));
+        assertFalse(fxml.contains("newMemberIdField"));
+        assertFalse(fxml.contains("createMemberPane"));
         assertFalse(fxml.contains("passwordHash"));
     }
 
