@@ -1,5 +1,5 @@
 .root {
-    -fx-font-family: "Segoe UI", "Inter", sans-serif;
+    -fx-font-family: "sans-serif";
     -fx-font-size: 14px;
     -fx-text-fill: #172033;
     -fx-focus-color: #1463ff;
@@ -28,7 +28,7 @@
 
 .screen-title {
     -fx-font-size: 26px;
-    -fx-font-weight: 750;
+    -fx-font-weight: 700;
     -fx-text-fill: #172033;
 }
 
@@ -94,7 +94,7 @@
 }
 
 .error-text {
-    -fx-font-weight: 650;
+    -fx-font-weight: 600;
     -fx-text-fill: #a12626;
 }
 

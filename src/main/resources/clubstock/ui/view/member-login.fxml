@@ -3,6 +3,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -13,14 +16,28 @@
     <padding>
         <Insets top="36" right="36" bottom="36" left="36"/>
     </padding>
-    <VBox alignment="CENTER_LEFT" maxWidth="520" spacing="16" styleClass="surface-card">
+    <VBox alignment="CENTER_LEFT" maxWidth="520" spacing="14" styleClass="surface-card">
         <children>
             <Label text="MEMBER ACCESS" styleClass="eyebrow"/>
             <Label text="Member sign in" styleClass="screen-title"/>
-            <Label text="The Member sign-in form is supplied by the Member authentication implementation and is not available in this build yet."
-                   styleClass="supporting-text" wrapText="true"/>
-            <Button text="_Back to role selection" mnemonicParsing="true" defaultButton="true"
-                    onAction="#goBack" styleClass="secondary-button"/>
+            <Label fx:id="memberIdLabel" text="_Member ID" mnemonicParsing="true"
+                   styleClass="field-label"/>
+            <TextField fx:id="memberIdField" promptText="Enter your Member ID"
+                       onAction="#login"/>
+            <Label fx:id="passwordLabel" text="_Password" mnemonicParsing="true"
+                   styleClass="field-label"/>
+            <PasswordField fx:id="passwordField" promptText="Enter your password"
+                           onAction="#login"/>
+            <Label fx:id="errorLabel" accessibleRoleDescription="Sign-in error"
+                   minHeight="24" styleClass="error-text" wrapText="true"/>
+            <HBox spacing="12">
+                <children>
+                    <Button text="_Sign in" mnemonicParsing="true" defaultButton="true"
+                            onAction="#login" styleClass="primary-button"/>
+                    <Button text="_Back" mnemonicParsing="true" cancelButton="true"
+                            onAction="#goBack" styleClass="secondary-button"/>
+                </children>
+            </HBox>
         </children>
     </VBox>
 </StackPane>

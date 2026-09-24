@@ -29,12 +29,11 @@ The core domain and SLICE-001 SQLite foundation exist under `clubstock.domain`,
 `clubstock.application` and `clubstock.infrastructure`. Persistence tests use temporary
 databases. The FXML shell now initializes `clubstock.db` under `${user.home}/.clubstock`,
 or the directory selected by the `clubstock.dataDir` system property, and provides role
-selection, Exco setup/login views, guarded role hosts, logout wiring and shared CSS.
-
-The shell consumes authentication through `AuthenticationGateway`. Until Keith's shared
-authentication/session implementation and Member-login view are integrated, startup uses a safe
-unavailable adapter: the shell can be inspected, but real Exco or Member authentication is not yet
-available. The Member-login FXML is an explicit non-authenticating integration placeholder.
+selection, Exco setup/login views, Member login, guarded role hosts, logout wiring and shared CSS.
+`ApplicationContext` composes PBKDF2 password hashing, account authentication, the in-memory
+session manager and the UI authentication adapter around the same SQLite database. A fresh
+installation routes Exco to one-time password setup; configured Exco accounts and active
+Exco-created Members can then sign in.
 
 Follow the [parallel implementation roadmap](plans/parallel-role-implementation.md)
 for ownership and delivery. The [shared application design](plans/shared-application-design.md)

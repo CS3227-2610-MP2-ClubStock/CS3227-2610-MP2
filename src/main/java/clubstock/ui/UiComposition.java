@@ -3,6 +3,7 @@ package clubstock.ui;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
+import clubstock.ui.auth.MemberAuthenticationAction;
 import clubstock.ui.auth.RoleSelectionAction;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
@@ -51,8 +52,10 @@ public final class UiComposition {
                 () -> new ExcoSetupController(excoAction, navigator));
         controllerFactory.register(ExcoLoginController.class,
                 () -> new ExcoLoginController(excoAction, navigator));
+        MemberAuthenticationAction memberAction =
+                new MemberAuthenticationAction(authentication, navigator);
         controllerFactory.register(MemberLoginController.class,
-                () -> new MemberLoginController(navigator));
+                () -> new MemberLoginController(memberAction, navigator));
         controllerFactory.register(ExcoHomeController.class,
                 () -> new ExcoHomeController(logoutAction));
         controllerFactory.register(MemberHomeController.class,

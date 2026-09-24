@@ -52,6 +52,7 @@ public final class JavaFxNavigator implements NavigationService {
             throw new IllegalArgumentException("Route cannot be null.");
         }
         if (!policy.permits(route, authentication.currentPrincipal())) {
+            authentication.logout();
             errorPresenter.showError("Sign in required", ACCESS_DENIED);
             install(Route.ROLE_SELECTION);
             return;

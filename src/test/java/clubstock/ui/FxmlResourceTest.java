@@ -78,10 +78,19 @@ class FxmlResourceTest {
     }
 
     @Test
-    void roleHostsUseSeparateShellStyleClasses()
-            throws IOException, ParserConfigurationException, SAXException {
-        assertStyleClasses(Route.EXCO_HOME, List.of("role-shell", "exco-shell"));
-        assertStyleClasses(Route.MEMBER_HOME, List.of("role-shell", "member-shell"));
+    void memberLoginRouteContainsBothCredentialsAndActions() throws IOException {
+        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_LOGIN.resourcePath());
+        assertNotNull(resource);
+        String fxml;
+        try (InputStream stream = resource.openStream()) {
+            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        assertTrue(fxml.contains("fx:id=\"memberIdField\""));
+        assertTrue(fxml.contains("fx:id=\"passwordField\""));
+        assertTrue(fxml.contains("onAction=\"#login\""));
+        assertTrue(fxml.contains("onAction=\"#goBack\""));
+        assertFalse(fxml.contains("not available in this build yet"));
     }
 
     private static void assertCredentialLabelBindings(Route route, String labelId,

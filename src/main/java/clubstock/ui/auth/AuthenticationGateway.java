@@ -32,6 +32,14 @@ public interface AuthenticationGateway {
     void authenticateExco(char[] password);
 
     /**
+     * Authenticates an active Member and establishes that Member's principal.
+     *
+     * @param memberId Member identity.
+     * @param password Password characters; the caller clears its array after the call.
+     */
+    void authenticateMember(String memberId, char[] password);
+
+    /**
      * Returns the current in-memory principal.
      *
      * @return Current principal, when authenticated.
