@@ -11,7 +11,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="clubstock.ui.controller.MemberHomeController"
-            styleClass="role-shell member-shell">
+            styleClass="role-shell, member-shell">
     <top>
         <HBox alignment="CENTER_LEFT" spacing="16" styleClass="shell-bar">
             <padding>

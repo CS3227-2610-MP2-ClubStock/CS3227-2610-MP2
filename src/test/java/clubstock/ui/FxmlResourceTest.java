@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
@@ -76,6 +77,13 @@ class FxmlResourceTest {
         assertCredentialLabelBindings(Route.EXCO_SETUP, "confirmationLabel", "confirmationField");
     }
 
+    @Test
+    void roleHostsUseSeparateShellStyleClasses()
+            throws IOException, ParserConfigurationException, SAXException {
+        assertStyleClasses(Route.EXCO_HOME, List.of("role-shell", "exco-shell"));
+        assertStyleClasses(Route.MEMBER_HOME, List.of("role-shell", "member-shell"));
+    }
+
     private static void assertCredentialLabelBindings(Route route, String labelId,
             String fieldId) throws IOException {
         URL resource = FxmlResourceTest.class.getResource(route.resourcePath());
@@ -88,6 +96,18 @@ class FxmlResourceTest {
         assertFalse(fxml.contains("labelFor="), route.name());
         assertTrue(fxml.contains("fx:id=\"" + labelId + "\""), labelId);
         assertTrue(fxml.contains("fx:id=\"" + fieldId + "\""), fieldId);
+    }
+
+    private static void assertStyleClasses(Route route, List<String> expectedClasses)
+            throws IOException, ParserConfigurationException, SAXException {
+        URL resource = FxmlResourceTest.class.getResource(route.resourcePath());
+        assertNotNull(resource, route.resourcePath());
+        try (InputStream stream = resource.openStream()) {
+            Document document = secureDocumentBuilderFactory()
+                    .newDocumentBuilder().parse(stream);
+            String classes = document.getDocumentElement().getAttribute("styleClass");
+            assertEquals(expectedClasses, List.of(classes.split(",\\s*")), route.name());
+        }
     }
 
     private static DocumentBuilderFactory secureDocumentBuilderFactory()
