@@ -157,6 +157,16 @@ class FxmlResourceTest {
         assertFalse(fxml.contains("labelFor="));
     }
 
+    @Test
+    void excoActiveLoansRouteContainsRequiredLoanFields() throws IOException {
+        String fxml = routeText(Route.EXCO_ACTIVE_LOANS);
+        assertTrue(fxml.contains("fx:id=\"loansTable\""));
+        assertTrue(fxml.contains("fx:id=\"memberColumn\""));
+        assertTrue(fxml.contains("fx:id=\"equipmentIdColumn\""));
+        assertTrue(fxml.contains("fx:id=\"overdueColumn\""));
+        assertTrue(fxml.contains("onAction=\"#refresh\""));
+    }
+
     private static void assertCredentialLabelBindings(Route route, String labelId,
             String fieldId) throws IOException {
         String fxml = routeText(route);
