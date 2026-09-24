@@ -45,6 +45,58 @@
     -fx-text-fill: #526077;
 }
 
+.catalog-empty-text {
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #526077;
+}
+
+.catalog-list-view {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.catalog-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 6px 0;
+}
+
+.catalog-list-view .list-cell:filled:selected {
+    -fx-background-color: transparent;
+}
+
+.catalog-list-view .list-cell:filled:selected .catalog-row {
+    -fx-border-color: #1463ff;
+}
+
+.catalog-row {
+    -fx-background-color: #f9fbff;
+    -fx-background-radius: 10px;
+    -fx-border-color: #dce3ef;
+    -fx-border-radius: 10px;
+    -fx-padding: 14px 16px;
+}
+
+.catalog-type-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #172033;
+}
+
+.available-status {
+    -fx-font-weight: 700;
+    -fx-text-fill: #176b4d;
+}
+
+.zero-stock-status {
+    -fx-background-color: #fff0f0;
+    -fx-background-radius: 7px;
+    -fx-font-weight: 800;
+    -fx-padding: 6px 10px;
+    -fx-text-fill: #8f1f1f;
+}
+
 .field-label {
     -fx-font-weight: 700;
     -fx-text-fill: #27364e;

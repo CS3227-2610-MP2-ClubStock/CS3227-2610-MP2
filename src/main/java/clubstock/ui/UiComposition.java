@@ -1,7 +1,8 @@
 package clubstock.ui;
 
-import clubstock.application.member.MemberAccountService;
+import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.inventory.InventoryService;
+import clubstock.application.member.MemberAccountService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
@@ -10,10 +11,10 @@ import clubstock.ui.auth.RoleSelectionAction;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
+import clubstock.ui.controller.InventoryAdministrationController;
+import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
-import clubstock.ui.controller.MemberAdministrationController;
-import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.ControllerFactory;
 import clubstock.ui.navigation.FxmlViewLoader;
@@ -35,13 +36,14 @@ public final class UiComposition {
      * @param authentication Authentication/session boundary.
      * @param memberAccountService Exco Member-account administration service.
      * @param inventoryService Exco inventory administration service.
+     * @param memberCatalogService Context-owned Member catalogue query.
      * @return Configured navigator.
      */
     public static JavaFxNavigator createNavigator(Stage stage,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
-            InventoryService inventoryService) {
+            InventoryService inventoryService, MemberCatalogService memberCatalogService) {
         if (stage == null || authentication == null || memberAccountService == null
-                || inventoryService == null) {
+                || inventoryService == null || memberCatalogService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -71,7 +73,7 @@ public final class UiComposition {
         controllerFactory.register(InventoryAdministrationController.class,
                 () -> new InventoryAdministrationController(inventoryService, navigator));
         controllerFactory.register(MemberHomeController.class,
-                () -> new MemberHomeController(logoutAction));
+                () -> new MemberHomeController(logoutAction, memberCatalogService));
         return navigator;
     }
 }

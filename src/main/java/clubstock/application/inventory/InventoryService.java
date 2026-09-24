@@ -239,7 +239,7 @@ public final class InventoryService {
 
     private EquipmentTypeSummary typeSummary(UnitOfWork unitOfWork, EquipmentType type) {
         return new EquipmentTypeSummary(type.equipmentTypeId().value(), type.name().value(),
-                type.isOffered(), availabilityPolicy.availableCount(unitOfWork,
+                type.isOffered(), availabilityPolicy.countAvailable(unitOfWork,
                         type.equipmentTypeId()));
     }
 

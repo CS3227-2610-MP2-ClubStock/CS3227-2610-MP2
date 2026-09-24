@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
@@ -24,8 +23,8 @@ import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
-import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberAdministrationController;
+import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.Route;
@@ -60,18 +59,15 @@ class FxmlResourceTest {
     }
 
     @Test
-    void sharedStylesheetIncludesVisibleFocusAndTextualErrorStyles() throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(STYLESHEET);
-        assertNotNull(resource);
-        String css;
-        try (InputStream stream = resource.openStream()) {
-            css = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+    void sharedStylesheetIncludesVisibleFocusAndRoleScreenStyles() throws IOException {
+        String css = resourceText(STYLESHEET);
 
         assertTrue(css.contains(":focused"));
         assertTrue(css.contains(".error-text"));
         assertTrue(css.contains(".member-shell"));
         assertTrue(css.contains(".exco-shell"));
+        assertTrue(css.contains(".catalog-list-view"));
+        assertTrue(css.contains(".zero-stock-status"));
     }
 
     @Test
@@ -83,12 +79,7 @@ class FxmlResourceTest {
 
     @Test
     void memberLoginRouteContainsBothCredentialsAndActions() throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_LOGIN.resourcePath());
-        assertNotNull(resource);
-        String fxml;
-        try (InputStream stream = resource.openStream()) {
-            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String fxml = routeText(Route.MEMBER_LOGIN);
 
         assertTrue(fxml.contains("fx:id=\"memberIdField\""));
         assertTrue(fxml.contains("fx:id=\"passwordField\""));
@@ -98,13 +89,23 @@ class FxmlResourceTest {
     }
 
     @Test
+    void memberHomeRouteContainsSafeCatalogueAndRefreshBindings() throws IOException {
+        String fxml = routeText(Route.MEMBER_HOME);
+
+        assertTrue(fxml.contains("fx:id=\"catalogListView\""));
+        assertTrue(fxml.contains("Offered equipment types and available quantities"));
+        assertTrue(fxml.contains("No equipment is currently offered"));
+        assertTrue(fxml.contains("fx:id=\"errorLabel\""));
+        assertTrue(fxml.contains("onAction=\"#refresh\""));
+        assertTrue(fxml.contains("onAction=\"#logout\""));
+        assertFalse(fxml.contains("Equipment ID"));
+        assertFalse(fxml.contains("EquipmentItem"));
+        assertFalse(fxml.contains("equipmentId"));
+    }
+
+    @Test
     void memberAdministrationRouteContainsSafeAccountControls() throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_ADMINISTRATION.resourcePath());
-        assertNotNull(resource);
-        String fxml;
-        try (InputStream stream = resource.openStream()) {
-            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String fxml = routeText(Route.MEMBER_ADMINISTRATION);
 
         assertTrue(fxml.contains("fx:id=\"membersTable\""));
         assertTrue(fxml.contains("fx:id=\"editMemberButton\""));
@@ -121,12 +122,7 @@ class FxmlResourceTest {
 
     @Test
     void inventoryAdministrationRouteContainsExcoInventoryControls() throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(Route.INVENTORY_ADMINISTRATION.resourcePath());
-        assertNotNull(resource);
-        String fxml;
-        try (InputStream stream = resource.openStream()) {
-            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String fxml = routeText(Route.INVENTORY_ADMINISTRATION);
 
         assertTrue(fxml.contains("fx:id=\"typesTable\""));
         assertTrue(fxml.contains("fx:id=\"itemsTable\""));
@@ -141,27 +137,22 @@ class FxmlResourceTest {
 
     private static void assertCredentialLabelBindings(Route route, String labelId,
             String fieldId) throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(route.resourcePath());
-        assertNotNull(resource, route.resourcePath());
-        String fxml;
-        try (InputStream stream = resource.openStream()) {
-            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String fxml = routeText(route);
 
         assertFalse(fxml.contains("labelFor="), route.name());
         assertTrue(fxml.contains("fx:id=\"" + labelId + "\""), labelId);
         assertTrue(fxml.contains("fx:id=\"" + fieldId + "\""), fieldId);
     }
 
-    private static void assertStyleClasses(Route route, List<String> expectedClasses)
-            throws IOException, ParserConfigurationException, SAXException {
-        URL resource = FxmlResourceTest.class.getResource(route.resourcePath());
-        assertNotNull(resource, route.resourcePath());
+    private static String routeText(Route route) throws IOException {
+        return resourceText(route.resourcePath());
+    }
+
+    private static String resourceText(String resourcePath) throws IOException {
+        URL resource = FxmlResourceTest.class.getResource(resourcePath);
+        assertNotNull(resource, resourcePath);
         try (InputStream stream = resource.openStream()) {
-            Document document = secureDocumentBuilderFactory()
-                    .newDocumentBuilder().parse(stream);
-            String classes = document.getDocumentElement().getAttribute("styleClass");
-            assertEquals(expectedClasses, List.of(classes.split(",\\s*")), route.name());
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 

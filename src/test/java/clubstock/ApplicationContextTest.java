@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -37,6 +38,7 @@ class ApplicationContextTest {
         assertNotNull(first.transactionManager());
         assertNotNull(first.availabilityPolicy());
         assertNotNull(first.inventoryService());
+        assertNotNull(first.memberCatalogService());
         assertFalse(second.authentication().isExcoSetupRequired());
         assertTrue(second.sessionManager().currentPrincipal().isEmpty());
         assertArrayEquals(new char[password.length], password);

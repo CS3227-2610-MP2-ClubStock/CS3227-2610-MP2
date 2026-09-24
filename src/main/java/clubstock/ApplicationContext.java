@@ -9,7 +9,9 @@ import clubstock.application.ApplicationException;
 import clubstock.application.auth.AuthenticationService;
 import clubstock.application.auth.Pbkdf2PasswordHasher;
 import clubstock.application.auth.SessionManager;
+import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.inventory.AvailabilityPolicy;
+import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.port.TransactionManager;
@@ -33,11 +35,13 @@ public final class ApplicationContext {
     private final MemberAccountService memberAccountService;
     private final AvailabilityPolicy availabilityPolicy;
     private final InventoryService inventoryService;
+    private final MemberCatalogService memberCatalogService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
-            AvailabilityPolicy availabilityPolicy, InventoryService inventoryService) {
+            AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
+            MemberCatalogService memberCatalogService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -47,6 +51,7 @@ public final class ApplicationContext {
         this.memberAccountService = memberAccountService;
         this.availabilityPolicy = availabilityPolicy;
         this.inventoryService = inventoryService;
+        this.memberCatalogService = memberCatalogService;
     }
 
     /**
@@ -55,8 +60,7 @@ public final class ApplicationContext {
      * @return Fully initialized application context.
      */
     public static ApplicationContext createProduction() {
-        Path dataDirectory = resolveDataDirectory();
-        return create(dataDirectory);
+        return create(resolveDataDirectory());
     }
 
     /**
@@ -79,14 +83,16 @@ public final class ApplicationContext {
         AuthenticationGateway authentication = new AuthenticationGatewayAdapter(
                 authenticationService);
         Clock clock = Clock.systemDefaultZone();
+        AvailabilityPolicy availabilityPolicy = new EquipmentItemAvailabilityPolicy();
         MemberAccountService memberAccountService = new MemberAccountService(database, sessionManager,
                 passwordHasher, clock);
-        AvailabilityPolicy availabilityPolicy = new AvailabilityPolicy();
         InventoryService inventoryService = new InventoryService(database, sessionManager,
                 new UuidIdGenerator(), availabilityPolicy, clock);
+        MemberCatalogService memberCatalogService = new MemberCatalogService(database,
+                sessionManager, availabilityPolicy);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
-                inventoryService);
+                inventoryService, memberCatalogService);
     }
 
     /**
@@ -101,7 +107,7 @@ public final class ApplicationContext {
     /**
      * Returns the process clock captured during composition.
      *
-     * @return Application clock.
+     * @return Process clock.
      */
     public Clock clock() {
         return clock;
@@ -110,7 +116,7 @@ public final class ApplicationContext {
     /**
      * Returns the process time zone captured during composition.
      *
-     * @return Application time zone.
+     * @return Process time zone.
      */
     public ZoneId zoneId() {
         return zoneId;
@@ -153,9 +159,9 @@ public final class ApplicationContext {
     }
 
     /**
-     * Returns the shared availability calculation policy for cross-role catalogue use.
+     * Returns the shared transactional availability policy for cross-role catalogue use.
      *
-     * @return Shared transactional availability policy.
+     * @return Shared availability policy.
      */
     public AvailabilityPolicy availabilityPolicy() {
         return availabilityPolicy;
@@ -168,6 +174,15 @@ public final class ApplicationContext {
      */
     public InventoryService inventoryService() {
         return inventoryService;
+    }
+
+    /**
+     * Returns the Member catalogue query service.
+     *
+     * @return Context-owned catalogue service.
+     */
+    public MemberCatalogService memberCatalogService() {
+        return memberCatalogService;
     }
 
     private static Path resolveDataDirectory() {
@@ -184,12 +199,6 @@ public final class ApplicationContext {
         return Path.of(userHome, ".clubstock").toAbsolutePath().normalize();
     }
 
-    /**
-     * Initializes the SQLite database in the configured data directory.
-     *
-     * @param dataDirectory Application data directory.
-     * @return Initialized database and transaction manager.
-     */
     private static SqliteDatabase initializeDatabase(Path dataDirectory) {
         SqliteDatabase database = new SqliteDatabase(dataDirectory.resolve(DATABASE_FILENAME));
         database.initialize();

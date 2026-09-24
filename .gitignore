@@ -1,6 +1,7 @@
 .gradle/
 build/
 *.class
+.vscode/
 
 # Local ClubStock Codex workflow
 /.agents/skills/implement/

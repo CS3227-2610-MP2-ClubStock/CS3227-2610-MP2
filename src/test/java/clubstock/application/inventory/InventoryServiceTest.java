@@ -48,7 +48,7 @@ class InventoryServiceTest {
             @TempDir java.nio.file.Path temporaryDirectory) {
         SqliteDatabase database = initializedDatabase(temporaryDirectory);
         SessionManager sessionManager = signedInExco(database);
-        AvailabilityPolicy availabilityPolicy = new AvailabilityPolicy();
+        AvailabilityPolicy availabilityPolicy = new EquipmentItemAvailabilityPolicy();
         InventoryService inventory = inventory(database, sessionManager, () -> "type-uuid-01",
                 availabilityPolicy);
 
@@ -73,7 +73,7 @@ class InventoryServiceTest {
         inventory.releaseItem("item-01");
 
         assertEquals("AVAILABLE", inventory.listItems().getFirst().availability());
-        assertEquals(1, database.read(unitOfWork -> availabilityPolicy.availableCount(unitOfWork,
+        assertEquals(1, database.read(unitOfWork -> availabilityPolicy.countAvailable(unitOfWork,
                 new EquipmentTypeId("type-uuid-01"))).intValue());
         assertEquals(1, inventory.listTypes().getFirst().availableQuantity());
 
@@ -92,7 +92,7 @@ class InventoryServiceTest {
         SessionManager sessionManager = signedInExco(database);
         InventoryService inventory = inventory(database, sessionManager, new SequenceIdGenerator(
                 "type-01", "unused-duplicate-id", "type-02", "type-03"),
-                new AvailabilityPolicy());
+                new EquipmentItemAvailabilityPolicy());
 
         inventory.createType("Hockey stick");
         assertError(ApplicationErrorCode.CONFLICT, () -> inventory.createType("HOCKEY STICK"));
@@ -144,7 +144,7 @@ class InventoryServiceTest {
         SqliteDatabase database = initializedDatabase(temporaryDirectory);
         SessionManager sessionManager = signedInExco(database);
         InventoryService inventory = inventory(database, sessionManager, () -> "type-01",
-                new AvailabilityPolicy());
+                new EquipmentItemAvailabilityPolicy());
         inventory.createType("Requestable type");
         database.write(unitOfWork -> {
             unitOfWork.members().insert(Member.create(new MemberId("member-01"), "Member",
