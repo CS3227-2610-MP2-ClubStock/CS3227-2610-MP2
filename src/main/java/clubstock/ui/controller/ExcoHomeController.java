@@ -53,4 +53,6 @@ public final class ExcoHomeController {
     private void manageRequests() {
         navigation.show(Route.EXCO_REQUEST_QUEUE);
     }
+
+    @FXML private void manageLoans() { navigation.show(Route.EXCO_ACTIVE_LOANS); }
 }

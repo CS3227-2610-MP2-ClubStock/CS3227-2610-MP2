@@ -5,6 +5,7 @@ import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.request.ExcoRequestService;
 import clubstock.application.request.ApprovalService;
+import clubstock.application.loan.LoanQueryService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
@@ -14,6 +15,7 @@ import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.ExcoRequestQueueController;
+import clubstock.ui.controller.ExcoActiveLoansController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberHomeController;
@@ -45,10 +47,10 @@ public final class UiComposition {
     public static JavaFxNavigator createNavigator(Stage stage,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             InventoryService inventoryService, MemberCatalogService memberCatalogService,
-            ExcoRequestService excoRequestService, ApprovalService approvalService) {
+            ExcoRequestService excoRequestService, ApprovalService approvalService, LoanQueryService loanQueryService) {
         if (stage == null || authentication == null || memberAccountService == null
                 || inventoryService == null || memberCatalogService == null
-                || excoRequestService == null || approvalService == null) {
+                || excoRequestService == null || approvalService == null || loanQueryService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -79,6 +81,8 @@ public final class UiComposition {
                 () -> new InventoryAdministrationController(inventoryService, navigator));
         controllerFactory.register(ExcoRequestQueueController.class,
                 () -> new ExcoRequestQueueController(excoRequestService, approvalService, navigator));
+        controllerFactory.register(ExcoActiveLoansController.class,
+                () -> new ExcoActiveLoansController(loanQueryService, navigator));
         controllerFactory.register(MemberHomeController.class,
                 () -> new MemberHomeController(logoutAction, memberCatalogService));
         return navigator;

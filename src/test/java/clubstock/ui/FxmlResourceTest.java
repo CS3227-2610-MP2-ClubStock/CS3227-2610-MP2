@@ -22,6 +22,7 @@ import org.xml.sax.SAXException;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoRequestQueueController;
+import clubstock.ui.controller.ExcoActiveLoansController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
@@ -42,6 +43,7 @@ class FxmlResourceTest {
             Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class,
             Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class,
             Route.EXCO_REQUEST_QUEUE, ExcoRequestQueueController.class,
+            Route.EXCO_ACTIVE_LOANS, ExcoActiveLoansController.class,
             Route.MEMBER_HOME, MemberHomeController.class);
 
     @Test

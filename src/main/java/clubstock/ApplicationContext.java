@@ -16,6 +16,7 @@ import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.request.ExcoRequestService;
 import clubstock.application.request.ApprovalService;
+import clubstock.application.loan.LoanQueryService;
 import clubstock.application.port.TransactionManager;
 import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
@@ -40,13 +41,14 @@ public final class ApplicationContext {
     private final MemberCatalogService memberCatalogService;
     private final ExcoRequestService excoRequestService;
     private final ApprovalService approvalService;
+    private final LoanQueryService loanQueryService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
             MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService,
-            ApprovalService approvalService) {
+            ApprovalService approvalService, LoanQueryService loanQueryService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -59,6 +61,7 @@ public final class ApplicationContext {
         this.memberCatalogService = memberCatalogService;
         this.excoRequestService = excoRequestService;
         this.approvalService = approvalService;
+        this.loanQueryService = loanQueryService;
     }
 
     /**
@@ -101,9 +104,11 @@ public final class ApplicationContext {
                 availabilityPolicy);
         ApprovalService approvalService = new ApprovalService(database, sessionManager,
                 availabilityPolicy, new UuidIdGenerator(), clock);
+        LoanQueryService loanQueryService = new LoanQueryService(database, sessionManager, clock,
+                ZoneId.systemDefault());
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
-                inventoryService, memberCatalogService, excoRequestService, approvalService);
+                inventoryService, memberCatalogService, excoRequestService, approvalService, loanQueryService);
     }
 
     /**
@@ -209,6 +214,8 @@ public final class ApplicationContext {
     public ApprovalService approvalService() {
         return approvalService;
     }
+
+    public LoanQueryService loanQueryService() { return loanQueryService; }
 
     private static Path resolveDataDirectory() {
         String configuredDirectory = System.getProperty(DATA_DIRECTORY_PROPERTY);
