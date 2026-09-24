@@ -91,6 +91,7 @@
 
 - Darryl requested a fix for the reviewed FXML forward `labelFor` references in the Exco login and setup screens. The labels now receive their associations in controller initialization after field injection, preserving the screen layout while allowing keyboard mnemonics to focus the correct password fields. The fix will be committed separately with the affected FXML, controllers, verification coverage, and this prompt log.
 - The focused JavaFX FXML regression test passed, including the actual post-injection label associations, and the Shadow JAR packaging task passed. The separate fix commit groups `exco-login.fxml`, `exco-setup.fxml`, their controllers, `FxmlResourceTest.java`, and this log.
-## 2026-09-24 — Reuse implementation workflow across projects
 
-- Darryl asked whether the local `$implement` workflow can be used in another project. Explained that ClubStock-specific scripts and references should not be copied directly; recommended a generic user-level or per-project skill with project-specific verification references, and identified the relevant installation locations.
+## 2026-09-24 — Strengthen JavaFX FXML review checks
+
+- Darryl requested that the quality-review skill catch the discovered FXML integration defects. Added a focused checklist section covering forward `Label.labelFor` references, comma-delimited multi-class `styleClass` values and CSS-selector alignment, plus the separation of headless unit tests from display-backed JavaFX checks.
