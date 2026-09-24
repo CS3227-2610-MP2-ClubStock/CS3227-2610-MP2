@@ -35,6 +35,7 @@ class ApplicationContextTest {
                 first.authentication().currentPrincipal().orElseThrow().role());
         assertEquals(AccountRole.EXCO, first.sessionManager().requireExco().role());
         assertNotNull(first.transactionManager());
+        assertNotNull(first.memberCatalogService());
         assertFalse(second.authentication().isExcoSetupRequired());
         assertTrue(second.sessionManager().currentPrincipal().isEmpty());
         assertArrayEquals(new char[password.length], password);
