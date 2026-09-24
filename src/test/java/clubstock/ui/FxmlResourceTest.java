@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
@@ -23,6 +22,8 @@ import org.xml.sax.SAXException;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
+import clubstock.ui.controller.InventoryAdministrationController;
+import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
 import clubstock.ui.controller.RoleSelectionController;
@@ -37,6 +38,8 @@ class FxmlResourceTest {
             Route.EXCO_LOGIN, ExcoLoginController.class,
             Route.MEMBER_LOGIN, MemberLoginController.class,
             Route.EXCO_HOME, ExcoHomeController.class,
+            Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class,
+            Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class,
             Route.MEMBER_HOME, MemberHomeController.class);
 
     @Test
@@ -56,13 +59,8 @@ class FxmlResourceTest {
     }
 
     @Test
-    void sharedStylesheetIncludesVisibleFocusAndTextualErrorStyles() throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(STYLESHEET);
-        assertNotNull(resource);
-        String css;
-        try (InputStream stream = resource.openStream()) {
-            css = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+    void sharedStylesheetIncludesVisibleFocusAndRoleScreenStyles() throws IOException {
+        String css = resourceText(STYLESHEET);
 
         assertTrue(css.contains(":focused"));
         assertTrue(css.contains(".error-text"));
@@ -81,12 +79,7 @@ class FxmlResourceTest {
 
     @Test
     void memberLoginRouteContainsBothCredentialsAndActions() throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_LOGIN.resourcePath());
-        assertNotNull(resource);
-        String fxml;
-        try (InputStream stream = resource.openStream()) {
-            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String fxml = routeText(Route.MEMBER_LOGIN);
 
         assertTrue(fxml.contains("fx:id=\"memberIdField\""));
         assertTrue(fxml.contains("fx:id=\"passwordField\""));
@@ -97,12 +90,7 @@ class FxmlResourceTest {
 
     @Test
     void memberHomeRouteContainsSafeCatalogueAndRefreshBindings() throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(Route.MEMBER_HOME.resourcePath());
-        assertNotNull(resource);
-        String fxml;
-        try (InputStream stream = resource.openStream()) {
-            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String fxml = routeText(Route.MEMBER_HOME);
 
         assertTrue(fxml.contains("fx:id=\"catalogListView\""));
         assertTrue(fxml.contains("Offered equipment types and available quantities"));
@@ -115,29 +103,56 @@ class FxmlResourceTest {
         assertFalse(fxml.contains("equipmentId"));
     }
 
+    @Test
+    void memberAdministrationRouteContainsSafeAccountControls() throws IOException {
+        String fxml = routeText(Route.MEMBER_ADMINISTRATION);
+
+        assertTrue(fxml.contains("fx:id=\"membersTable\""));
+        assertTrue(fxml.contains("fx:id=\"editMemberButton\""));
+        assertTrue(fxml.contains("onAction=\"#openCreateDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openEditDialog\""));
+        assertTrue(fxml.indexOf("onAction=\"#openCreateDialog\"")
+                < fxml.indexOf("fx:id=\"membersTable\""));
+        assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));
+        assertTrue(fxml.contains("hbarPolicy=\"NEVER\""));
+        assertFalse(fxml.contains("newMemberIdField"));
+        assertFalse(fxml.contains("createMemberPane"));
+        assertFalse(fxml.contains("passwordHash"));
+    }
+
+    @Test
+    void inventoryAdministrationRouteContainsExcoInventoryControls() throws IOException {
+        String fxml = routeText(Route.INVENTORY_ADMINISTRATION);
+
+        assertTrue(fxml.contains("fx:id=\"typesTable\""));
+        assertTrue(fxml.contains("fx:id=\"itemsTable\""));
+        assertTrue(fxml.contains("onAction=\"#openCreateTypeDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openManageTypeDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openAddItemDialog\""));
+        assertTrue(fxml.contains("onAction=\"#openManageItemDialog\""));
+        assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));
+        assertFalse(fxml.contains("labelFor="));
+        assertFalse(fxml.contains("Member catalogue"));
+    }
+
     private static void assertCredentialLabelBindings(Route route, String labelId,
             String fieldId) throws IOException {
-        URL resource = FxmlResourceTest.class.getResource(route.resourcePath());
-        assertNotNull(resource, route.resourcePath());
-        String fxml;
-        try (InputStream stream = resource.openStream()) {
-            fxml = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        String fxml = routeText(route);
 
         assertFalse(fxml.contains("labelFor="), route.name());
         assertTrue(fxml.contains("fx:id=\"" + labelId + "\""), labelId);
         assertTrue(fxml.contains("fx:id=\"" + fieldId + "\""), fieldId);
     }
 
-    private static void assertStyleClasses(Route route, List<String> expectedClasses)
-            throws IOException, ParserConfigurationException, SAXException {
-        URL resource = FxmlResourceTest.class.getResource(route.resourcePath());
-        assertNotNull(resource, route.resourcePath());
+    private static String routeText(Route route) throws IOException {
+        return resourceText(route.resourcePath());
+    }
+
+    private static String resourceText(String resourcePath) throws IOException {
+        URL resource = FxmlResourceTest.class.getResource(resourcePath);
+        assertNotNull(resource, resourcePath);
         try (InputStream stream = resource.openStream()) {
-            Document document = secureDocumentBuilderFactory()
-                    .newDocumentBuilder().parse(stream);
-            String classes = document.getDocumentElement().getAttribute("styleClass");
-            assertEquals(expectedClasses, List.of(classes.split(",\\s*")), route.name());
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 
