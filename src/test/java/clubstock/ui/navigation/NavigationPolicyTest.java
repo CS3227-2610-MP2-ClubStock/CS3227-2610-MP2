@@ -30,6 +30,15 @@ class NavigationPolicyTest {
     }
 
     @Test
+    void excoRequestQueueRequiresExcoPrincipal() {
+        assertFalse(policy.permits(Route.EXCO_REQUEST_QUEUE, Optional.empty()));
+        assertTrue(policy.permits(Route.EXCO_REQUEST_QUEUE,
+                Optional.of(AuthenticatedPrincipal.exco())));
+        assertFalse(policy.permits(Route.EXCO_REQUEST_QUEUE,
+                Optional.of(AuthenticatedPrincipal.member("M-001"))));
+    }
+
+    @Test
     void memberHomeRequiresMemberPrincipal() {
         assertFalse(policy.permits(Route.MEMBER_HOME, Optional.empty()));
         assertFalse(policy.permits(Route.MEMBER_HOME,

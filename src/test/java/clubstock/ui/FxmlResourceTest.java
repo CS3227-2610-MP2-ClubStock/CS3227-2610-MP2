@@ -21,6 +21,7 @@ import org.xml.sax.SAXException;
 
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
+import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
@@ -40,6 +41,7 @@ class FxmlResourceTest {
             Route.EXCO_HOME, ExcoHomeController.class,
             Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class,
             Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class,
+            Route.EXCO_REQUEST_QUEUE, ExcoRequestQueueController.class,
             Route.MEMBER_HOME, MemberHomeController.class);
 
     @Test
@@ -133,6 +135,22 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));
         assertFalse(fxml.contains("labelFor="));
         assertFalse(fxml.contains("Member catalogue"));
+    }
+
+    @Test
+    void excoRequestQueueRouteContainsPendingQueueControls() throws IOException {
+        String fxml = routeText(Route.EXCO_REQUEST_QUEUE);
+
+        assertTrue(fxml.contains("fx:id=\"requestsTable\""));
+        assertTrue(fxml.contains("fx:id=\"requestIdColumn\""));
+        assertTrue(fxml.contains("fx:id=\"availableQuantityColumn\""));
+        assertTrue(fxml.contains("fx:id=\"detailsColumn\""));
+        assertTrue(fxml.contains("fx:id=\"emptyQueueLabel\""));
+        assertTrue(fxml.contains("onAction=\"#rejectSelectedRequest\""));
+        assertTrue(fxml.contains("onAction=\"#refreshRequests\""));
+        assertTrue(fxml.contains("<ScrollPane fitToWidth=\"true\""));
+        assertFalse(fxml.contains("Equipment ID"));
+        assertFalse(fxml.contains("labelFor="));
     }
 
     private static void assertCredentialLabelBindings(Route route, String labelId,

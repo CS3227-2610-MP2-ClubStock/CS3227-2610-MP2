@@ -26,6 +26,12 @@ public interface LoanRequestRepository {
      */
     List<LoanRequest> findAll();
     /**
+     * Returns pending requests ordered by submission time and stable request identity.
+     *
+     * @return Pending requests ordered by requestedAt ascending, then Request ID ascending.
+     */
+    List<LoanRequest> findPendingOrderedByRequestedAt();
+    /**
      * Inserts a request.
      *
      * @param loanRequest Request to insert.

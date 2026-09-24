@@ -3,6 +3,7 @@ package clubstock.ui;
 import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
+import clubstock.application.request.ExcoRequestService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
@@ -11,6 +12,7 @@ import clubstock.ui.auth.RoleSelectionAction;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoSetupController;
+import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberHomeController;
@@ -41,9 +43,11 @@ public final class UiComposition {
      */
     public static JavaFxNavigator createNavigator(Stage stage,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
-            InventoryService inventoryService, MemberCatalogService memberCatalogService) {
+            InventoryService inventoryService, MemberCatalogService memberCatalogService,
+            ExcoRequestService excoRequestService) {
         if (stage == null || authentication == null || memberAccountService == null
-                || inventoryService == null || memberCatalogService == null) {
+                || inventoryService == null || memberCatalogService == null
+                || excoRequestService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -72,6 +76,8 @@ public final class UiComposition {
                 () -> new MemberAdministrationController(memberAccountService, navigator));
         controllerFactory.register(InventoryAdministrationController.class,
                 () -> new InventoryAdministrationController(inventoryService, navigator));
+        controllerFactory.register(ExcoRequestQueueController.class,
+                () -> new ExcoRequestQueueController(excoRequestService, navigator));
         controllerFactory.register(MemberHomeController.class,
                 () -> new MemberHomeController(logoutAction, memberCatalogService));
         return navigator;

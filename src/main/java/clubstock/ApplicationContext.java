@@ -14,6 +14,7 @@ import clubstock.application.inventory.AvailabilityPolicy;
 import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.member.MemberAccountService;
+import clubstock.application.request.ExcoRequestService;
 import clubstock.application.port.TransactionManager;
 import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
@@ -36,12 +37,13 @@ public final class ApplicationContext {
     private final AvailabilityPolicy availabilityPolicy;
     private final InventoryService inventoryService;
     private final MemberCatalogService memberCatalogService;
+    private final ExcoRequestService excoRequestService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
-            MemberCatalogService memberCatalogService) {
+            MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -52,6 +54,7 @@ public final class ApplicationContext {
         this.availabilityPolicy = availabilityPolicy;
         this.inventoryService = inventoryService;
         this.memberCatalogService = memberCatalogService;
+        this.excoRequestService = excoRequestService;
     }
 
     /**
@@ -90,9 +93,11 @@ public final class ApplicationContext {
                 new UuidIdGenerator(), availabilityPolicy, clock);
         MemberCatalogService memberCatalogService = new MemberCatalogService(database,
                 sessionManager, availabilityPolicy);
+        ExcoRequestService excoRequestService = new ExcoRequestService(database, sessionManager,
+                availabilityPolicy);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
-                inventoryService, memberCatalogService);
+                inventoryService, memberCatalogService, excoRequestService);
     }
 
     /**
@@ -183,6 +188,15 @@ public final class ApplicationContext {
      */
     public MemberCatalogService memberCatalogService() {
         return memberCatalogService;
+    }
+
+    /**
+     * Returns the Exco pending-request query and manual-rejection service.
+     *
+     * @return Context-owned Exco request service.
+     */
+    public ExcoRequestService excoRequestService() {
+        return excoRequestService;
     }
 
     private static Path resolveDataDirectory() {
