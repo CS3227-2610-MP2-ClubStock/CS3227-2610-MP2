@@ -33,7 +33,8 @@ public final class ClubStockApplication extends Application {
                     applicationContext.excoRequestService(),
                     applicationContext.memberRequestService(),
                     applicationContext.approvalService(),
-                    applicationContext.loanQueryService(), applicationContext.verificationService());
+                    applicationContext.loanQueryService(), applicationContext.memberLoanService(),
+                    applicationContext.verificationService());
             navigator.show(Route.ROLE_SELECTION);
             stage.show();
         } catch (RuntimeException exception) {

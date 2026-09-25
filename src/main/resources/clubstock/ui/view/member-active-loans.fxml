@@ -3,9 +3,11 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -27,7 +29,8 @@
                     <Label text="MEMBER WORKSPACE" styleClass="shell-role" />
                 </children>
             </VBox>
-            <Button text="_Refresh" mnemonicParsing="true" onAction="#refresh"
+            <Button fx:id="refreshButton" text="_Refresh" mnemonicParsing="true"
+                    onAction="#refresh"
                     styleClass="secondary-button" />
         </HBox>
     </top>
@@ -49,6 +52,8 @@
                     <VBox spacing="14" styleClass="account-form-card">
                         <children>
                             <Label text="Active loans" styleClass="section-title" />
+                            <Label fx:id="loadingLabel" text="Loading your loans…"
+                                   styleClass="supporting-text" visible="false" managed="false" />
                             <Label fx:id="emptyStateLabel" text="You have no active loans."
                                    styleClass="catalog-empty-text" visible="false" managed="false"
                                    wrapText="true" />
@@ -72,6 +77,95 @@
                                                  text="Overdue" />
                                 </columns>
                             </TableView>
+                        </children>
+                    </VBox>
+                    <VBox spacing="12" styleClass="account-form-card">
+                        <children>
+                            <Label text="Loan actions" styleClass="section-title" />
+                            <Label text="Select one of your ON_LOAN items to return it or report it lost."
+                                   styleClass="supporting-text" wrapText="true" />
+                            <HBox spacing="10">
+                                <children>
+                                    <Button fx:id="returnActionButton" text="Return"
+                                            onAction="#openReturnForm" styleClass="primary-button"
+                                            disable="true" />
+                                    <Button fx:id="lostActionButton" text="Report Lost"
+                                            onAction="#openLostForm" styleClass="secondary-button"
+                                            disable="true" />
+                                </children>
+                            </HBox>
+                            <Label fx:id="operationMessageLabel" text="" visible="false"
+                                   managed="false" wrapText="true" />
+                            <VBox fx:id="returnForm" spacing="12" visible="false"
+                                  managed="false" styleClass="account-form-card">
+                                <children>
+                                    <Label text="Return selected item" styleClass="section-title" />
+                                    <Label text="Choose the condition you observed. Exco will verify the item."
+                                           styleClass="supporting-text" wrapText="true" />
+                                    <HBox spacing="18">
+                                        <children>
+                                            <RadioButton fx:id="goodReturnRadioButton" text="Good condition"
+                                                         selected="true" />
+                                            <RadioButton fx:id="damagedReturnRadioButton" text="Damaged" />
+                                        </children>
+                                    </HBox>
+                                    <VBox fx:id="damagedReturnFields" spacing="10"
+                                          visible="false" managed="false">
+                                        <children>
+                                            <Label text="Damage description" styleClass="field-label" />
+                                            <TextArea fx:id="damageDescriptionArea" prefRowCount="3"
+                                                      wrapText="true"
+                                                      promptText="Describe the damage" />
+                                            <Label text="Damage image (JPEG or PNG)"
+                                                   styleClass="field-label" />
+                                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                                <children>
+                                                    <Button fx:id="chooseDamageImageButton"
+                                                            text="Choose image…"
+                                                            onAction="#chooseDamageImage"
+                                                            styleClass="secondary-button" />
+                                                    <Label fx:id="selectedDamageImageLabel"
+                                                           text="No image selected"
+                                                           styleClass="supporting-text"
+                                                           wrapText="true" />
+                                                </children>
+                                            </HBox>
+                                        </children>
+                                    </VBox>
+                                    <HBox spacing="10">
+                                        <children>
+                                            <Button fx:id="submitReturnButton" text="Submit Return"
+                                                    onAction="#submitReturn"
+                                                    styleClass="primary-button" />
+                                            <Button fx:id="cancelReturnButton" text="Cancel"
+                                                    onAction="#cancelReturn"
+                                                    styleClass="secondary-button" />
+                                        </children>
+                                    </HBox>
+                                </children>
+                            </VBox>
+                            <VBox fx:id="lostForm" spacing="12" visible="false"
+                                  managed="false" styleClass="account-form-card">
+                                <children>
+                                    <Label text="Report selected item lost" styleClass="section-title" />
+                                    <Label text="Describe what happened. Exco will review the report."
+                                           styleClass="supporting-text" wrapText="true" />
+                                    <Label text="Loss description" styleClass="field-label" />
+                                    <TextArea fx:id="lossDescriptionArea" prefRowCount="3"
+                                              wrapText="true"
+                                              promptText="Describe the loss" />
+                                    <HBox spacing="10">
+                                        <children>
+                                            <Button fx:id="submitLostButton" text="Submit Lost Report"
+                                                    onAction="#submitLost"
+                                                    styleClass="primary-button" />
+                                            <Button fx:id="cancelLostButton" text="Cancel"
+                                                    onAction="#cancelLost"
+                                                    styleClass="secondary-button" />
+                                        </children>
+                                    </HBox>
+                                </children>
+                            </VBox>
                         </children>
                     </VBox>
                 </VBox>

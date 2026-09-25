@@ -216,14 +216,44 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("fx:id=\"overdueColumn\""));
         assertTrue(fxml.contains("fx:id=\"emptyStateLabel\""));
         assertTrue(fxml.contains("fx:id=\"errorLabel\""));
+        assertTrue(fxml.contains("fx:id=\"loadingLabel\""));
+        assertTrue(fxml.contains("fx:id=\"operationMessageLabel\""));
+        assertTrue(fxml.contains("fx:id=\"refreshButton\""));
+        assertTrue(fxml.contains("fx:id=\"returnActionButton\""));
+        assertTrue(fxml.contains("fx:id=\"lostActionButton\""));
+        assertTrue(fxml.contains("fx:id=\"returnForm\""));
+        assertTrue(fxml.contains("fx:id=\"lostForm\""));
+        assertTrue(fxml.contains("fx:id=\"goodReturnRadioButton\""));
+        assertTrue(fxml.contains("fx:id=\"damagedReturnRadioButton\""));
+        assertTrue(fxml.contains("fx:id=\"damageDescriptionArea\""));
+        assertTrue(fxml.contains("fx:id=\"lossDescriptionArea\""));
         assertTrue(fxml.contains("onAction=\"#refresh\""));
+        assertTrue(fxml.contains("onAction=\"#openReturnForm\""));
+        assertTrue(fxml.contains("onAction=\"#openLostForm\""));
+        assertTrue(fxml.contains("onAction=\"#submitReturn\""));
+        assertTrue(fxml.contains("onAction=\"#submitLost\""));
+        assertTrue(fxml.contains("onAction=\"#chooseDamageImage\""));
+        assertTrue(fxml.contains("onAction=\"#cancelReturn\""));
+        assertTrue(fxml.contains("onAction=\"#cancelLost\""));
         assertTrue(fxml.contains("onAction=\"#goBack\""));
         assertFalse(fxml.contains("cancelSelectedLoan"));
-        assertFalse(fxml.contains("reportLost"));
-        assertFalse(fxml.contains("reportDamage"));
         assertTrue(MemberActiveLoansController.class.getDeclaredMethod("initialize")
                 .isAnnotationPresent(FXML.class));
         assertTrue(MemberActiveLoansController.class.getDeclaredMethod("refresh")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("openReturnForm")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("openLostForm")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("submitReturn")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("submitLost")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("cancelReturn")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("cancelLost")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("chooseDamageImage")
                 .isAnnotationPresent(FXML.class));
         assertTrue(MemberActiveLoansController.class.getDeclaredMethod("goBack")
                 .isAnnotationPresent(FXML.class));
