@@ -8,6 +8,7 @@ import java.util.List;
 
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
+import clubstock.application.TransactionOutcome;
 import clubstock.application.request.MemberRequestService;
 import clubstock.application.request.OwnRequest;
 import clubstock.domain.request.LoanRequestStatus;
@@ -31,6 +32,9 @@ public final class MemberOwnRequestsController {
             "Your requests could not be loaded. Try refreshing.";
     private static final String ACTION_FAILURE_TEXT =
             "The request could not be cancelled. Please try again.";
+    private static final String UNKNOWN_CANCELLATION_OUTCOME_TEXT =
+            "We could not confirm whether the request was cancelled. "
+                    + "Check its current status before trying again.";
     private static final DateTimeFormatter REQUESTED_AT_FORMAT =
             DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm").withZone(ZoneId.systemDefault());
 
@@ -151,8 +155,7 @@ public final class MemberOwnRequestsController {
     }
 
     /**
-     * Performs cancellation without changing the table until the service succeeds, then refreshes
-     * authoritative state. Stale-state failures also trigger a refresh.
+     * Performs cancellation and refreshes authoritative state after success or a stale-state result.
      *
      * @param selectedRequest Previously selected pending request.
      */
@@ -166,11 +169,19 @@ public final class MemberOwnRequestsController {
             requestService.cancelRequest(selectedRequest.loanRequestId());
             cancelled = true;
         } catch (ApplicationException exception) {
-            failureMessage = exception.displayMessage();
-            shouldRefresh = exception.errorCode() == ApplicationErrorCode.CONFLICT
-                    || exception.errorCode() == ApplicationErrorCode.NOT_FOUND;
-            if (exception.errorCode() == ApplicationErrorCode.AUTHORIZATION_DENIED) {
-                clearResults();
+            TransactionOutcome transactionOutcome = exception.transactionOutcome().orElse(null);
+            if (transactionOutcome == TransactionOutcome.COMMITTED) {
+                cancelled = true;
+            } else if (transactionOutcome == TransactionOutcome.COMMIT_OUTCOME_UNKNOWN) {
+                shouldRefresh = true;
+                failureMessage = UNKNOWN_CANCELLATION_OUTCOME_TEXT;
+            } else {
+                failureMessage = exception.displayMessage();
+                shouldRefresh = exception.errorCode() == ApplicationErrorCode.CONFLICT
+                        || exception.errorCode() == ApplicationErrorCode.NOT_FOUND;
+                if (exception.errorCode() == ApplicationErrorCode.AUTHORIZATION_DENIED) {
+                    clearResults();
+                }
             }
         } catch (RuntimeException exception) {
             failureMessage = ACTION_FAILURE_TEXT;
@@ -178,11 +189,11 @@ public final class MemberOwnRequestsController {
             setBusy(false);
         }
 
+        if (cancelled) {
+            showSuccess("Request cancelled.");
+        }
         if (cancelled || shouldRefresh) {
-            boolean refreshed = loadRequests();
-            if (cancelled && refreshed) {
-                showSuccess("Request cancelled.");
-            }
+            loadRequests();
         }
         if (failureMessage != null) {
             showError(failureMessage);
