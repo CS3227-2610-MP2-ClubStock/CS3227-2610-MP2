@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
 import clubstock.application.TransactionOutcome;
 import clubstock.application.loan.LoanQueryService;
@@ -568,14 +569,17 @@ public final class MemberActiveLoansController {
     }
 
     /**
-     * Returns whether a failed action needs a fresh view because its write may have committed.
+     * Returns whether a failed action needs a fresh view because the displayed Loan state
+     * may be stale.
      */
     private static boolean requiresRefreshAfterFailure(Throwable failure) {
         if (!(failure instanceof ApplicationException applicationException)) {
             return false;
         }
         TransactionOutcome outcome = applicationException.transactionOutcome().orElse(null);
-        return outcome == TransactionOutcome.COMMIT_OUTCOME_UNKNOWN;
+        return outcome == TransactionOutcome.COMMIT_OUTCOME_UNKNOWN
+                || applicationException.errorCode() == ApplicationErrorCode.CONFLICT
+                || applicationException.errorCode() == ApplicationErrorCode.NOT_FOUND;
     }
 
     /**
