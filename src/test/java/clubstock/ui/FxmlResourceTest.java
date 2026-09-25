@@ -15,6 +15,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import javafx.fxml.FXML;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -27,6 +28,7 @@ import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
+import clubstock.ui.controller.MemberActiveLoansController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
 import clubstock.ui.controller.MemberOwnRequestsController;
@@ -50,7 +52,8 @@ class FxmlResourceTest {
             Map.entry(Route.EXCO_REPORT_VERIFICATION, ExcoReportVerificationController.class),
             Map.entry(Route.MEMBER_HOME, MemberHomeController.class),
             Map.entry(Route.MEMBER_REQUEST_ENTRY, RequestEntryController.class),
-            Map.entry(Route.MEMBER_OWN_REQUESTS, MemberOwnRequestsController.class));
+            Map.entry(Route.MEMBER_OWN_REQUESTS, MemberOwnRequestsController.class),
+            Map.entry(Route.MEMBER_ACTIVE_LOANS, MemberActiveLoansController.class));
 
     @Test
     void everyRouteHasWellFormedFxmlWithTheRegisteredController()
@@ -99,7 +102,8 @@ class FxmlResourceTest {
     }
 
     @Test
-    void memberHomeRouteContainsSafeCatalogueAndRefreshBindings() throws IOException {
+    void memberHomeRouteContainsSafeCatalogueAndRefreshBindings()
+            throws IOException, NoSuchMethodException {
         String fxml = routeText(Route.MEMBER_HOME);
 
         assertTrue(fxml.contains("fx:id=\"catalogListView\""));
@@ -110,6 +114,10 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("onAction=\"#logout\""));
         assertTrue(fxml.contains("onAction=\"#openRequestEntry\""));
         assertTrue(fxml.contains("onAction=\"#openOwnRequests\""));
+        assertTrue(fxml.contains("text=\"_My loans\""));
+        assertTrue(fxml.contains("onAction=\"#openMyLoans\""));
+        assertTrue(MemberHomeController.class.getDeclaredMethod("openMyLoans")
+                .isAnnotationPresent(FXML.class));
         assertFalse(fxml.contains("Equipment ID"));
         assertFalse(fxml.contains("EquipmentItem"));
         assertFalse(fxml.contains("equipmentId"));
@@ -192,6 +200,33 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("fx:id=\"equipmentIdColumn\""));
         assertTrue(fxml.contains("fx:id=\"overdueColumn\""));
         assertTrue(fxml.contains("onAction=\"#refresh\""));
+    }
+
+    @Test
+    void memberActiveLoansRouteContainsRequiredLoanFieldsAndSafeActions() throws IOException,
+            NoSuchMethodException {
+        String fxml = routeText(Route.MEMBER_ACTIVE_LOANS);
+
+        assertTrue(fxml.contains("fx:id=\"loansTable\""));
+        assertTrue(fxml.contains("fx:id=\"equipmentTypeColumn\""));
+        assertTrue(fxml.contains("fx:id=\"equipmentIdColumn\""));
+        assertTrue(fxml.contains("fx:id=\"statusColumn\""));
+        assertTrue(fxml.contains("fx:id=\"startedAtColumn\""));
+        assertTrue(fxml.contains("fx:id=\"endDateColumn\""));
+        assertTrue(fxml.contains("fx:id=\"overdueColumn\""));
+        assertTrue(fxml.contains("fx:id=\"emptyStateLabel\""));
+        assertTrue(fxml.contains("fx:id=\"errorLabel\""));
+        assertTrue(fxml.contains("onAction=\"#refresh\""));
+        assertTrue(fxml.contains("onAction=\"#goBack\""));
+        assertFalse(fxml.contains("cancelSelectedLoan"));
+        assertFalse(fxml.contains("reportLost"));
+        assertFalse(fxml.contains("reportDamage"));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("initialize")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("refresh")
+                .isAnnotationPresent(FXML.class));
+        assertTrue(MemberActiveLoansController.class.getDeclaredMethod("goBack")
+                .isAnnotationPresent(FXML.class));
     }
 
     @Test

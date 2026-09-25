@@ -35,7 +35,11 @@ public enum Route {
     MEMBER_REQUEST_ENTRY("/clubstock/ui/view/request-entry.fxml", "New request", UserRole.MEMBER),
     /** Member-protected request history and cancellation screen. */
     MEMBER_OWN_REQUESTS("/clubstock/ui/view/member-own-requests.fxml", "Your requests",
-            UserRole.MEMBER);
+            UserRole.MEMBER),
+    /**
+     * Member-protected active Loan screen.
+     */
+    MEMBER_ACTIVE_LOANS("/clubstock/ui/view/member-active-loans.fxml", "My loans", UserRole.MEMBER);
 
     private final String resourcePath;
     private final String windowTitle;

@@ -56,6 +56,8 @@
                                         onAction="#openRequestEntry" styleClass="primary-button" />
                                 <Button text="_My requests" mnemonicParsing="true"
                                         onAction="#openOwnRequests" styleClass="secondary-button" />
+                                <Button text="_My loans" mnemonicParsing="true"
+                                        onAction="#openMyLoans" styleClass="secondary-button" />
                             </children>
                         </HBox>
                         <Label fx:id="emptyStateLabel" text="No equipment is currently offered"

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="clubstock.ui.controller.MemberActiveLoansController"
+            styleClass="role-shell, member-shell">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="shell-bar">
+            <padding>
+                <Insets top="16" right="24" bottom="16" left="24" />
+            </padding>
+            <Button text="_Back" mnemonicParsing="true" onAction="#goBack"
+                    styleClass="secondary-button" />
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <children>
+                    <Label text="ClubStock" styleClass="shell-brand" />
+                    <Label text="MEMBER WORKSPACE" styleClass="shell-role" />
+                </children>
+            </VBox>
+            <Button text="_Refresh" mnemonicParsing="true" onAction="#refresh"
+                    styleClass="secondary-button" />
+        </HBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="AS_NEEDED" styleClass="content-scroll">
+            <content>
+                <VBox maxWidth="1180" spacing="18" styleClass="admin-content">
+                    <padding>
+                        <Insets top="28" right="32" bottom="32" left="32" />
+                    </padding>
+                    <VBox spacing="6">
+                        <children>
+                            <Label text="MEMBER LOANS" styleClass="eyebrow" />
+                            <Label text="My loans" styleClass="screen-title" />
+                            <Label text="Each assigned item is listed separately. Overdue applies only to an ON_LOAN item past its end date."
+                                   styleClass="supporting-text" wrapText="true" />
+                        </children>
+                    </VBox>
+                    <VBox spacing="14" styleClass="account-form-card">
+                        <children>
+                            <Label text="Active loans" styleClass="section-title" />
+                            <Label fx:id="emptyStateLabel" text="You have no active loans."
+                                   styleClass="catalog-empty-text" visible="false" managed="false"
+                                   wrapText="true" />
+                            <Label fx:id="errorLabel" text="" styleClass="error-text"
+                                   visible="false" managed="false" wrapText="true" />
+                            <TableView fx:id="loansTable" prefHeight="380" minWidth="850"
+                                       accessibleText="Your unresolved individual loans and overdue status"
+                                       visible="false" managed="false" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="equipmentTypeColumn" prefWidth="170"
+                                                 text="Equipment type" />
+                                    <TableColumn fx:id="equipmentIdColumn" prefWidth="130"
+                                                 text="Equipment ID" />
+                                    <TableColumn fx:id="statusColumn" prefWidth="135"
+                                                 text="Status" />
+                                    <TableColumn fx:id="startedAtColumn" prefWidth="190"
+                                                 text="Start date/time" />
+                                    <TableColumn fx:id="endDateColumn" prefWidth="130"
+                                                 text="End date" />
+                                    <TableColumn fx:id="overdueColumn" prefWidth="110"
+                                                 text="Overdue" />
+                                </columns>
+                            </TableView>
+                        </children>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
