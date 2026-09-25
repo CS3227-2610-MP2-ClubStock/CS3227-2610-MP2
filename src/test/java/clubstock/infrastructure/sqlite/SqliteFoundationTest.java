@@ -156,6 +156,77 @@ class SqliteFoundationTest {
                 unitOfWork.damageReports().findByLoanId(loan.loanId()).orElseThrow().description()));
     }
 
+    @Test
+    void loanRequests_findByMember_returnsOnlyMembersRequestsInStableIdentityOrder(
+            @TempDir Path tempDirectory) {
+        SqliteDatabase database = new SqliteDatabase(tempDirectory.resolve("clubstock.db"));
+        database.initialize();
+        Member firstMember = Member.create(new MemberId("member-first"), "First Member",
+                new PasswordHash("hash-first"));
+        Member secondMember = Member.create(new MemberId("member-second"), "Second Member",
+                new PasswordHash("hash-second"));
+        EquipmentType type = EquipmentType.create(new EquipmentTypeId("type-requests"),
+                new EquipmentTypeName("Request Type"));
+        Clock clock = Clock.fixed(Instant.parse("2026-09-22T10:15:30Z"), ZoneOffset.UTC);
+        LoanRequest firstRejected = createRequest("first-rejected", firstMember.memberId(),
+                type.equipmentTypeId(), LoanRequestStatus.REJECTED, clock);
+        LoanRequest secondApproved = createRequest("second-approved", secondMember.memberId(),
+                type.equipmentTypeId(), LoanRequestStatus.PENDING, clock);
+        secondApproved.approve(1);
+        EquipmentItem secondApprovedItem = EquipmentItem.create(new EquipmentId("item-second-approved"),
+                type.equipmentTypeId());
+        secondApprovedItem.release();
+        secondApprovedItem.allocate();
+        Loan secondApprovedLoan = Loan.start(new LoanId("loan-second-approved"),
+                secondApproved.loanRequestId(), secondMember.memberId(),
+                secondApprovedItem.equipmentId(), secondApproved.requestedEndDate(), clock);
+        LoanRequest firstApproved = createRequest("first-approved", firstMember.memberId(),
+                type.equipmentTypeId(), LoanRequestStatus.PENDING, clock);
+        firstApproved.approve(1);
+        EquipmentItem firstApprovedItem = EquipmentItem.create(new EquipmentId("item-first-approved"),
+                type.equipmentTypeId());
+        firstApprovedItem.release();
+        firstApprovedItem.allocate();
+        Loan firstApprovedLoan = Loan.start(new LoanId("loan-first-approved"),
+                firstApproved.loanRequestId(), firstMember.memberId(),
+                firstApprovedItem.equipmentId(), firstApproved.requestedEndDate(), clock);
+        LoanRequest secondPending = createRequest("second-pending", secondMember.memberId(),
+                type.equipmentTypeId(), LoanRequestStatus.PENDING, clock);
+        LoanRequest firstCancelled = createRequest("first-cancelled", firstMember.memberId(),
+                type.equipmentTypeId(), LoanRequestStatus.CANCELLED, clock);
+        LoanRequest firstPending = createRequest("first-pending", firstMember.memberId(),
+                type.equipmentTypeId(), LoanRequestStatus.PENDING, clock);
+
+        database.write(unitOfWork -> {
+            unitOfWork.members().insert(firstMember);
+            unitOfWork.members().insert(secondMember);
+            unitOfWork.equipmentTypes().insert(type);
+            unitOfWork.equipmentItems().insert(firstApprovedItem);
+            unitOfWork.equipmentItems().insert(secondApprovedItem);
+            unitOfWork.loanRequests().insert(firstRejected);
+            unitOfWork.loanRequests().insert(secondApproved);
+            unitOfWork.loanRequests().insert(firstApproved);
+            unitOfWork.loanRequests().insert(secondPending);
+            unitOfWork.loanRequests().insert(firstCancelled);
+            unitOfWork.loanRequests().insert(firstPending);
+            unitOfWork.loans().insert(firstApprovedLoan);
+            unitOfWork.loans().insert(secondApprovedLoan);
+            return null;
+        });
+
+        List<LoanRequest> firstMembersRequests = database.read(unitOfWork ->
+                unitOfWork.loanRequests().findByMember(firstMember.memberId()));
+
+        assertEquals(List.of("request-first-approved", "request-first-cancelled",
+                        "request-first-pending", "request-first-rejected"),
+                firstMembersRequests.stream().map(request -> request.loanRequestId().value()).toList());
+        assertEquals(List.of(LoanRequestStatus.APPROVED, LoanRequestStatus.CANCELLED,
+                        LoanRequestStatus.PENDING, LoanRequestStatus.REJECTED),
+                firstMembersRequests.stream().map(LoanRequest::status).toList());
+        assertTrue(firstMembersRequests.stream().allMatch(request ->
+                request.memberId().equals(firstMember.memberId())));
+    }
+
     @ParameterizedTest
     @CsvSource({
         "9999-12-31, +10000-01-01",

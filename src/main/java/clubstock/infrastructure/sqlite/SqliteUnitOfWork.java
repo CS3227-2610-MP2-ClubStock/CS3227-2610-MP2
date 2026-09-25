@@ -544,6 +544,20 @@ final class SqliteUnitOfWork implements UnitOfWork {
         }
 
         @Override
+        public List<LoanRequest> findByMember(MemberId memberId) {
+            requireId(memberId, "Member ID");
+            try (PreparedStatement statement = connection.prepareStatement(requestSelect(
+                    "WHERE member_id = ? ORDER BY loan_request_id COLLATE BINARY"))) {
+                statement.setString(1, memberId.value());
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    return list(resultSet, SqliteUnitOfWork::mapLoanRequest);
+                }
+            } catch (SQLException exception) {
+                throw persistenceFailure("Member loan requests could not be read.", exception);
+            }
+        }
+
+        @Override
         public List<LoanRequest> findPendingOrderedByRequestedAt() {
             try (Statement statement = connection.createStatement();
                     ResultSet resultSet = statement.executeQuery(requestSelect(
