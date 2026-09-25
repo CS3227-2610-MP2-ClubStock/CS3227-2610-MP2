@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="clubstock.ui.controller.ExcoReportVerificationController"
+      spacing="12" styleClass="role-shell, exco-shell">
+    <children>
+        <Label text="Verify pending reports" styleClass="screen-title" />
+        <Label text="Review Member advisory evidence before authoritatively resolving each item."
+               styleClass="supporting-text" wrapText="true" />
+        <TableView fx:id="reportsTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="memberColumn" text="Member" />
+                <TableColumn fx:id="typeColumn" text="Equipment type" />
+                <TableColumn fx:id="equipmentIdColumn" text="Equipment ID" />
+                <TableColumn fx:id="kindColumn" text="Report" />
+                <TableColumn fx:id="conditionColumn" text="Reported condition" />
+                <TableColumn fx:id="imageAvailableColumn" text="Damage image" />
+                <TableColumn fx:id="evidenceColumn" text="Advisory details" />
+            </columns>
+        </TableView>
+        <HBox spacing="8">
+            <children>
+                <Button fx:id="goodButton" text="Verify _good" mnemonicParsing="true"
+                        onAction="#verifyGood" />
+                <Button fx:id="damagedAvailableButton" text="Damaged: _available"
+                        mnemonicParsing="true" onAction="#verifyDamagedAvailable" />
+                <Button fx:id="damagedUnavailableButton" text="Damaged: _unavailable"
+                        mnemonicParsing="true" onAction="#verifyDamagedUnavailable" />
+                <Button fx:id="lostButton" text="Confirm _lost" mnemonicParsing="true"
+                        onAction="#confirmLost" />
+                <Button fx:id="viewImageButton" text="View _damage image" mnemonicParsing="true"
+                        onAction="#viewDamageImage" />
+                <Button text="_Refresh" mnemonicParsing="true" onAction="#refresh" />
+                <Button text="_Back" mnemonicParsing="true" onAction="#goBack" />
+            </children>
+        </HBox>
+        <Label fx:id="statusLabel" styleClass="supporting-text" wrapText="true" />
+    </children>
+</VBox>

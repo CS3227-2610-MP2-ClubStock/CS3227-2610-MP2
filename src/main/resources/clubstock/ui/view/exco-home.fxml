@@ -48,6 +48,8 @@
                                 onAction="#manageRequests" styleClass="secondary-button"/>
                         <Button text="View active _loans" mnemonicParsing="true"
                                 onAction="#manageLoans" styleClass="secondary-button"/>
+                        <Button text="Verify pending _reports" mnemonicParsing="true"
+                                onAction="#verifyReports" styleClass="secondary-button"/>
                     </children>
                 </VBox>
             </children>

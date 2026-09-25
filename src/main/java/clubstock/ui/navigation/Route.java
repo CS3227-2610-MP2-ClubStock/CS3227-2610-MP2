@@ -28,6 +28,7 @@ public enum Route {
     EXCO_REQUEST_QUEUE("/clubstock/ui/view/exco-request-queue.fxml",
             "Pending requests", UserRole.EXCO),
     EXCO_ACTIVE_LOANS("/clubstock/ui/view/exco-active-loans.fxml", "Active Loans", UserRole.EXCO),
+    EXCO_REPORT_VERIFICATION("/clubstock/ui/view/exco-report-verification.fxml", "Verify reports", UserRole.EXCO),
     /** Member-protected shell. */
     MEMBER_HOME("/clubstock/ui/view/member-home.fxml", "Member home", UserRole.MEMBER),
     /** Member-protected request submission and review screen. */

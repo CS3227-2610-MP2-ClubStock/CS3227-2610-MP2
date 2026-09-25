@@ -19,9 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import clubstock.ui.controller.ExcoActiveLoansController;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
-import clubstock.ui.controller.ExcoActiveLoansController;
+import clubstock.ui.controller.ExcoReportVerificationController;
 import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
@@ -46,6 +47,7 @@ class FxmlResourceTest {
             Map.entry(Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class),
             Map.entry(Route.EXCO_REQUEST_QUEUE, ExcoRequestQueueController.class),
             Map.entry(Route.EXCO_ACTIVE_LOANS, ExcoActiveLoansController.class),
+            Map.entry(Route.EXCO_REPORT_VERIFICATION, ExcoReportVerificationController.class),
             Map.entry(Route.MEMBER_HOME, MemberHomeController.class),
             Map.entry(Route.MEMBER_REQUEST_ENTRY, RequestEntryController.class),
             Map.entry(Route.MEMBER_OWN_REQUESTS, MemberOwnRequestsController.class));
@@ -190,6 +192,24 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("fx:id=\"equipmentIdColumn\""));
         assertTrue(fxml.contains("fx:id=\"overdueColumn\""));
         assertTrue(fxml.contains("onAction=\"#refresh\""));
+    }
+
+    @Test
+    void excoReportVerificationRouteContainsEvidenceAndResolutionControls() throws IOException {
+        String fxml = routeText(Route.EXCO_REPORT_VERIFICATION);
+
+        assertTrue(fxml.contains("fx:id=\"reportsTable\""));
+        assertTrue(fxml.contains("fx:id=\"conditionColumn\""));
+        assertTrue(fxml.contains("fx:id=\"imageAvailableColumn\""));
+        assertTrue(fxml.contains("fx:id=\"evidenceColumn\""));
+        assertTrue(fxml.contains("onAction=\"#verifyGood\""));
+        assertTrue(fxml.contains("onAction=\"#verifyDamagedAvailable\""));
+        assertTrue(fxml.contains("onAction=\"#verifyDamagedUnavailable\""));
+        assertTrue(fxml.contains("onAction=\"#confirmLost\""));
+        assertTrue(fxml.contains("fx:id=\"viewImageButton\""));
+        assertTrue(fxml.contains("onAction=\"#viewDamageImage\""));
+        assertTrue(fxml.contains("onAction=\"#refresh\""));
+        assertTrue(fxml.contains("fx:id=\"statusLabel\""));
     }
 
     private static void assertCredentialLabelBindings(Route route, String labelId,
