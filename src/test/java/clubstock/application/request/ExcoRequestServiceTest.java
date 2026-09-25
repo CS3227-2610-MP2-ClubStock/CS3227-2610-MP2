@@ -54,7 +54,8 @@ class ExcoRequestServiceTest {
 
         List<ExcoPendingRequest> queue = service.listPendingRequests();
 
-        assertEquals(List.of("request-early", "request-alpha", "request-beta"),
+        assertEquals(List.of("request-early", "request-alpha", "request-beta", "request-z-earlier",
+                "request-a-later"),
                 queue.stream().map(ExcoPendingRequest::loanRequestId).toList());
         ExcoPendingRequest first = queue.getFirst();
         assertEquals("member-01", first.memberId());
@@ -86,7 +87,7 @@ class ExcoRequestServiceTest {
         assertEquals(EquipmentAvailability.AVAILABLE, database.read(unitOfWork ->
                 unitOfWork.equipmentItems().findById(new EquipmentId("ball-available"))
                         .orElseThrow().availability()));
-        assertEquals(List.of("request-early", "request-beta"), service.listPendingRequests().stream()
+        assertEquals(List.of("request-early", "request-beta", "request-z-earlier", "request-a-later"), service.listPendingRequests().stream()
                 .map(ExcoPendingRequest::loanRequestId).toList());
     }
 
@@ -206,6 +207,12 @@ class ExcoRequestServiceTest {
                     Instant.parse("2026-09-24T10:00:00Z"), LoanRequestStatus.PENDING, null, null));
             unitOfWork.loanRequests().insert(request("request-beta", memberOne, balls,
                     Instant.parse("2026-09-24T10:00:00Z"), LoanRequestStatus.PENDING, null, null));
+            unitOfWork.loanRequests().insert(request("request-z-earlier", memberOne, balls,
+                    Instant.parse("2026-09-24T10:00:00.000000100Z"), LoanRequestStatus.PENDING,
+                    null, null));
+            unitOfWork.loanRequests().insert(request("request-a-later", memberOne, balls,
+                    Instant.parse("2026-09-24T10:00:00.000000200Z"), LoanRequestStatus.PENDING,
+                    null, null));
             unitOfWork.loanRequests().insert(request("request-rejected", memberOne, balls,
                     Instant.parse("2026-09-24T11:00:00Z"), LoanRequestStatus.REJECTED, null, null));
             unitOfWork.loanRequests().insert(request("request-cancelled", memberOne, balls,
