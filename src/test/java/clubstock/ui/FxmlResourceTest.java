@@ -175,12 +175,14 @@ class FxmlResourceTest {
 
         assertTrue(fxml.contains("fx:id=\"reportsTable\""));
         assertTrue(fxml.contains("fx:id=\"conditionColumn\""));
-        assertTrue(fxml.contains("fx:id=\"imageReferenceColumn\""));
+        assertTrue(fxml.contains("fx:id=\"imageAvailableColumn\""));
         assertTrue(fxml.contains("fx:id=\"evidenceColumn\""));
         assertTrue(fxml.contains("onAction=\"#verifyGood\""));
         assertTrue(fxml.contains("onAction=\"#verifyDamagedAvailable\""));
         assertTrue(fxml.contains("onAction=\"#verifyDamagedUnavailable\""));
         assertTrue(fxml.contains("onAction=\"#confirmLost\""));
+        assertTrue(fxml.contains("fx:id=\"viewImageButton\""));
+        assertTrue(fxml.contains("onAction=\"#viewDamageImage\""));
         assertTrue(fxml.contains("onAction=\"#refresh\""));
         assertTrue(fxml.contains("fx:id=\"statusLabel\""));
     }

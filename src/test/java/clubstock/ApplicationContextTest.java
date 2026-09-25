@@ -43,6 +43,7 @@ class ApplicationContextTest {
         assertNotNull(first.approvalService());
         assertNotNull(first.loanQueryService());
         assertNotNull(first.verificationService());
+        assertNotNull(first.damageEvidenceStore());
         assertFalse(second.authentication().isExcoSetupRequired());
         assertTrue(second.sessionManager().currentPrincipal().isEmpty());
         assertArrayEquals(new char[password.length], password);

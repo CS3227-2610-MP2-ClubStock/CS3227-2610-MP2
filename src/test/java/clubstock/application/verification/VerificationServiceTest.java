@@ -1,5 +1,6 @@
 package clubstock.application.verification;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +40,7 @@ import clubstock.domain.report.LossReport;
 import clubstock.domain.request.LoanRequest;
 import clubstock.domain.request.LoanRequestId;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
+import clubstock.infrastructure.file.FileDamageEvidenceStore;
 
 class VerificationServiceTest {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-09-25T12:00:00Z"),
@@ -60,13 +62,32 @@ class VerificationServiceTest {
                 .filter(report -> report.loanId().equals("return-damaged")).findFirst().orElseThrow();
         assertEquals("RETURN", damaged.reportKind());
         assertEquals("DAMAGED", damaged.reportedCondition());
-        assertEquals("damage-return-damaged.jpg", damaged.imageReference());
+        assertTrue(damaged.hasDamageImage());
         assertEquals("Damaged item return-damaged", damaged.description());
         PendingVerification lost = reports.stream()
                 .filter(report -> report.loanId().equals("loss-pending")).findFirst().orElseThrow();
         assertEquals("LOSS", lost.reportKind());
         assertEquals("Lost item loss-pending", lost.description());
-        assertEquals("", lost.imageReference());
+        assertFalse(lost.hasDamageImage());
+    }
+
+    @Test
+    void loadDamageEvidence_returnsManagedImageOnlyToExco(@TempDir java.nio.file.Path temp)
+            throws java.io.IOException {
+        SqliteDatabase database = database(temp);
+        addReturn(database, "return-damaged", "item-damaged", ReportedReturnCondition.DAMAGED, true);
+        java.nio.file.Path evidenceDirectory = temp.resolve("damage-evidence");
+        FileDamageEvidenceStore store = new FileDamageEvidenceStore(evidenceDirectory);
+        byte[] image = {1};
+        java.nio.file.Files.write(evidenceDirectory.resolve("damage-return-damaged.jpg"), image);
+        VerificationService excoService = new VerificationService(database, excoSession(), store);
+
+        assertEquals(DamageImageFormat.JPEG,
+                excoService.loadDamageEvidence("return-damaged").format());
+        assertArrayEquals(image, excoService.loadDamageEvidence("return-damaged").bytes());
+        assertError(ApplicationErrorCode.AUTHORIZATION_DENIED,
+                () -> new VerificationService(database, memberSession(), store)
+                        .loadDamageEvidence("return-damaged"));
     }
 
     @Test
@@ -231,7 +252,7 @@ class VerificationServiceTest {
     }
 
     private static VerificationService service(SqliteDatabase database, SessionManager session) {
-        return new VerificationService(database, session);
+        return new VerificationService(database, session, reference -> java.util.Optional.empty());
     }
 
     private static void assertResolved(SqliteDatabase database, String loanId, String itemId,

@@ -1,8 +1,10 @@
 package clubstock.ui.controller;
 
+import java.io.ByteArrayInputStream;
 import java.util.Optional;
 
 import clubstock.application.ApplicationException;
+import clubstock.application.verification.DamageEvidence;
 import clubstock.application.verification.PendingVerification;
 import clubstock.application.verification.VerificationService;
 import clubstock.ui.navigation.NavigationService;
@@ -11,9 +13,14 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.ButtonType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 
 /** Presents Exco's pending return and loss-report verification workflow. */
 public final class ExcoReportVerificationController {
@@ -36,7 +43,7 @@ public final class ExcoReportVerificationController {
     @FXML
     private TableColumn<PendingVerification, String> conditionColumn;
     @FXML
-    private TableColumn<PendingVerification, String> imageReferenceColumn;
+    private TableColumn<PendingVerification, String> imageAvailableColumn;
     @FXML
     private TableColumn<PendingVerification, String> evidenceColumn;
     @FXML
@@ -47,6 +54,8 @@ public final class ExcoReportVerificationController {
     private Button damagedUnavailableButton;
     @FXML
     private Button lostButton;
+    @FXML
+    private Button viewImageButton;
     @FXML
     private Label statusLabel;
 
@@ -77,18 +86,22 @@ public final class ExcoReportVerificationController {
                 value.getValue().reportKind()));
         conditionColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(
                 value.getValue().reportedCondition()));
-        imageReferenceColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(
-                blankAsDash(value.getValue().imageReference())));
+        imageAvailableColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(
+                value.getValue().hasDamageImage() ? "Available" : "—"));
         evidenceColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(
                 blankAsDash(value.getValue().description())));
         reportsTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, previous, selected) -> updateActions(selected));
         updateActions(null);
-        refresh();
+        refreshReports();
     }
 
     @FXML
     private void refresh() {
+        refreshReports();
+    }
+
+    private boolean refreshReports() {
         try {
             var reports = service.listPending();
             reportsTable.setItems(FXCollections.observableArrayList(reports));
@@ -96,11 +109,15 @@ public final class ExcoReportVerificationController {
                     ? "No reports await verification."
                     : "Select a report to verify.");
             updateActions(reportsTable.getSelectionModel().getSelectedItem());
+            return true;
         } catch (ApplicationException exception) {
             statusLabel.setText(exception.displayMessage());
         } catch (RuntimeException exception) {
             statusLabel.setText("Reports could not be refreshed. Please try again.");
         }
+        reportsTable.getSelectionModel().clearSelection();
+        updateActions(null);
+        return false;
     }
 
     @FXML
@@ -126,6 +143,19 @@ public final class ExcoReportVerificationController {
     }
 
     @FXML
+    private void viewDamageImage() {
+        selected().filter(PendingVerification::hasDamageImage).ifPresent(report -> {
+            try {
+                showDamageImage(service.loadDamageEvidence(report.loanId()));
+            } catch (ApplicationException exception) {
+                statusLabel.setText(exception.displayMessage());
+            } catch (RuntimeException exception) {
+                statusLabel.setText("The submitted damage image could not be displayed.");
+            }
+        });
+    }
+
+    @FXML
     private void goBack() {
         navigation.show(Route.EXCO_HOME);
     }
@@ -134,8 +164,9 @@ public final class ExcoReportVerificationController {
         selected().ifPresent(report -> {
             try {
                 resolution.resolve(report);
-                refresh();
-                statusLabel.setText(successMessage);
+                if (refreshReports()) {
+                    statusLabel.setText(successMessage);
+                }
             } catch (ApplicationException exception) {
                 statusLabel.setText(exception.displayMessage());
             } catch (RuntimeException exception) {
@@ -159,6 +190,26 @@ public final class ExcoReportVerificationController {
         damagedAvailableButton.setDisable(!returnReport);
         damagedUnavailableButton.setDisable(!returnReport);
         lostButton.setDisable(!lossReport);
+        viewImageButton.setDisable(report == null || !report.hasDamageImage());
+    }
+
+    private void showDamageImage(DamageEvidence evidence) {
+        Image image = new Image(new ByteArrayInputStream(evidence.bytes()));
+        if (image.isError()) {
+            statusLabel.setText("The submitted damage image could not be displayed.");
+            return;
+        }
+        ImageView imageView = new ImageView(image);
+        imageView.setPreserveRatio(true);
+        imageView.setFitWidth(600);
+        imageView.setFitHeight(450);
+
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Submitted damage image");
+        dialog.setHeaderText("Review this evidence before resolving the return.");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.getDialogPane().setContent(new VBox(imageView));
+        dialog.showAndWait();
     }
 
     private static String blankAsDash(String value) {

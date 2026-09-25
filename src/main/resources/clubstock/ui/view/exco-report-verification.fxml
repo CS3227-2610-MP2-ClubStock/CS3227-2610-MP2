@@ -23,7 +23,7 @@
                 <TableColumn fx:id="equipmentIdColumn" text="Equipment ID" />
                 <TableColumn fx:id="kindColumn" text="Report" />
                 <TableColumn fx:id="conditionColumn" text="Reported condition" />
-                <TableColumn fx:id="imageReferenceColumn" text="Image reference" />
+                <TableColumn fx:id="imageAvailableColumn" text="Damage image" />
                 <TableColumn fx:id="evidenceColumn" text="Advisory details" />
             </columns>
         </TableView>
@@ -37,6 +37,8 @@
                         mnemonicParsing="true" onAction="#verifyDamagedUnavailable" />
                 <Button fx:id="lostButton" text="Confirm _lost" mnemonicParsing="true"
                         onAction="#confirmLost" />
+                <Button fx:id="viewImageButton" text="View _damage image" mnemonicParsing="true"
+                        onAction="#viewDamageImage" />
                 <Button text="_Refresh" mnemonicParsing="true" onAction="#refresh" />
                 <Button text="_Back" mnemonicParsing="true" onAction="#goBack" />
             </children>

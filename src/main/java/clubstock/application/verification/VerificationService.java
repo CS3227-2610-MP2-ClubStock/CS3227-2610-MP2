@@ -5,6 +5,7 @@ import java.util.List;
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
 import clubstock.application.auth.SessionManager;
+import clubstock.application.port.DamageEvidenceStore;
 import clubstock.application.port.TransactionManager;
 import clubstock.application.port.UnitOfWork;
 import clubstock.domain.loan.Loan;
@@ -16,6 +17,7 @@ import clubstock.domain.loan.ReportedReturnCondition;
 public final class VerificationService {
     private final TransactionManager transactions;
     private final SessionManager sessions;
+    private final DamageEvidenceStore damageEvidenceStore;
 
     /**
      * Creates the verification boundary.
@@ -23,12 +25,14 @@ public final class VerificationService {
      * @param transactions Shared transaction manager.
      * @param sessions Current authentication session.
      */
-    public VerificationService(TransactionManager transactions, SessionManager sessions) {
-        if (transactions == null || sessions == null) {
+    public VerificationService(TransactionManager transactions, SessionManager sessions,
+            DamageEvidenceStore damageEvidenceStore) {
+        if (transactions == null || sessions == null || damageEvidenceStore == null) {
             throw new IllegalArgumentException("Verification dependencies cannot be null.");
         }
         this.transactions = transactions;
         this.sessions = sessions;
+        this.damageEvidenceStore = damageEvidenceStore;
     }
 
     /**
@@ -42,6 +46,27 @@ public final class VerificationService {
                 .filter(VerificationService::isPendingVerification)
                 .map(loan -> pendingVerification(unit, loan))
                 .toList());
+    }
+
+    /**
+     * Loads one pending damaged-return image for Exco review.
+     *
+     * @param loanId Pending damaged-return Loan ID.
+     * @return Image evidence resolved from managed storage.
+     */
+    public DamageEvidence loadDamageEvidence(String loanId) {
+        sessions.requireExco();
+        return transactions.read(unit -> {
+            Loan loan = findLoan(unit, loanId);
+            if (loan.status() != LoanStatus.RETURN_PENDING
+                    || loan.reportedReturnCondition().orElse(null) != ReportedReturnCondition.DAMAGED) {
+                throw conflict();
+            }
+            var report = unit.damageReports().findByLoanId(loan.loanId())
+                    .orElseThrow(VerificationService::evidenceUnavailable);
+            return damageEvidenceStore.find(report.imageReference())
+                    .orElseThrow(VerificationService::evidenceUnavailable);
+        });
     }
 
     /**
@@ -124,13 +149,13 @@ public final class VerificationService {
             return new PendingVerification(loan.loanId().value(), member.name(), type.name().value(),
                     item.equipmentId().value(), "RETURN",
                     loan.reportedReturnCondition().map(Enum::name).orElse("GOOD"),
-                    damage.map(report -> report.imageReference().storageKey()).orElse(""),
+                    damage.isPresent(),
                     damage.map(report -> report.description()).orElse(""));
         }
         var loss = unit.lossReports().findByLoanId(loan.loanId())
                 .orElseThrow(() -> missing("Loss report"));
         return new PendingVerification(loan.loanId().value(), member.name(), type.name().value(),
-                item.equipmentId().value(), "LOSS", "LOST", "", loss.description());
+                item.equipmentId().value(), "LOSS", "LOST", false, loss.description());
     }
 
     private static Loan findLoan(UnitOfWork unit, String loanId) {
@@ -161,5 +186,10 @@ public final class VerificationService {
     private static ApplicationException conflict() {
         return new ApplicationException(ApplicationErrorCode.CONFLICT,
                 "This report is no longer pending.", null);
+    }
+
+    private static ApplicationException evidenceUnavailable() {
+        return new ApplicationException(ApplicationErrorCode.NOT_FOUND,
+                "The submitted damage image is unavailable.", null);
     }
 }

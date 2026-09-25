@@ -19,6 +19,8 @@ import clubstock.application.request.ApprovalService;
 import clubstock.application.loan.LoanQueryService;
 import clubstock.application.verification.VerificationService;
 import clubstock.application.port.TransactionManager;
+import clubstock.application.port.DamageEvidenceStore;
+import clubstock.infrastructure.file.FileDamageEvidenceStore;
 import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
 import clubstock.ui.auth.AuthenticationGateway;
@@ -30,6 +32,7 @@ import clubstock.ui.auth.AuthenticationGatewayAdapter;
 public final class ApplicationContext {
     private static final String DATA_DIRECTORY_PROPERTY = "clubstock.dataDir";
     private static final String DATABASE_FILENAME = "clubstock.db";
+    private static final String DAMAGE_EVIDENCE_DIRECTORY = "damage-evidence";
     private final Path dataDirectory;
     private final Clock clock;
     private final ZoneId zoneId;
@@ -44,13 +47,15 @@ public final class ApplicationContext {
     private final ApprovalService approvalService;
     private final LoanQueryService loanQueryService;
     private final VerificationService verificationService;
+    private final DamageEvidenceStore damageEvidenceStore;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
             MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService,
-            ApprovalService approvalService, LoanQueryService loanQueryService, VerificationService verificationService) {
+            ApprovalService approvalService, LoanQueryService loanQueryService,
+            VerificationService verificationService, DamageEvidenceStore damageEvidenceStore) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -65,6 +70,7 @@ public final class ApplicationContext {
         this.approvalService = approvalService;
         this.loanQueryService = loanQueryService;
         this.verificationService = verificationService;
+        this.damageEvidenceStore = damageEvidenceStore;
     }
 
     /**
@@ -109,10 +115,14 @@ public final class ApplicationContext {
                 availabilityPolicy, new UuidIdGenerator(), clock);
         LoanQueryService loanQueryService = new LoanQueryService(database, sessionManager, clock,
                 ZoneId.systemDefault());
-        VerificationService verificationService = new VerificationService(database, sessionManager);
+        DamageEvidenceStore damageEvidenceStore = new FileDamageEvidenceStore(
+                normalizedDirectory.resolve(DAMAGE_EVIDENCE_DIRECTORY));
+        VerificationService verificationService = new VerificationService(database, sessionManager,
+                damageEvidenceStore);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
-                inventoryService, memberCatalogService, excoRequestService, approvalService, loanQueryService, verificationService);
+                inventoryService, memberCatalogService, excoRequestService, approvalService, loanQueryService,
+                verificationService, damageEvidenceStore);
     }
 
     /**
@@ -221,6 +231,9 @@ public final class ApplicationContext {
 
     public LoanQueryService loanQueryService() { return loanQueryService; }
     public VerificationService verificationService() { return verificationService; }
+
+    /** Returns the context-owned managed damage-evidence store. */
+    public DamageEvidenceStore damageEvidenceStore() { return damageEvidenceStore; }
 
     private static Path resolveDataDirectory() {
         String configuredDirectory = System.getProperty(DATA_DIRECTORY_PROPERTY);
