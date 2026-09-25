@@ -25,6 +25,8 @@ import clubstock.application.ApplicationException;
 import clubstock.application.auth.Principal;
 import clubstock.application.auth.SessionManager;
 import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
+import clubstock.application.port.TransactionManager;
+import clubstock.application.port.UnitOfWorkOperation;
 import clubstock.application.request.ApprovalSelection;
 import clubstock.application.request.ApprovalService;
 import clubstock.domain.account.Member;
@@ -132,6 +134,37 @@ class LoanQueryServiceTest {
                 () -> service(database, new SessionManager()).listActiveForMember());
         assertError(ApplicationErrorCode.AUTHORIZATION_DENIED,
                 () -> service(database, excoSession()).listActiveForMember());
+    }
+
+    @Test
+    void listActiveForMember_rejectsOwnerChangeInsideRead(@TempDir Path temp) {
+        SqliteDatabase database = database(temp);
+        addMember(database, SECOND_MEMBER, "Member Two");
+        addLoan(database, "first-member-loan", "first-member-item", LoanStatus.ON_LOAN,
+                LocalDate.of(2026, 9, 28));
+        SessionManager session = memberSession(FIRST_MEMBER);
+        TransactionManager changingSession = new TransactionManager() {
+            @Override
+            public <T> T read(UnitOfWorkOperation<T> operation) {
+                return database.read(unit -> {
+                    session.logout();
+                    establish(session, Principal.member(SECOND_MEMBER));
+                    return operation.execute(unit);
+                });
+            }
+
+            @Override
+            public <T> T write(UnitOfWorkOperation<T> operation) {
+                return database.write(operation);
+            }
+        };
+
+        LoanQueryService loanQueryService = new LoanQueryService(changingSession, session,
+                CLOCK, ZONE);
+
+        assertError(ApplicationErrorCode.AUTHORIZATION_DENIED,
+                loanQueryService::listActiveForMember);
+        assertEquals(SECOND_MEMBER, session.requireMember());
     }
 
     @Test
@@ -375,6 +408,11 @@ class LoanQueryServiceTest {
 
     private static SessionManager session(Principal principal) {
         SessionManager session = new SessionManager();
+        establish(session, principal);
+        return session;
+    }
+
+    private static void establish(SessionManager session, Principal principal) {
         try {
             var establish = SessionManager.class.getDeclaredMethod("establish", Principal.class);
             establish.setAccessible(true);
@@ -382,7 +420,6 @@ class LoanQueryServiceTest {
         } catch (ReflectiveOperationException exception) {
             throw new AssertionError(exception);
         }
-        return session;
     }
 
     private static void deleteRow(Path databasePath, String table, String column, String value) {

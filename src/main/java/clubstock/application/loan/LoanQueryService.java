@@ -67,11 +67,14 @@ public final class LoanQueryService {
     public List<MemberActiveLoan> listActiveForMember() {
         MemberId memberId = sessions.requireMember();
         LocalDate today = LocalDate.now(clock.withZone(zoneId));
-        return transactions.read(unit -> unit.loans().findAll().stream()
-                .filter(LoanQueryService::active)
-                .filter(loan -> loan.memberId().equals(memberId))
-                .map(loan -> mapForMember(unit, loan, today))
-                .toList());
+        return transactions.read(unit -> {
+            sessions.requireMember(memberId);
+            return unit.loans().findAll().stream()
+                    .filter(LoanQueryService::active)
+                    .filter(loan -> loan.memberId().equals(memberId))
+                    .map(loan -> mapForMember(unit, loan, today))
+                    .toList();
+        });
     }
 
     /**
