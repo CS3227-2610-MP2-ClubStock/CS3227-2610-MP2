@@ -2,26 +2,29 @@ package clubstock.ui;
 
 import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.inventory.InventoryService;
-import clubstock.application.member.MemberAccountService;
-import clubstock.application.request.ExcoRequestService;
-import clubstock.application.request.ApprovalService;
 import clubstock.application.loan.LoanQueryService;
+import clubstock.application.member.MemberAccountService;
+import clubstock.application.request.ApprovalService;
+import clubstock.application.request.ExcoRequestService;
+import clubstock.application.request.MemberRequestService;
 import clubstock.application.verification.VerificationService;
 import clubstock.ui.auth.AuthenticationGateway;
 import clubstock.ui.auth.ExcoAuthenticationAction;
 import clubstock.ui.auth.LogoutAction;
 import clubstock.ui.auth.MemberAuthenticationAction;
 import clubstock.ui.auth.RoleSelectionAction;
+import clubstock.ui.controller.ExcoActiveLoansController;
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
-import clubstock.ui.controller.ExcoSetupController;
-import clubstock.ui.controller.ExcoRequestQueueController;
-import clubstock.ui.controller.ExcoActiveLoansController;
 import clubstock.ui.controller.ExcoReportVerificationController;
+import clubstock.ui.controller.ExcoRequestQueueController;
+import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
+import clubstock.ui.controller.MemberOwnRequestsController;
+import clubstock.ui.controller.RequestEntryController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.ControllerFactory;
 import clubstock.ui.navigation.FxmlViewLoader;
@@ -44,15 +47,24 @@ public final class UiComposition {
      * @param memberAccountService Exco Member-account administration service.
      * @param inventoryService Exco inventory administration service.
      * @param memberCatalogService Context-owned Member catalogue query.
+     * @param excoRequestService Context-owned Exco request query and decision service.
+     * @param memberRequestService Context-owned Member request service.
+     * @param approvalService Context-owned Exco approval service.
+     * @param loanQueryService Context-owned active-loan query service.
+     * @param verificationService Context-owned Exco report verification service.
      * @return Configured navigator.
      */
     public static JavaFxNavigator createNavigator(Stage stage,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             InventoryService inventoryService, MemberCatalogService memberCatalogService,
-            ExcoRequestService excoRequestService, ApprovalService approvalService, LoanQueryService loanQueryService, VerificationService verificationService) {
+            ExcoRequestService excoRequestService, MemberRequestService memberRequestService,
+            ApprovalService approvalService, LoanQueryService loanQueryService,
+            VerificationService verificationService) {
         if (stage == null || authentication == null || memberAccountService == null
                 || inventoryService == null || memberCatalogService == null
-                || excoRequestService == null || approvalService == null || loanQueryService == null || verificationService == null) {
+                || excoRequestService == null || memberRequestService == null
+                || approvalService == null || loanQueryService == null
+                || verificationService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
@@ -88,7 +100,12 @@ public final class UiComposition {
         controllerFactory.register(ExcoReportVerificationController.class,
                 () -> new ExcoReportVerificationController(verificationService, navigator));
         controllerFactory.register(MemberHomeController.class,
-                () -> new MemberHomeController(logoutAction, memberCatalogService));
+                () -> new MemberHomeController(logoutAction, memberCatalogService, navigator));
+        controllerFactory.register(RequestEntryController.class,
+                () -> new RequestEntryController(memberCatalogService, memberRequestService,
+                        navigator));
+        controllerFactory.register(MemberOwnRequestsController.class,
+                () -> new MemberOwnRequestsController(memberRequestService, navigator));
         return navigator;
     }
 }

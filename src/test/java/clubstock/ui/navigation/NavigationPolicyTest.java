@@ -46,4 +46,15 @@ class NavigationPolicyTest {
         assertTrue(policy.permits(Route.MEMBER_HOME,
                 Optional.of(AuthenticatedPrincipal.member("M-001"))));
     }
+
+    @Test
+    void memberRequestRoutesRequireMemberPrincipal() {
+        for (Route route : new Route[] {Route.MEMBER_REQUEST_ENTRY, Route.MEMBER_OWN_REQUESTS}) {
+            assertFalse(policy.permits(route, Optional.empty()), route.name());
+            assertFalse(policy.permits(route,
+                    Optional.of(AuthenticatedPrincipal.exco())), route.name());
+            assertTrue(policy.permits(route,
+                    Optional.of(AuthenticatedPrincipal.member("M-001"))), route.name());
+        }
+    }
 }

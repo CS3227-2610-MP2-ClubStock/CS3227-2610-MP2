@@ -30,7 +30,12 @@ public enum Route {
     EXCO_ACTIVE_LOANS("/clubstock/ui/view/exco-active-loans.fxml", "Active Loans", UserRole.EXCO),
     EXCO_REPORT_VERIFICATION("/clubstock/ui/view/exco-report-verification.fxml", "Verify reports", UserRole.EXCO),
     /** Member-protected shell. */
-    MEMBER_HOME("/clubstock/ui/view/member-home.fxml", "Member home", UserRole.MEMBER);
+    MEMBER_HOME("/clubstock/ui/view/member-home.fxml", "Member home", UserRole.MEMBER),
+    /** Member-protected request submission and review screen. */
+    MEMBER_REQUEST_ENTRY("/clubstock/ui/view/request-entry.fxml", "New request", UserRole.MEMBER),
+    /** Member-protected request history and cancellation screen. */
+    MEMBER_OWN_REQUESTS("/clubstock/ui/view/member-own-requests.fxml", "Your requests",
+            UserRole.MEMBER);
 
     private final String resourcePath;
     private final String windowTitle;

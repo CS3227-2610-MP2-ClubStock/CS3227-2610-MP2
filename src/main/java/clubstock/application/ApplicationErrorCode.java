@@ -16,6 +16,8 @@ public enum ApplicationErrorCode {
     CONFLICT,
     /** No allocatable stock exists for an operation. */
     NO_AVAILABLE_STOCK,
+    /** A zero-stock request needs explicit Member confirmation before submission. */
+    ZERO_STOCK_CONFIRMATION_REQUIRED,
     /** Persistent storage could not be read or written safely. */
     PERSISTENCE_FAILURE,
     /** Managed evidence storage failed. */

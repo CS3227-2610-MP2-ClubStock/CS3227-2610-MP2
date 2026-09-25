@@ -25,6 +25,15 @@ public interface LoanRequestRepository {
      * @return All requests.
      */
     List<LoanRequest> findAll();
+
+    /**
+     * Returns the specified Member's requests ordered by stable request identity.
+     *
+     * @param memberId Member identity.
+     * @return Requests owned by the specified Member, ordered by Request ID ascending.
+     */
+    List<LoanRequest> findByMember(MemberId memberId);
+
     /**
      * Returns pending requests ordered by submission time and stable request identity.
      *
