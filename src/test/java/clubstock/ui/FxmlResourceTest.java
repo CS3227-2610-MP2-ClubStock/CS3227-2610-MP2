@@ -21,30 +21,34 @@ import org.xml.sax.SAXException;
 
 import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
-import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.ExcoActiveLoansController;
+import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
+import clubstock.ui.controller.MemberOwnRequestsController;
+import clubstock.ui.controller.RequestEntryController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.Route;
 
 class FxmlResourceTest {
     private static final String FXML_NAMESPACE = "http://javafx.com/fxml/1";
     private static final String STYLESHEET = "/clubstock/ui/clubstock.css";
-    private static final Map<Route, Class<?>> CONTROLLERS = Map.of(
-            Route.ROLE_SELECTION, RoleSelectionController.class,
-            Route.EXCO_SETUP, ExcoSetupController.class,
-            Route.EXCO_LOGIN, ExcoLoginController.class,
-            Route.MEMBER_LOGIN, MemberLoginController.class,
-            Route.EXCO_HOME, ExcoHomeController.class,
-            Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class,
-            Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class,
-            Route.EXCO_REQUEST_QUEUE, ExcoRequestQueueController.class,
-            Route.EXCO_ACTIVE_LOANS, ExcoActiveLoansController.class,
-            Route.MEMBER_HOME, MemberHomeController.class);
+    private static final Map<Route, Class<?>> CONTROLLERS = Map.ofEntries(
+            Map.entry(Route.ROLE_SELECTION, RoleSelectionController.class),
+            Map.entry(Route.EXCO_SETUP, ExcoSetupController.class),
+            Map.entry(Route.EXCO_LOGIN, ExcoLoginController.class),
+            Map.entry(Route.MEMBER_LOGIN, MemberLoginController.class),
+            Map.entry(Route.EXCO_HOME, ExcoHomeController.class),
+            Map.entry(Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class),
+            Map.entry(Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class),
+            Map.entry(Route.EXCO_REQUEST_QUEUE, ExcoRequestQueueController.class),
+            Map.entry(Route.EXCO_ACTIVE_LOANS, ExcoActiveLoansController.class),
+            Map.entry(Route.MEMBER_HOME, MemberHomeController.class),
+            Map.entry(Route.MEMBER_REQUEST_ENTRY, RequestEntryController.class),
+            Map.entry(Route.MEMBER_OWN_REQUESTS, MemberOwnRequestsController.class));
 
     @Test
     void everyRouteHasWellFormedFxmlWithTheRegisteredController()
@@ -102,9 +106,30 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("fx:id=\"errorLabel\""));
         assertTrue(fxml.contains("onAction=\"#refresh\""));
         assertTrue(fxml.contains("onAction=\"#logout\""));
+        assertTrue(fxml.contains("onAction=\"#openRequestEntry\""));
+        assertTrue(fxml.contains("onAction=\"#openOwnRequests\""));
         assertFalse(fxml.contains("Equipment ID"));
         assertFalse(fxml.contains("EquipmentItem"));
         assertFalse(fxml.contains("equipmentId"));
+    }
+
+    @Test
+    void memberRequestRoutesContainTheirMemberSafeActions() throws IOException {
+        String requestEntry = routeText(Route.MEMBER_REQUEST_ENTRY);
+        assertTrue(requestEntry.contains("fx:id=\"equipmentTypeComboBox\""));
+        assertTrue(requestEntry.contains("onAction=\"#reviewRequest\""));
+        assertTrue(requestEntry.contains("onAction=\"#submitRequest\""));
+        assertTrue(requestEntry.contains("onAction=\"#goBack\""));
+        assertFalse(requestEntry.contains("Equipment ID"));
+        assertFalse(requestEntry.contains("equipmentId"));
+
+        String ownRequests = routeText(Route.MEMBER_OWN_REQUESTS);
+        assertTrue(ownRequests.contains("fx:id=\"requestsTable\""));
+        assertTrue(ownRequests.contains("fx:id=\"approvedQuantityColumn\""));
+        assertTrue(ownRequests.contains("onAction=\"#cancelSelectedRequest\""));
+        assertTrue(ownRequests.contains("onAction=\"#refreshRequests\""));
+        assertFalse(ownRequests.contains("Equipment ID"));
+        assertFalse(ownRequests.contains("equipmentId"));
     }
 
     @Test

@@ -13,10 +13,11 @@ import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.inventory.AvailabilityPolicy;
 import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
 import clubstock.application.inventory.InventoryService;
-import clubstock.application.member.MemberAccountService;
-import clubstock.application.request.ExcoRequestService;
-import clubstock.application.request.ApprovalService;
 import clubstock.application.loan.LoanQueryService;
+import clubstock.application.member.MemberAccountService;
+import clubstock.application.request.ApprovalService;
+import clubstock.application.request.ExcoRequestService;
+import clubstock.application.request.MemberRequestService;
 import clubstock.application.port.TransactionManager;
 import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
@@ -40,6 +41,7 @@ public final class ApplicationContext {
     private final InventoryService inventoryService;
     private final MemberCatalogService memberCatalogService;
     private final ExcoRequestService excoRequestService;
+    private final MemberRequestService memberRequestService;
     private final ApprovalService approvalService;
     private final LoanQueryService loanQueryService;
 
@@ -48,7 +50,8 @@ public final class ApplicationContext {
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
             MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService,
-            ApprovalService approvalService, LoanQueryService loanQueryService) {
+            MemberRequestService memberRequestService, ApprovalService approvalService,
+            LoanQueryService loanQueryService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -60,6 +63,7 @@ public final class ApplicationContext {
         this.inventoryService = inventoryService;
         this.memberCatalogService = memberCatalogService;
         this.excoRequestService = excoRequestService;
+        this.memberRequestService = memberRequestService;
         this.approvalService = approvalService;
         this.loanQueryService = loanQueryService;
     }
@@ -100,6 +104,8 @@ public final class ApplicationContext {
                 new UuidIdGenerator(), availabilityPolicy, clock);
         MemberCatalogService memberCatalogService = new MemberCatalogService(database,
                 sessionManager, availabilityPolicy);
+        MemberRequestService memberRequestService = new MemberRequestService(database,
+                sessionManager, availabilityPolicy, new UuidIdGenerator(), clock);
         ExcoRequestService excoRequestService = new ExcoRequestService(database, sessionManager,
                 availabilityPolicy);
         ApprovalService approvalService = new ApprovalService(database, sessionManager,
@@ -108,7 +114,8 @@ public final class ApplicationContext {
                 ZoneId.systemDefault());
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
-                inventoryService, memberCatalogService, excoRequestService, approvalService, loanQueryService);
+                inventoryService, memberCatalogService, excoRequestService, memberRequestService,
+                approvalService, loanQueryService);
     }
 
     /**
@@ -208,6 +215,15 @@ public final class ApplicationContext {
      */
     public ExcoRequestService excoRequestService() {
         return excoRequestService;
+    }
+
+    /**
+     * Returns the Member request submission, query, and cancellation service.
+     *
+     * @return Context-owned Member request service.
+     */
+    public MemberRequestService memberRequestService() {
+        return memberRequestService;
     }
 
     /** Returns the Exco request-approval and item-allocation service. */

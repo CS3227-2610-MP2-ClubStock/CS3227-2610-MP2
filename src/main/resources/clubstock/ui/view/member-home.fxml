@@ -50,6 +50,14 @@
                                         onAction="#refresh" styleClass="secondary-button"/>
                             </children>
                         </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <children>
+                                <Button text="_New request" mnemonicParsing="true"
+                                        onAction="#openRequestEntry" styleClass="primary-button" />
+                                <Button text="_My requests" mnemonicParsing="true"
+                                        onAction="#openOwnRequests" styleClass="secondary-button" />
+                            </children>
+                        </HBox>
                         <Label fx:id="emptyStateLabel" text="No equipment is currently offered"
                                styleClass="catalog-empty-text" visible="false" managed="false"
                                wrapText="true"/>

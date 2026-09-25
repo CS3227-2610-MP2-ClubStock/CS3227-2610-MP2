@@ -39,6 +39,7 @@ class ApplicationContextTest {
         assertNotNull(first.availabilityPolicy());
         assertNotNull(first.inventoryService());
         assertNotNull(first.memberCatalogService());
+        assertNotNull(first.memberRequestService());
         assertNotNull(first.excoRequestService());
         assertNotNull(first.approvalService());
         assertNotNull(first.loanQueryService());

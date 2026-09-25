@@ -158,8 +158,10 @@ public final class RequestEntryController {
         try {
             showPreview(requestService.preview(draft), false);
         } catch (ApplicationException exception) {
+            hidePreview();
             showError(exception.displayMessage());
         } catch (RuntimeException exception) {
+            hidePreview();
             showError(REQUEST_FAILURE);
         } finally {
             setBusy(false);
@@ -181,15 +183,18 @@ public final class RequestEntryController {
         try {
             requestService.submit(reviewedDraft, isConfirmedZeroStock);
             clearForm();
-            refreshOfferedTypes();
-            showSuccess("Your request was submitted for Exco review.");
+            if (refreshOfferedTypes()) {
+                showSuccess("Your request was submitted for Exco review.");
+            }
         } catch (ApplicationException exception) {
             if (exception.errorCode() == ApplicationErrorCode.ZERO_STOCK_CONFIRMATION_REQUIRED) {
                 refreshPreviewAfterStockChange();
             } else {
+                hidePreview();
                 showError(exception.displayMessage());
             }
         } catch (RuntimeException exception) {
+            hidePreview();
             showError(REQUEST_FAILURE);
         } finally {
             setBusy(false);
@@ -198,8 +203,10 @@ public final class RequestEntryController {
 
     /**
      * Loads current offered types while preserving a still-offered selection and form draft.
+     *
+     * @return Whether the catalogue loaded successfully.
      */
-    private void refreshOfferedTypes() {
+    private boolean refreshOfferedTypes() {
         CatalogType previouslySelected = equipmentTypeComboBox.getValue();
         boolean hadPreview = currentPreview != null;
         try {
@@ -224,13 +231,16 @@ public final class RequestEntryController {
             } else if (hadPreview) {
                 hidePreview();
                 showStatus("Equipment availability was refreshed. Review your request again.");
-            } else if (isEmpty) {
+            } else {
                 clearStatus();
             }
+            return true;
         } catch (ApplicationException exception) {
             showTypeLoadError(exception.displayMessage());
+            return false;
         } catch (RuntimeException exception) {
             showTypeLoadError(CATALOG_LOAD_FAILURE);
+            return false;
         }
     }
 
@@ -396,6 +406,12 @@ public final class RequestEntryController {
      * @param message Safe user-facing message.
      */
     private void showTypeLoadError(String message) {
+        equipmentTypeComboBox.getItems().clear();
+        equipmentTypeComboBox.getSelectionModel().clearSelection();
+        equipmentTypeComboBox.setValue(null);
+        emptyTypesLabel.setVisible(false);
+        emptyTypesLabel.setManaged(false);
+        hidePreview();
         typeLoadErrorLabel.setText(message);
         typeLoadErrorLabel.setVisible(true);
         typeLoadErrorLabel.setManaged(true);

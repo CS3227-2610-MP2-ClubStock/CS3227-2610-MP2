@@ -5,6 +5,8 @@ import java.util.List;
 import clubstock.application.catalog.CatalogType;
 import clubstock.application.catalog.MemberCatalogService;
 import clubstock.ui.auth.LogoutAction;
+import clubstock.ui.navigation.NavigationService;
+import clubstock.ui.navigation.Route;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -23,6 +25,7 @@ public final class MemberHomeController {
 
     private final LogoutAction logoutAction;
     private final MemberCatalogService catalogService;
+    private final NavigationService navigation;
 
     @FXML
     private Label emptyStateLabel;
@@ -36,14 +39,17 @@ public final class MemberHomeController {
      *
      * @param logoutAction Shared logout action.
      * @param catalogService Member-authorized catalogue query service.
+     * @param navigation Navigation boundary.
      * @throws IllegalArgumentException If either dependency is null.
      */
-    public MemberHomeController(LogoutAction logoutAction, MemberCatalogService catalogService) {
-        if (logoutAction == null || catalogService == null) {
+    public MemberHomeController(LogoutAction logoutAction, MemberCatalogService catalogService,
+            NavigationService navigation) {
+        if (logoutAction == null || catalogService == null || navigation == null) {
             throw new IllegalArgumentException("Member home dependencies cannot be null.");
         }
         this.logoutAction = logoutAction;
         this.catalogService = catalogService;
+        this.navigation = navigation;
     }
 
     /**
@@ -96,6 +102,18 @@ public final class MemberHomeController {
     @FXML
     private void logout() {
         logoutAction.execute();
+    }
+
+    /** Opens the request-entry screen for the authenticated Member. */
+    @FXML
+    private void openRequestEntry() {
+        navigation.show(Route.MEMBER_REQUEST_ENTRY);
+    }
+
+    /** Opens the authenticated Member's request history. */
+    @FXML
+    private void openOwnRequests() {
+        navigation.show(Route.MEMBER_OWN_REQUESTS);
     }
 
     /**
