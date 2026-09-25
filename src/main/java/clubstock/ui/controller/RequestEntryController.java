@@ -4,6 +4,7 @@ import java.util.List;
 
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
+import clubstock.application.TransactionOutcome;
 import clubstock.application.catalog.CatalogType;
 import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.request.MemberRequestService;
@@ -30,6 +31,9 @@ public final class RequestEntryController {
             "Offered equipment types could not be loaded. Try refreshing.";
     private static final String REQUEST_FAILURE =
             "Your request could not be completed. Please try again.";
+    private static final String UNKNOWN_SUBMISSION_OUTCOME =
+            "We couldn't confirm whether your request was submitted. Go back to Member home, "
+                    + "open My requests, and refresh before trying again.";
 
     private final MemberCatalogService catalogService;
     private final MemberRequestService requestService;
@@ -182,11 +186,15 @@ public final class RequestEntryController {
         setBusy(true);
         try {
             requestService.submit(reviewedDraft, isConfirmedZeroStock);
-            clearForm();
-            refreshOfferedTypes();
-            showSuccess("Your request was submitted for Exco review.");
+            completeSubmission();
         } catch (ApplicationException exception) {
-            if (exception.errorCode() == ApplicationErrorCode.ZERO_STOCK_CONFIRMATION_REQUIRED) {
+            TransactionOutcome transactionOutcome = exception.transactionOutcome().orElse(null);
+            if (transactionOutcome == TransactionOutcome.COMMITTED) {
+                completeSubmission();
+            } else if (transactionOutcome == TransactionOutcome.COMMIT_OUTCOME_UNKNOWN) {
+                hidePreview();
+                showError(UNKNOWN_SUBMISSION_OUTCOME);
+            } else if (exception.errorCode() == ApplicationErrorCode.ZERO_STOCK_CONFIRMATION_REQUIRED) {
                 refreshPreviewAfterStockChange();
             } else {
                 hidePreview();
@@ -198,6 +206,15 @@ public final class RequestEntryController {
         } finally {
             setBusy(false);
         }
+    }
+
+    /**
+     * Clears a successfully submitted draft, refreshes the catalogue, and reports success.
+     */
+    private void completeSubmission() {
+        clearForm();
+        refreshOfferedTypes();
+        showSuccess("Your request was submitted for Exco review.");
     }
 
     /**
