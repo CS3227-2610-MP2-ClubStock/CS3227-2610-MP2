@@ -15,6 +15,7 @@ import clubstock.application.inventory.AvailabilityPolicy;
 import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.loan.LoanQueryService;
+import clubstock.application.loan.MemberLoanService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.port.DamageEvidenceStore;
 import clubstock.application.port.ManagedDamageImageStore;
@@ -52,6 +53,7 @@ public final class ApplicationContext {
     private final MemberRequestService memberRequestService;
     private final ApprovalService approvalService;
     private final LoanQueryService loanQueryService;
+    private final MemberLoanService memberLoanService;
     private final VerificationService verificationService;
     private final ManagedDamageImageStore managedDamageImageStore;
 
@@ -61,7 +63,7 @@ public final class ApplicationContext {
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
             MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService,
             MemberRequestService memberRequestService, ApprovalService approvalService,
-            LoanQueryService loanQueryService,
+            LoanQueryService loanQueryService, MemberLoanService memberLoanService,
             VerificationService verificationService,
             ManagedDamageImageStore managedDamageImageStore) {
         this.dataDirectory = dataDirectory;
@@ -78,6 +80,7 @@ public final class ApplicationContext {
         this.memberRequestService = memberRequestService;
         this.approvalService = approvalService;
         this.loanQueryService = loanQueryService;
+        this.memberLoanService = memberLoanService;
         this.verificationService = verificationService;
         this.managedDamageImageStore = managedDamageImageStore;
     }
@@ -129,12 +132,13 @@ public final class ApplicationContext {
                 availabilityPolicy, new UuidIdGenerator(), clock);
         LoanQueryService loanQueryService = new LoanQueryService(database, sessionManager, clock,
                 ZoneId.systemDefault());
+        MemberLoanService memberLoanService = new MemberLoanService(database, sessionManager);
         VerificationService verificationService = new VerificationService(database, sessionManager,
                 managedDamageImageStore);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
                 inventoryService, memberCatalogService, excoRequestService, memberRequestService,
-                approvalService, loanQueryService,
+                approvalService, loanQueryService, memberLoanService,
                 verificationService, managedDamageImageStore);
     }
 
@@ -253,6 +257,15 @@ public final class ApplicationContext {
 
     public LoanQueryService loanQueryService() { return loanQueryService; }
     public VerificationService verificationService() { return verificationService; }
+
+    /**
+     * Returns the Member's return and loss-report workflow service.
+     *
+     * @return Context-owned Member Loan service.
+     */
+    public MemberLoanService memberLoanService() {
+        return memberLoanService;
+    }
 
     /**
      * Returns the context-owned read-only damage-evidence contract used by Exco verification.

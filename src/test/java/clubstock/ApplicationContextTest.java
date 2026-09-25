@@ -64,6 +64,7 @@ class ApplicationContextTest {
         assertNotNull(first.excoRequestService());
         assertNotNull(first.approvalService());
         assertNotNull(first.loanQueryService());
+        assertNotNull(first.memberLoanService());
         assertNotNull(first.verificationService());
         assertNotNull(first.damageEvidenceStore());
         assertFalse(second.authentication().isExcoSetupRequired());
