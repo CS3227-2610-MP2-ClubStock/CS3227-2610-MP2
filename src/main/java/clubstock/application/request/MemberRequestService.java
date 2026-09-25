@@ -1,6 +1,8 @@
 package clubstock.application.request;
 
 import java.time.Clock;
+import java.util.Comparator;
+import java.util.List;
 
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
@@ -15,9 +17,10 @@ import clubstock.domain.equipment.EquipmentType;
 import clubstock.domain.equipment.EquipmentTypeId;
 import clubstock.domain.request.LoanRequest;
 import clubstock.domain.request.LoanRequestId;
+import clubstock.domain.request.LoanRequestStatus;
 
 /**
- * Previews and submits LoanRequests for the authenticated Member.
+ * Previews, submits, lists, and cancels requests for the authenticated Member.
  */
 public final class MemberRequestService {
     private static final String MEMBER_UNAVAILABLE_MESSAGE =
@@ -108,6 +111,62 @@ public final class MemberRequestService {
     }
 
     /**
+     * Returns an immutable snapshot of every request owned by the authenticated Member.
+     *
+     * @return Own requests ordered by submission time descending, then Request ID ascending.
+     */
+    public List<OwnRequest> listOwnRequests() {
+        MemberId memberId = sessionManager.requireMember();
+        return transactionManager.read(unitOfWork -> {
+            sessionManager.requireMember(memberId);
+            requireActiveMember(unitOfWork, memberId);
+            List<OwnRequest> requests = unitOfWork.loanRequests().findByMember(memberId).stream()
+                    .map(request -> ownRequest(unitOfWork, request))
+                    .sorted(Comparator.comparing(OwnRequest::requestedAt).reversed()
+                            .thenComparing(request -> request.loanRequestId().value()))
+                    .toList();
+            return List.copyOf(requests);
+        });
+    }
+
+    /**
+     * Cancels one of the authenticated Member's pending requests.
+     *
+     * @param requestId Request identity to cancel.
+     * @throws ApplicationException If the session, request identity, ownership, or request status
+     *         is invalid.
+     */
+    public void cancelRequest(LoanRequestId requestId) {
+        MemberId memberId = sessionManager.requireMember();
+        transactionManager.write(unitOfWork -> {
+            sessionManager.requireMember(memberId);
+            requireActiveMember(unitOfWork, memberId);
+            if (requestId == null) {
+                throw validation("Select a request to cancel.");
+            }
+            LoanRequest request = unitOfWork.loanRequests().findById(requestId).orElseThrow(() ->
+                    new ApplicationException(ApplicationErrorCode.NOT_FOUND,
+                            "The selected request no longer exists.", null));
+            if (!request.memberId().equals(memberId)) {
+                throw new ApplicationException(ApplicationErrorCode.AUTHORIZATION_DENIED,
+                        "This operation is not available for the current session.", null);
+            }
+            if (request.status() != LoanRequestStatus.PENDING) {
+                throw new ApplicationException(ApplicationErrorCode.CONFLICT,
+                        "Only a pending request can be cancelled.", null);
+            }
+            try {
+                request.cancelBy(memberId);
+            } catch (IllegalStateException exception) {
+                throw new ApplicationException(ApplicationErrorCode.CONFLICT,
+                        "This request is no longer pending.", exception);
+            }
+            unitOfWork.loanRequests().update(request);
+            return null;
+        });
+    }
+
+    /**
      * Returns a trimmed, valid draft for the current request operation.
      *
      * @param draft Member-entered request values.
@@ -128,6 +187,23 @@ public final class MemberRequestService {
         }
         return new RequestDraft(draft.equipmentTypeId(), draft.quantity(), draft.startDate(),
                 draft.endDate(), details);
+    }
+
+    /**
+     * Maps a persisted request and its current equipment type name to a Member-safe summary.
+     *
+     * @param unitOfWork Current transaction-scoped repositories.
+     * @param request Persisted request owned by the authenticated Member.
+     * @return Request summary without physical equipment identities.
+     */
+    private static OwnRequest ownRequest(UnitOfWork unitOfWork, LoanRequest request) {
+        EquipmentType type = unitOfWork.equipmentTypes().findById(request.equipmentTypeId())
+                .orElseThrow(() -> new ApplicationException(ApplicationErrorCode.PERSISTENCE_FAILURE,
+                        "A request references a missing equipment type.", null));
+        return new OwnRequest(request.loanRequestId(), request.equipmentTypeId(),
+                type.name().value(), request.requestedQuantity(), request.requestedStartDate(),
+                request.requestedEndDate(), request.requestedAt(), request.status(),
+                request.approvedQuantity());
     }
 
     /**
