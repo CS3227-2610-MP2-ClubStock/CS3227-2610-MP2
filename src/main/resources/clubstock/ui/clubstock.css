@@ -227,6 +227,10 @@
     -fx-text-fill: #176b4d;
 }
 
+.member-shell .radio-button {
+    -fx-text-fill: #27364e;
+}
+
 .exco-shell .shell-role {
     -fx-text-fill: #315a9a;
 }

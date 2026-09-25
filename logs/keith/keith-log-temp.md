@@ -301,3 +301,7 @@
 - `$commit` grouped good-return and loss-report commands, context wiring, and transactional tests in `1090b0f` (`feat: add member good return and loss reporting`): `MemberLoanService.java`, `MemberLoanServiceTest.java`, `ApplicationContext.java`, and `ApplicationContextTest.java`. `$commit` grouped damaged-return submission, outcome-safe image compensation, context injection, and failure/restart tests in `cc4da0e` (`feat: submit damaged returns with managed evidence`): `MemberLoanService.java`, `MemberLoanServiceTest.java`, and `ApplicationContext.java`.
 - `$commit` grouped the separate Member Return and Report Lost forms, background submission, composition, and FXML checks in `7c7de0a` (`feat: add member return and loss report forms`): `MemberActiveLoansController.java`, `member-active-loans.fxml`, `UiComposition.java`, `ClubStockApplication.java`, and `FxmlResourceTest.java`.
 - The full `./gradlew test` suite, `shadowJar`, packaged-resource inspection, and whitespace checks passed. A native ClubStock window was unavailable to desktop inspection, so visual smoke was not completed.
+
+## 2026-09-26 — Member return choice visibility
+
+- Confirmed the Member return option text looks correct after the radio-button color fix, and requested this outcome be logged and committed. `$commit` groups the Member-scoped text-color rule and this entry in one commit. `git diff --check` passed. Files: `src/main/resources/clubstock/ui/clubstock.css` and `logs/keith/keith-log-temp.md`.
