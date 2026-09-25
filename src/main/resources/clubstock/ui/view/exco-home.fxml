@@ -38,12 +38,16 @@
                 <VBox alignment="CENTER_LEFT" maxWidth="720" spacing="12" styleClass="surface-card">
                     <children>
                         <Label text="Exco home" styleClass="screen-title"/>
-                        <Label text="You are signed in with the Exco role. Manage Member accounts and equipment inventory; request, loan, and verification screens will appear as their milestones are completed."
+                        <Label text="You are signed in with the Exco role. Manage Member accounts, equipment inventory, and pending LoanRequests. Loan and verification screens will appear as their milestones are completed."
                                styleClass="supporting-text" wrapText="true"/>
                         <Button text="Manage _Members" mnemonicParsing="true" onAction="#manageMembers"
                                 styleClass="primary-button"/>
                         <Button text="Manage _inventory" mnemonicParsing="true" onAction="#manageInventory"
                                 styleClass="secondary-button"/>
+                        <Button text="Manage pending _requests" mnemonicParsing="true"
+                                onAction="#manageRequests" styleClass="secondary-button"/>
+                        <Button text="View active _loans" mnemonicParsing="true"
+                                onAction="#manageLoans" styleClass="secondary-button"/>
                     </children>
                 </VBox>
             </children>

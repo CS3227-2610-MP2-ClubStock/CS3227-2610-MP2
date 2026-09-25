@@ -29,7 +29,9 @@ public final class ClubStockApplication extends Application {
             applicationContext = ApplicationContext.createProduction();
             JavaFxNavigator navigator = UiComposition.createNavigator(stage,
                     applicationContext.authentication(), applicationContext.memberAccountService(),
-                    applicationContext.inventoryService(), applicationContext.memberCatalogService());
+                    applicationContext.inventoryService(), applicationContext.memberCatalogService(),
+                    applicationContext.excoRequestService(), applicationContext.approvalService(),
+                    applicationContext.loanQueryService());
             navigator.show(Route.ROLE_SELECTION);
             stage.show();
         } catch (RuntimeException exception) {

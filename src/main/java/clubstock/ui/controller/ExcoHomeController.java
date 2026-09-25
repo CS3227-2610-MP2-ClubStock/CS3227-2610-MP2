@@ -45,4 +45,14 @@ public final class ExcoHomeController {
     private void manageInventory() {
         navigation.show(Route.INVENTORY_ADMINISTRATION);
     }
+
+    /**
+     * Opens the Exco pending-request queue.
+     */
+    @FXML
+    private void manageRequests() {
+        navigation.show(Route.EXCO_REQUEST_QUEUE);
+    }
+
+    @FXML private void manageLoans() { navigation.show(Route.EXCO_ACTIVE_LOANS); }
 }
