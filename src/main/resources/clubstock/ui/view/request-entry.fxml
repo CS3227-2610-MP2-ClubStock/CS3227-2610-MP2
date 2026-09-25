@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="clubstock.ui.controller.RequestEntryController"
+            styleClass="role-shell, member-shell">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16" styleClass="shell-bar">
+            <padding>
+                <Insets top="16" right="24" bottom="16" left="24" />
+            </padding>
+            <Button fx:id="backButton" text="_Back" mnemonicParsing="true"
+                    onAction="#goBack" styleClass="secondary-button" />
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <children>
+                    <Label text="ClubStock" styleClass="shell-brand" />
+                    <Label text="MEMBER WORKSPACE" styleClass="shell-role" />
+                </children>
+            </VBox>
+            <Button fx:id="refreshTypesButton" text="_Refresh types" mnemonicParsing="true"
+                    onAction="#refreshTypes" styleClass="secondary-button" />
+        </HBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="content-scroll">
+            <content>
+                <VBox maxWidth="840" spacing="18" styleClass="admin-content">
+                    <padding>
+                        <Insets top="28" right="32" bottom="32" left="32" />
+                    </padding>
+                    <VBox spacing="6">
+                        <children>
+                            <Label text="REQUEST EQUIPMENT" styleClass="eyebrow" />
+                            <Label text="New loan request" styleClass="screen-title" />
+                            <Label text="Choose an equipment type, quantity, and dates. Your request does not reserve equipment."
+                                   styleClass="supporting-text" wrapText="true" />
+                        </children>
+                    </VBox>
+                    <VBox fx:id="requestForm" spacing="14" styleClass="account-form-card">
+                        <children>
+                            <Label text="Equipment type" styleClass="field-label" />
+                            <ComboBox fx:id="equipmentTypeComboBox" maxWidth="Infinity"
+                                      promptText="Select an offered type"
+                                      accessibleText="Equipment type and available quantity"
+                                      styleClass="request-control" />
+                            <Label fx:id="emptyTypesLabel" text="No equipment types are currently offered."
+                                   styleClass="catalog-empty-text" visible="false" managed="false"
+                                   wrapText="true" />
+                            <Label fx:id="typeLoadErrorLabel" text="" styleClass="error-text"
+                                   visible="false" managed="false" wrapText="true" />
+                            <Label text="Requested quantity" styleClass="field-label" />
+                            <TextField fx:id="quantityField" promptText="For example, 2"
+                                       accessibleText="Requested quantity" styleClass="text-field" />
+                            <HBox spacing="16">
+                                <children>
+                                    <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                        <children>
+                                            <Label text="Requested start date" styleClass="field-label" />
+                                            <DatePicker fx:id="startDatePicker" maxWidth="Infinity"
+                                                        accessibleText="Requested start date"
+                                                        styleClass="request-control" />
+                                        </children>
+                                    </VBox>
+                                    <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                        <children>
+                                            <Label text="Requested end date" styleClass="field-label" />
+                                            <DatePicker fx:id="endDatePicker" maxWidth="Infinity"
+                                                        accessibleText="Requested end date"
+                                                        styleClass="request-control" />
+                                        </children>
+                                    </VBox>
+                                </children>
+                            </HBox>
+                            <Label text="Optional details" styleClass="field-label" />
+                            <TextArea fx:id="detailsTextArea" prefRowCount="3" wrapText="true"
+                                      promptText="Add any helpful context"
+                                      accessibleText="Optional request details"
+                                      styleClass="request-control" />
+                            <Button fx:id="reviewButton" text="_Review request"
+                                    mnemonicParsing="true" onAction="#reviewRequest"
+                                    styleClass="primary-button" />
+                        </children>
+                    </VBox>
+                    <VBox fx:id="previewPanel" spacing="12" styleClass="account-form-card"
+                          visible="false" managed="false">
+                        <children>
+                            <Label text="REVIEW YOUR REQUEST" styleClass="eyebrow" />
+                            <Label text="Request summary" styleClass="section-title" />
+                            <HBox spacing="8">
+                                <children>
+                                    <Label text="Equipment type:" styleClass="field-label" />
+                                    <Label fx:id="previewTypeLabel" wrapText="true" />
+                                </children>
+                            </HBox>
+                            <HBox spacing="8">
+                                <children>
+                                    <Label text="Quantity:" styleClass="field-label" />
+                                    <Label fx:id="previewQuantityLabel" />
+                                </children>
+                            </HBox>
+                            <HBox spacing="8">
+                                <children>
+                                    <Label text="Requested dates:" styleClass="field-label" />
+                                    <Label fx:id="previewDatesLabel" wrapText="true" />
+                                </children>
+                            </HBox>
+                            <HBox spacing="8">
+                                <children>
+                                    <Label text="Details:" styleClass="field-label" />
+                                    <Label fx:id="previewDetailsLabel" wrapText="true" />
+                                </children>
+                            </HBox>
+                            <HBox spacing="8">
+                                <children>
+                                    <Label text="Current availability:" styleClass="field-label" />
+                                    <Label fx:id="previewAvailabilityLabel" />
+                                </children>
+                            </HBox>
+                            <Label fx:id="zeroStockWarningLabel"
+                                   text="No items are currently available. You may still submit, but this request will not reserve equipment."
+                                   styleClass="zero-stock-status" visible="false" managed="false"
+                                   wrapText="true" />
+                            <CheckBox fx:id="zeroStockConfirmationCheckBox"
+                                      text="I understand and want to submit this zero-stock request."
+                                      visible="false" managed="false" wrapText="true" />
+                            <Button fx:id="submitButton" text="Confirm and submit"
+                                    onAction="#submitRequest" styleClass="primary-button"
+                                    disable="true" />
+                        </children>
+                    </VBox>
+                    <Label fx:id="statusLabel" minHeight="24" wrapText="true"
+                           styleClass="supporting-text" />
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

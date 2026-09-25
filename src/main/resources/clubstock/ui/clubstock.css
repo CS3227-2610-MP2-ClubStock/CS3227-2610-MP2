@@ -103,7 +103,10 @@
 }
 
 .password-field,
-.text-field {
+.text-field,
+.combo-box,
+.date-picker,
+.text-area {
     -fx-background-color: #f9fbff;
     -fx-border-color: #b9c6d9;
     -fx-border-radius: 9px;
@@ -111,8 +114,16 @@
     -fx-padding: 11px 12px;
 }
 
+.text-area .content {
+    -fx-background-color: #f9fbff;
+    -fx-background-radius: 9px;
+}
+
 .password-field:focused,
 .text-field:focused,
+.combo-box:focused,
+.date-picker:focused,
+.text-area:focused,
 .button:focused {
     -fx-border-color: #1463ff;
     -fx-border-width: 2px;
