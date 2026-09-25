@@ -127,6 +127,18 @@ public final class MemberLoanService {
             throw validation("Select a JPEG or PNG image for the damage report.");
         }
 
+        damageImageStore.withExclusiveAccess(() -> {
+            submitDamagedReturnWhileLocked(memberId, validatedLoanId, validatedDescription,
+                    sourcePath);
+            return null;
+        });
+    }
+
+    /**
+     * Finalizes evidence and commits its report while reconciliation is excluded.
+     */
+    private void submitDamagedReturnWhileLocked(MemberId memberId, LoanId validatedLoanId,
+            String validatedDescription, Path sourcePath) {
         transactions.read(unit -> {
             sessions.requireMember(memberId);
             requireActiveMember(unit, memberId);

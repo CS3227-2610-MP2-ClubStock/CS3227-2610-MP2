@@ -13,6 +13,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
@@ -30,6 +35,45 @@ class FileDamageEvidenceStoreTest {
 
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void exclusiveAccessSerializesStoreInstancesForOneEvidenceDirectory() throws Exception {
+        Path evidenceDirectory = temporaryDirectory.resolve("damage-evidence");
+        FileDamageEvidenceStore firstStore = new FileDamageEvidenceStore(evidenceDirectory);
+        FileDamageEvidenceStore secondStore = new FileDamageEvidenceStore(evidenceDirectory);
+        CountDownLatch firstEntered = new CountDownLatch(1);
+        CountDownLatch allowFirstToExit = new CountDownLatch(1);
+        CountDownLatch secondStarted = new CountDownLatch(1);
+        CountDownLatch secondEntered = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        try {
+            Future<?> firstOperation = executor.submit(() -> firstStore.withExclusiveAccess(() -> {
+                firstEntered.countDown();
+                await(allowFirstToExit);
+                return null;
+            }));
+            assertTrue(firstEntered.await(5, TimeUnit.SECONDS));
+
+            Future<?> secondOperation = executor.submit(() -> {
+                secondStarted.countDown();
+                return secondStore.withExclusiveAccess(() -> {
+                    secondEntered.countDown();
+                    return null;
+                });
+            });
+            assertTrue(secondStarted.await(5, TimeUnit.SECONDS));
+            assertFalse(secondEntered.await(100, TimeUnit.MILLISECONDS));
+
+            allowFirstToExit.countDown();
+            firstOperation.get(5, TimeUnit.SECONDS);
+            secondOperation.get(5, TimeUnit.SECONDS);
+            assertEquals(0, secondEntered.getCount());
+        } finally {
+            allowFirstToExit.countDown();
+            executor.shutdownNow();
+        }
+    }
 
     @Test
     void stageAcceptsAbsoluteAndRelativeImagePathsAndFinalizesGeneratedKeys() throws IOException {
@@ -204,6 +248,15 @@ class FileDamageEvidenceStoreTest {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         assertTrue(ImageIO.write(image, format, output));
         return output.toByteArray();
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            latch.await();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(exception);
+        }
     }
 
     private static long countFinalizedImages(Path evidenceDirectory) throws IOException {

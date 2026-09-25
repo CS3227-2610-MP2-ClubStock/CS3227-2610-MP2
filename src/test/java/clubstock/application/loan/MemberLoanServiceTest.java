@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -20,6 +21,12 @@ import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
 
@@ -58,6 +65,7 @@ import clubstock.domain.report.DamageReport;
 import clubstock.domain.report.LossReport;
 import clubstock.domain.request.LoanRequest;
 import clubstock.domain.request.LoanRequestId;
+import clubstock.fixture.DamageEvidenceReconciliationProcess;
 import clubstock.infrastructure.file.FileDamageEvidenceStore;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
 
@@ -67,6 +75,95 @@ class MemberLoanServiceTest {
     private static final MemberId MEMBER_ID = new MemberId("member-one");
     private static final MemberId OTHER_MEMBER_ID = new MemberId("member-two");
     private static final EquipmentTypeId TYPE_ID = new EquipmentTypeId("type-one");
+
+    @Test
+    void damagedReturnRetainsEvidenceWhenAnotherProcessStartsBeforeCommit(
+            @TempDir Path temporaryDirectory) throws Exception {
+        Fixture fixture = createFixture(temporaryDirectory);
+        addLoan(fixture.database(), "loan-race", "item-race", MEMBER_ID);
+        Path source = temporaryDirectory.resolve("damage.png");
+        byte[] expectedBytes = writePng(source);
+        CountDownLatch finalized = new CountDownLatch(1);
+        CountDownLatch allowCommit = new CountDownLatch(1);
+        TransactionManager transactions = new TransactionManager() {
+            @Override
+            public <T> T read(UnitOfWorkOperation<T> operation) {
+                return fixture.database().read(operation);
+            }
+
+            @Override
+            public <T> T write(UnitOfWorkOperation<T> operation) {
+                // The real service has finalized the image, but no database write has begun.
+                finalized.countDown();
+                try {
+                    assertTrue(allowCommit.await(15, TimeUnit.SECONDS));
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    throw new AssertionError(exception);
+                }
+                return fixture.database().write(operation);
+            }
+        };
+        MemberLoanService submittingService = new MemberLoanService(transactions,
+                memberSession(MEMBER_ID), fixture.imageStore());
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        Process startup = null;
+        Path processErrors = temporaryDirectory.resolve("startup-errors.txt");
+        try {
+            Future<?> submission = executor.submit(() -> submittingService.submitDamagedReturn(
+                    "loan-race", "Damaged handle", source));
+            assertTrue(finalized.await(5, TimeUnit.SECONDS));
+            assertEquals(1, fixture.imageStore().finalizedCount());
+            boolean hasNoReport = fixture.database().read(unit -> unit.damageReports().findAll().isEmpty());
+            assertTrue(hasNoReport);
+
+            String javaExecutableName = System.getProperty("os.name").startsWith("Windows")
+                    ? "java.exe" : "java";
+            startup = new ProcessBuilder(
+                    Path.of(System.getProperty("java.home"), "bin", javaExecutableName).toString(),
+                    "-cp", System.getProperty("clubstock.testRuntimeClasspath"),
+                    DamageEvidenceReconciliationProcess.class.getName(),
+                    temporaryDirectory.toString())
+                    .redirectError(processErrors.toFile()).start();
+            var output = startup.inputReader();
+            assertEquals("LOCKED", executor.submit(output::readLine).get(10, TimeUnit.SECONDS),
+                    () -> readProcessErrors(processErrors));
+            assertFalse(startup.waitFor(250, TimeUnit.MILLISECONDS),
+                    "Startup must wait while the submission is paused before commit.");
+
+            allowCommit.countDown();
+            submission.get(5, TimeUnit.SECONDS);
+            assertTrue(startup.waitFor(10, TimeUnit.SECONDS));
+            assertEquals(0, startup.exitValue(), () -> readProcessErrors(processErrors));
+            assertEquals("RECONCILED", output.readLine());
+            DamageReport report = fixture.database().read(unit -> unit.damageReports()
+                    .findByLoanId(new LoanId("loan-race")).orElseThrow());
+            assertArrayEquals(expectedBytes,
+                    fixture.imageStore().find(report.imageReference()).orElseThrow().bytes());
+            assertLoanState(fixture.database(), "loan-race", "item-race", LoanStatus.RETURN_PENDING,
+                    ReportedReturnCondition.DAMAGED, EquipmentAvailability.UNAVAILABLE,
+                    EquipmentCondition.GOOD, true);
+        } finally {
+            allowCommit.countDown();
+            if (startup != null && startup.isAlive()) {
+                startup.destroyForcibly();
+                startup.waitFor(5, TimeUnit.SECONDS);
+            }
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+        }
+    }
+
+    /**
+     * Returns child-process diagnostics when a protocol assertion fails.
+     */
+    private static String readProcessErrors(Path path) {
+        try {
+            return Files.readString(path);
+        } catch (IOException exception) {
+            return exception.toString();
+        }
+    }
 
     @Test
     void submitGoodReturnUpdatesOnlySelectedLoanAndIsVisibleToExco(@TempDir Path temporaryDirectory) {
@@ -660,6 +757,11 @@ class MemberLoanServiceTest {
         private TestDamageImageStore(Path root) {
             this.root = root.toAbsolutePath().normalize();
             delegate = new FileDamageEvidenceStore(this.root);
+        }
+
+        @Override
+        public <T> T withExclusiveAccess(Supplier<T> operation) {
+            return delegate.withExclusiveAccess(operation);
         }
 
         @Override

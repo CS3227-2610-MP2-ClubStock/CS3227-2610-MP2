@@ -311,10 +311,13 @@ public final class ApplicationContext {
      */
     private static void reconcileDamageEvidence(TransactionManager transactions,
             ManagedDamageImageStore imageStore) {
-        List<DamageImageReference> committedReferences = transactions.read(unit ->
-                unit.damageReports().findAll().stream()
-                        .map(DamageReport::imageReference)
-                        .toList());
-        imageStore.reconcile(committedReferences);
+        imageStore.withExclusiveAccess(() -> {
+            List<DamageImageReference> committedReferences = transactions.read(unit ->
+                    unit.damageReports().findAll().stream()
+                            .map(DamageReport::imageReference)
+                            .toList());
+            imageStore.reconcile(committedReferences);
+            return null;
+        });
     }
 }

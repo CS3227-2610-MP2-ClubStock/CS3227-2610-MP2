@@ -13,6 +13,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -101,6 +105,43 @@ class ApplicationContextTest {
         assertNotNull(reopened.managedDamageImageStore());
     }
 
+    @Test
+    void startupReconciliationWaitsForAnInFlightImageSubmission() throws Exception {
+        ApplicationContext submittingContext = ApplicationContext.create(temporaryDirectory);
+        Path evidenceDirectory = temporaryDirectory.resolve("damage-evidence");
+        String imageKey = UUID.randomUUID() + ".png";
+        byte[] imageBytes = {4, 5, 6};
+        Path finalizedImage = evidenceDirectory.resolve(imageKey);
+        Files.write(finalizedImage, imageBytes);
+        DamageImageReference reference = new DamageImageReference(imageKey,
+                DamageImageFormat.PNG, imageBytes.length);
+        CountDownLatch startupStarted = new CountDownLatch(1);
+        AtomicReference<Thread> startupThread = new AtomicReference<>();
+        FutureTask<ApplicationContext> startup = new FutureTask<>(() -> {
+            startupThread.set(Thread.currentThread());
+            startupStarted.countDown();
+            return ApplicationContext.create(temporaryDirectory);
+        });
+
+        submittingContext.managedDamageImageStore().withExclusiveAccess(() -> {
+            new Thread(startup, "clubstock-startup-reconciliation-test").start();
+            try {
+                assertTrue(startupStarted.await(5, TimeUnit.SECONDS));
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(exception);
+            }
+            awaitWaitingForImageLock(startupThread);
+            insertPendingDamageReport(submittingContext, reference);
+            return null;
+        });
+
+        ApplicationContext reopened = startup.get(5, TimeUnit.SECONDS);
+
+        assertTrue(Files.isRegularFile(finalizedImage));
+        assertTrue(reopened.damageEvidenceStore().find(reference).isPresent());
+    }
+
     private static void insertPendingDamageReport(ApplicationContext context,
             DamageImageReference imageReference) {
         Clock clock = Clock.fixed(Instant.parse("2026-09-25T12:00:00Z"), ZoneOffset.UTC);
@@ -133,5 +174,25 @@ class ApplicationContextTest {
             unit.damageReports().insert(report);
             return null;
         });
+    }
+
+    private static void awaitWaitingForImageLock(AtomicReference<Thread> startupThread) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        Thread thread;
+        while ((thread = startupThread.get()) == null
+                || thread.getState() != Thread.State.WAITING) {
+            if (thread != null && !thread.isAlive()) {
+                throw new AssertionError("Startup completed before it acquired the image lock.");
+            }
+            if (System.nanoTime() >= deadline) {
+                throw new AssertionError("Startup did not wait for the image operation lock.");
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(exception);
+            }
+        }
     }
 }

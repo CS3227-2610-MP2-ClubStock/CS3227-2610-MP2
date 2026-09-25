@@ -5,6 +5,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -20,6 +22,10 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -40,10 +46,15 @@ import clubstock.domain.report.DamageImageReference;
 public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
     private static final long MAX_SIZE_BYTES = 5L * 1024 * 1024;
     private static final String STAGING_DIRECTORY_NAME = ".staging";
+    private static final String OPERATION_LOCK_FILENAME = ".image-operations.lock";
+    private static final ConcurrentMap<Path, ReentrantLock> JVM_OPERATION_LOCKS =
+            new ConcurrentHashMap<>();
     private static final Pattern GENERATED_IMAGE_KEY = Pattern.compile(
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|png)");
     private final Path root;
     private final Path stagingDirectory;
+    private final Path operationLockFile;
+    private final ReentrantLock jvmOperationLock;
 
     /**
      * Creates a store rooted at an application-managed directory.
@@ -67,6 +78,9 @@ public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
             }
             this.root = normalizedRoot.toRealPath();
             stagingDirectory = this.root.resolve(STAGING_DIRECTORY_NAME);
+            operationLockFile = this.root.resolve(OPERATION_LOCK_FILENAME);
+            jvmOperationLock = JVM_OPERATION_LOCKS.computeIfAbsent(this.root,
+                    ignored -> new ReentrantLock());
             if (Files.isSymbolicLink(stagingDirectory)) {
                 throw storageFailure(null);
             }
@@ -74,6 +88,30 @@ public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
             requireManagedDirectories();
         } catch (IOException | SecurityException exception) {
             throw storageFailure(exception);
+        }
+    }
+
+    @Override
+    public <T> T withExclusiveAccess(Supplier<T> operation) {
+        if (operation == null) {
+            throw new IllegalArgumentException("Exclusive image operation cannot be null.");
+        }
+
+        boolean alreadyHeld = jvmOperationLock.isHeldByCurrentThread();
+        jvmOperationLock.lock();
+        try {
+            if (alreadyHeld) {
+                return operation.get();
+            }
+            try (FileChannel channel = FileChannel.open(operationLockFile,
+                    StandardOpenOption.CREATE, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
+                    FileLock fileLock = channel.lock()) {
+                return operation.get();
+            } catch (IOException | SecurityException exception) {
+                throw storageFailure(exception);
+            }
+        } finally {
+            jvmOperationLock.unlock();
         }
     }
 
