@@ -182,6 +182,10 @@
     -fx-text-fill: #172033;
 }
 
+.request-preview-value {
+    -fx-text-fill: #172033;
+}
+
 .account-form-card {
     -fx-background-color: white;
     -fx-background-radius: 12px;

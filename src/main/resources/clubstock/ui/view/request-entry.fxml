@@ -102,31 +102,36 @@
                             <HBox spacing="8">
                                 <children>
                                     <Label text="Equipment type:" styleClass="field-label" />
-                                    <Label fx:id="previewTypeLabel" wrapText="true" />
+                                    <Label fx:id="previewTypeLabel" wrapText="true"
+                                           styleClass="request-preview-value" />
                                 </children>
                             </HBox>
                             <HBox spacing="8">
                                 <children>
                                     <Label text="Quantity:" styleClass="field-label" />
-                                    <Label fx:id="previewQuantityLabel" />
+                                    <Label fx:id="previewQuantityLabel"
+                                           styleClass="request-preview-value" />
                                 </children>
                             </HBox>
                             <HBox spacing="8">
                                 <children>
                                     <Label text="Requested dates:" styleClass="field-label" />
-                                    <Label fx:id="previewDatesLabel" wrapText="true" />
+                                    <Label fx:id="previewDatesLabel" wrapText="true"
+                                           styleClass="request-preview-value" />
                                 </children>
                             </HBox>
                             <HBox spacing="8">
                                 <children>
                                     <Label text="Details:" styleClass="field-label" />
-                                    <Label fx:id="previewDetailsLabel" wrapText="true" />
+                                    <Label fx:id="previewDetailsLabel" wrapText="true"
+                                           styleClass="request-preview-value" />
                                 </children>
                             </HBox>
                             <HBox spacing="8">
                                 <children>
                                     <Label text="Current availability:" styleClass="field-label" />
-                                    <Label fx:id="previewAvailabilityLabel" />
+                                    <Label fx:id="previewAvailabilityLabel"
+                                           styleClass="request-preview-value" />
                                 </children>
                             </HBox>
                             <Label fx:id="zeroStockWarningLabel"
