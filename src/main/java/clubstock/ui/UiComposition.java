@@ -3,6 +3,7 @@ package clubstock.ui;
 import clubstock.application.catalog.MemberCatalogService;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.loan.LoanQueryService;
+import clubstock.application.loan.MemberLoanService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.request.ApprovalService;
 import clubstock.application.request.ExcoRequestService;
@@ -52,6 +53,7 @@ public final class UiComposition {
      * @param memberRequestService Context-owned Member request service.
      * @param approvalService Context-owned Exco approval service.
      * @param loanQueryService Context-owned active-loan query service.
+     * @param memberLoanService Context-owned Member return and report service.
      * @param verificationService Context-owned Exco report verification service.
      * @return Configured navigator.
      */
@@ -60,11 +62,11 @@ public final class UiComposition {
             InventoryService inventoryService, MemberCatalogService memberCatalogService,
             ExcoRequestService excoRequestService, MemberRequestService memberRequestService,
             ApprovalService approvalService, LoanQueryService loanQueryService,
-            VerificationService verificationService) {
+            MemberLoanService memberLoanService, VerificationService verificationService) {
         if (stage == null || authentication == null || memberAccountService == null
                 || inventoryService == null || memberCatalogService == null
                 || excoRequestService == null || memberRequestService == null
-                || approvalService == null || loanQueryService == null
+                || approvalService == null || loanQueryService == null || memberLoanService == null
                 || verificationService == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
@@ -108,7 +110,8 @@ public final class UiComposition {
         controllerFactory.register(MemberOwnRequestsController.class,
                 () -> new MemberOwnRequestsController(memberRequestService, navigator));
         controllerFactory.register(MemberActiveLoansController.class,
-                () -> new MemberActiveLoansController(loanQueryService, navigator));
+                () -> new MemberActiveLoansController(loanQueryService, memberLoanService,
+                        navigator));
         return navigator;
     }
 }

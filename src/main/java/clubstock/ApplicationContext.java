@@ -3,6 +3,7 @@ package clubstock;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.List;
 
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
@@ -14,13 +15,17 @@ import clubstock.application.inventory.AvailabilityPolicy;
 import clubstock.application.inventory.EquipmentItemAvailabilityPolicy;
 import clubstock.application.inventory.InventoryService;
 import clubstock.application.loan.LoanQueryService;
+import clubstock.application.loan.MemberLoanService;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.port.DamageEvidenceStore;
+import clubstock.application.port.ManagedDamageImageStore;
 import clubstock.application.port.TransactionManager;
 import clubstock.application.request.ApprovalService;
 import clubstock.application.request.ExcoRequestService;
 import clubstock.application.request.MemberRequestService;
 import clubstock.application.verification.VerificationService;
+import clubstock.domain.report.DamageImageReference;
+import clubstock.domain.report.DamageReport;
 import clubstock.infrastructure.file.FileDamageEvidenceStore;
 import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
@@ -48,8 +53,9 @@ public final class ApplicationContext {
     private final MemberRequestService memberRequestService;
     private final ApprovalService approvalService;
     private final LoanQueryService loanQueryService;
+    private final MemberLoanService memberLoanService;
     private final VerificationService verificationService;
-    private final DamageEvidenceStore damageEvidenceStore;
+    private final ManagedDamageImageStore managedDamageImageStore;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
@@ -57,8 +63,9 @@ public final class ApplicationContext {
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
             MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService,
             MemberRequestService memberRequestService, ApprovalService approvalService,
-            LoanQueryService loanQueryService,
-            VerificationService verificationService, DamageEvidenceStore damageEvidenceStore) {
+            LoanQueryService loanQueryService, MemberLoanService memberLoanService,
+            VerificationService verificationService,
+            ManagedDamageImageStore managedDamageImageStore) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -73,8 +80,9 @@ public final class ApplicationContext {
         this.memberRequestService = memberRequestService;
         this.approvalService = approvalService;
         this.loanQueryService = loanQueryService;
+        this.memberLoanService = memberLoanService;
         this.verificationService = verificationService;
-        this.damageEvidenceStore = damageEvidenceStore;
+        this.managedDamageImageStore = managedDamageImageStore;
     }
 
     /**
@@ -99,6 +107,9 @@ public final class ApplicationContext {
 
         Path normalizedDirectory = dataDirectory.toAbsolutePath().normalize();
         SqliteDatabase database = initializeDatabase(normalizedDirectory);
+        ManagedDamageImageStore managedDamageImageStore = new FileDamageEvidenceStore(
+                normalizedDirectory.resolve(DAMAGE_EVIDENCE_DIRECTORY));
+        reconcileDamageEvidence(database, managedDamageImageStore);
         SessionManager sessionManager = new SessionManager();
         Pbkdf2PasswordHasher passwordHasher = new Pbkdf2PasswordHasher();
         AuthenticationService authenticationService = new AuthenticationService(database,
@@ -121,15 +132,15 @@ public final class ApplicationContext {
                 availabilityPolicy, new UuidIdGenerator(), clock);
         LoanQueryService loanQueryService = new LoanQueryService(database, sessionManager, clock,
                 ZoneId.systemDefault());
-        DamageEvidenceStore damageEvidenceStore = new FileDamageEvidenceStore(
-                normalizedDirectory.resolve(DAMAGE_EVIDENCE_DIRECTORY));
+        MemberLoanService memberLoanService = new MemberLoanService(database, sessionManager,
+                managedDamageImageStore);
         VerificationService verificationService = new VerificationService(database, sessionManager,
-                damageEvidenceStore);
+                managedDamageImageStore);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
                 inventoryService, memberCatalogService, excoRequestService, memberRequestService,
-                approvalService, loanQueryService,
-                verificationService, damageEvidenceStore);
+                approvalService, loanQueryService, memberLoanService,
+                verificationService, managedDamageImageStore);
     }
 
     /**
@@ -248,8 +259,32 @@ public final class ApplicationContext {
     public LoanQueryService loanQueryService() { return loanQueryService; }
     public VerificationService verificationService() { return verificationService; }
 
-    /** Returns the context-owned managed damage-evidence store. */
-    public DamageEvidenceStore damageEvidenceStore() { return damageEvidenceStore; }
+    /**
+     * Returns the Member's return and loss-report workflow service.
+     *
+     * @return Context-owned Member Loan service.
+     */
+    public MemberLoanService memberLoanService() {
+        return memberLoanService;
+    }
+
+    /**
+     * Returns the context-owned read-only damage-evidence contract used by Exco verification.
+     *
+     * @return Managed damage-evidence reader.
+     */
+    public DamageEvidenceStore damageEvidenceStore() {
+        return managedDamageImageStore;
+    }
+
+    /**
+     * Returns the context-owned read and write managed damage-image store.
+     *
+     * @return Managed damage-image store.
+     */
+    public ManagedDamageImageStore managedDamageImageStore() {
+        return managedDamageImageStore;
+    }
 
     private static Path resolveDataDirectory() {
         String configuredDirectory = System.getProperty(DATA_DIRECTORY_PROPERTY);
@@ -269,5 +304,20 @@ public final class ApplicationContext {
         SqliteDatabase database = new SqliteDatabase(dataDirectory.resolve(DATABASE_FILENAME));
         database.initialize();
         return database;
+    }
+
+    /**
+     * Removes abandoned images after reading every committed damage-report reference.
+     */
+    private static void reconcileDamageEvidence(TransactionManager transactions,
+            ManagedDamageImageStore imageStore) {
+        imageStore.withExclusiveAccess(() -> {
+            List<DamageImageReference> committedReferences = transactions.read(unit ->
+                    unit.damageReports().findAll().stream()
+                            .map(DamageReport::imageReference)
+                            .toList());
+            imageStore.reconcile(committedReferences);
+            return null;
+        });
     }
 }

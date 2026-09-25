@@ -67,19 +67,26 @@ not depend on JavaFX, JDBC, or filesystem APIs.
 `ClubStockApplication` creates one application context during JavaFX startup. The context
 captures the application `Clock` and system `ZoneId`, opens the SQLite database, runs
 migrations, creates repository adapters and the services for integrated features, and supplies
-controllers through a controller factory. Image storage and recovery are registered when
-reporting is integrated. Each feature is wired incrementally; startup does not wait for
-unimplemented future features. Startup either produces a fully usable context or
-shows a fatal startup error; it never continues with a partially initialized backend.
+controllers through a controller factory. Damage-image storage reconciles committed report
+references before the context is returned and before routes are composed. Each feature is wired
+incrementally; startup does not wait for unimplemented future features. Startup either produces
+a fully usable context or shows a fatal startup error; it never continues with a partially
+initialized backend.
 
 The default data directory is `${user.home}/.clubstock`. The system property
 `clubstock.dataDir` overrides it for tests and controlled deployments. The directory contains:
 
 ```text
 clubstock.db
-damage-images/
-staging/
+damage-evidence/
+  .staging/
 ```
+
+After database initialization and before application routes are composed, startup reads every
+committed damage-report image reference in one consistent database read. It then removes
+abandoned staged files and unreferenced generated images while preserving referenced images,
+including legacy image keys. A failed reference scan or unsafe managed-directory layout stops
+startup before any reporting route becomes available.
 
 ### Stable application errors
 
@@ -390,22 +397,25 @@ damage evidence, and complete Exco verification atomically.
 
 - **Responsibility:** Validate and copy damage evidence into application-owned storage.
 - **Interface:** Stage a selected source path, whether absolute or relative, validate and copy
-  its contents, finalize the copy under a generated relative key, discard abandoned staged
-  files, conditionally delete finalized files after transaction failure, and resolve a stored
+  its contents, finalize the copy under a generated relative key, discard staged or newly
+  finalized files, reconcile storage with committed report references, and resolve a stored
   reference for Exco view.
 - **Collaborators:** Member Loan workflow, `DamageImageReference`, transaction manager, and
   startup cleanup.
 - **State and data:** Accept decoded JPEG or PNG content from 1 byte through 5 MiB. A selected
   source path identifies an external file only for validation and copying and is never
   persisted. Generated names, not original filenames, become storage keys. Database rows store
-  relative, non-traversing storage keys only.
+  relative, non-traversing storage keys only. New files are staged under
+  `damage-evidence/.staging/` and finalized under generated keys in `damage-evidence/`.
 - **Failure behavior:** Missing, oversized, unsupported, or malformed source files are rejected;
   an absolute source path from a desktop file picker is valid. Absolute or traversing persisted
-  storage keys are rejected. A finalized file is deleted only after rollback is confirmed or a
-  committed-reference check confirms that no damage report references it. An ambiguous commit
-  outcome retains the finalized file for startup reconciliation. A failure never removes an
-  image referenced by a committed report. `COMMITTED` cleanup failures retain evidence
-  and must not be presented as a rolled-back submission; reload the committed Loan state.
+  storage keys and symlink escapes are rejected. A finalized file is deleted only after rollback
+  is confirmed or a committed-reference check confirms that no damage report references it. An
+  ambiguous commit outcome retains the finalized file for startup reconciliation. A failure
+  never removes an image referenced by a committed report. `COMMITTED` cleanup failures retain
+  evidence and must not be presented as a rolled-back submission; reload the committed Loan
+  state. Startup preserves referenced legacy images and stops before route composition if the
+  reference scan or reconciliation fails.
 
 ### `MemberLoanService`
 
