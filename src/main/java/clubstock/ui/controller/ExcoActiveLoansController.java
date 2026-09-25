@@ -1,6 +1,7 @@
 package clubstock.ui.controller;
 
 import clubstock.application.loan.LoanQueryService;
+import clubstock.application.ApplicationException;
 import clubstock.ui.navigation.NavigationService;
 import clubstock.ui.navigation.Route;
 import javafx.fxml.FXML;
@@ -14,6 +15,8 @@ import clubstock.application.loan.ExcoActiveLoan;
 
 /** Presents the Exco active-Loan screen. */
 public final class ExcoActiveLoansController {
+    private static final String UNEXPECTED_ERROR =
+            "Active Loans could not be refreshed. Please try again.";
     private final LoanQueryService service; private final NavigationService navigation;
     @FXML private TableView<ExcoActiveLoan> loansTable;
     @FXML private TableColumn<ExcoActiveLoan, String> memberColumn;
@@ -28,8 +31,15 @@ public final class ExcoActiveLoansController {
         this.service = service; this.navigation = navigation;
     }
     @FXML private void refresh() {
-        var loans = service.listActiveForExco(); loansTable.setItems(FXCollections.observableArrayList(loans));
-        statusLabel.setText(loans.isEmpty() ? "No active Loans." : "");
+        try {
+            var loans = service.listActiveForExco();
+            loansTable.setItems(FXCollections.observableArrayList(loans));
+            statusLabel.setText(loans.isEmpty() ? "No active Loans." : "");
+        } catch (ApplicationException exception) {
+            statusLabel.setText(exception.displayMessage());
+        } catch (RuntimeException exception) {
+            statusLabel.setText(UNEXPECTED_ERROR);
+        }
     }
     @FXML private void goBack() { navigation.show(Route.EXCO_HOME); }
     @FXML private void initialize() {
