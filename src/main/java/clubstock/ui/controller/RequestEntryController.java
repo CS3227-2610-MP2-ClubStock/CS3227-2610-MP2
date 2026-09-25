@@ -183,9 +183,8 @@ public final class RequestEntryController {
         try {
             requestService.submit(reviewedDraft, isConfirmedZeroStock);
             clearForm();
-            if (refreshOfferedTypes()) {
-                showSuccess("Your request was submitted for Exco review.");
-            }
+            refreshOfferedTypes();
+            showSuccess("Your request was submitted for Exco review.");
         } catch (ApplicationException exception) {
             if (exception.errorCode() == ApplicationErrorCode.ZERO_STOCK_CONFIRMATION_REQUIRED) {
                 refreshPreviewAfterStockChange();
