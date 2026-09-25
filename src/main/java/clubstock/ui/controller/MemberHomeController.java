@@ -117,6 +117,14 @@ public final class MemberHomeController {
     }
 
     /**
+     * Opens the authenticated Member's active Loans.
+     */
+    @FXML
+    private void openMyLoans() {
+        navigation.show(Route.MEMBER_ACTIVE_LOANS);
+    }
+
+    /**
      * Replaces displayed rows after a successful query and clears them on failure.
      */
     private void loadCatalog() {

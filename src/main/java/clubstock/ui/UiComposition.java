@@ -21,6 +21,7 @@ import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
+import clubstock.ui.controller.MemberActiveLoansController;
 import clubstock.ui.controller.MemberHomeController;
 import clubstock.ui.controller.MemberLoginController;
 import clubstock.ui.controller.MemberOwnRequestsController;
@@ -106,6 +107,8 @@ public final class UiComposition {
                         navigator));
         controllerFactory.register(MemberOwnRequestsController.class,
                 () -> new MemberOwnRequestsController(memberRequestService, navigator));
+        controllerFactory.register(MemberActiveLoansController.class,
+                () -> new MemberActiveLoansController(loanQueryService, navigator));
         return navigator;
     }
 }

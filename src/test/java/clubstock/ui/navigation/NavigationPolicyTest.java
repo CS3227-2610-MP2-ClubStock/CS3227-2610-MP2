@@ -48,8 +48,9 @@ class NavigationPolicyTest {
     }
 
     @Test
-    void memberRequestRoutesRequireMemberPrincipal() {
-        for (Route route : new Route[] {Route.MEMBER_REQUEST_ENTRY, Route.MEMBER_OWN_REQUESTS}) {
+    void memberProtectedRoutesRequireMemberPrincipal() {
+        for (Route route : new Route[] {Route.MEMBER_REQUEST_ENTRY, Route.MEMBER_OWN_REQUESTS,
+                Route.MEMBER_ACTIVE_LOANS}) {
             assertFalse(policy.permits(route, Optional.empty()), route.name());
             assertFalse(policy.permits(route,
                     Optional.of(AuthenticatedPrincipal.exco())), route.name());
