@@ -327,14 +327,15 @@ public final class MemberActiveLoansController {
                 return null;
             }
         };
-        task.setOnSucceeded(event -> {
-            setSubmissionPending(false);
-            closeActionForms();
-            setOperationMessage(successMessage, false);
-            loadLoans(true);
-        });
+        task.setOnSucceeded(event -> showSubmissionSaved(successMessage));
         task.setOnFailed(event -> {
             Throwable failure = task.getException();
+            if (failure instanceof ApplicationException applicationException
+                    && applicationException.transactionOutcome().orElse(null)
+                            == TransactionOutcome.COMMITTED) {
+                showSubmissionSaved(successMessage);
+                return;
+            }
             setSubmissionPending(false);
             setOperationMessage(actionFailureMessage(failure), true);
             updateActionAvailability(selectedLoan());
@@ -343,6 +344,16 @@ public final class MemberActiveLoansController {
             }
         });
         startWorker(task);
+    }
+
+    /**
+     * Shows a saved submission independently of the subsequent Loan snapshot refresh.
+     */
+    private void showSubmissionSaved(String successMessage) {
+        setSubmissionPending(false);
+        closeActionForms();
+        setOperationMessage(successMessage, false);
+        loadLoans(true);
     }
 
     /**
@@ -564,8 +575,7 @@ public final class MemberActiveLoansController {
             return false;
         }
         TransactionOutcome outcome = applicationException.transactionOutcome().orElse(null);
-        return outcome == TransactionOutcome.COMMITTED
-                || outcome == TransactionOutcome.COMMIT_OUTCOME_UNKNOWN;
+        return outcome == TransactionOutcome.COMMIT_OUTCOME_UNKNOWN;
     }
 
     /**
