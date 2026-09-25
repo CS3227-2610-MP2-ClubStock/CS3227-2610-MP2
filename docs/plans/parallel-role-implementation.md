@@ -235,19 +235,26 @@ not depend on JavaFX, JDBC, or filesystem APIs.
 `ClubStockApplication` creates one application context during JavaFX startup. The context
 captures the application `Clock` and system `ZoneId`, opens the SQLite database, runs
 migrations, creates repository adapters and the services for integrated features, and supplies
-controllers through a controller factory. Image storage and recovery are registered when
-reporting is integrated. Each feature is wired incrementally; startup does not wait for
-unimplemented future features. Startup either produces a fully usable context or
-shows a fatal startup error; it never continues with a partially initialized backend.
+controllers through a controller factory. Damage-image storage reconciles committed report
+references before the context is returned and before routes are composed. Each feature is wired
+incrementally; startup does not wait for unimplemented future features. Startup either produces
+a fully usable context or shows a fatal startup error; it never continues with a partially
+initialized backend.
 
 The default data directory is `${user.home}/.clubstock`. The system property
 `clubstock.dataDir` overrides it for tests and controlled deployments. The directory contains:
 
 ```text
 clubstock.db
-damage-images/
-staging/
+damage-evidence/
+  .staging/
 ```
+
+After database initialization and before application routes are composed, startup reads every
+committed damage-report image reference in one consistent database read. It then removes
+abandoned staged files and unreferenced generated images while preserving referenced images,
+including legacy image keys. A failed reference scan or unsafe managed-directory layout stops
+startup before any reporting route becomes available.
 
 ### Stable application errors
 

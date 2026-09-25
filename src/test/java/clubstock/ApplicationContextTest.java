@@ -8,11 +8,32 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import clubstock.application.auth.AccountRole;
+import clubstock.domain.account.Member;
+import clubstock.domain.account.MemberId;
+import clubstock.domain.account.PasswordHash;
+import clubstock.domain.equipment.EquipmentId;
+import clubstock.domain.equipment.EquipmentItem;
+import clubstock.domain.equipment.EquipmentType;
+import clubstock.domain.equipment.EquipmentTypeId;
+import clubstock.domain.equipment.EquipmentTypeName;
+import clubstock.domain.loan.Loan;
+import clubstock.domain.loan.LoanId;
+import clubstock.domain.loan.ReportedReturnCondition;
+import clubstock.domain.report.DamageImageFormat;
+import clubstock.domain.report.DamageImageReference;
+import clubstock.domain.report.DamageReport;
+import clubstock.domain.request.LoanRequest;
+import clubstock.domain.request.LoanRequestId;
 import clubstock.ui.auth.UserRole;
 
 class ApplicationContextTest {
@@ -49,5 +70,67 @@ class ApplicationContextTest {
         assertTrue(second.sessionManager().currentPrincipal().isEmpty());
         assertArrayEquals(new char[password.length], password);
         assertArrayEquals(new char[confirmation.length], confirmation);
+    }
+
+    @Test
+    void startupRecoveryPreservesCommittedLegacyEvidenceAndRemovesOrphans() throws Exception {
+        ApplicationContext first = ApplicationContext.create(temporaryDirectory);
+        Path evidenceDirectory = temporaryDirectory.resolve("damage-evidence");
+        Path legacyDirectory = evidenceDirectory.resolve("archive");
+        Files.createDirectories(legacyDirectory);
+        Path legacyImage = legacyDirectory.resolve("legacy-report.jpg");
+        byte[] imageBytes = {1, 2, 3};
+        Files.write(legacyImage, imageBytes);
+        DamageImageReference reference = new DamageImageReference("archive/legacy-report.jpg",
+                DamageImageFormat.JPEG, imageBytes.length);
+        insertPendingDamageReport(first, reference);
+
+        String orphanName = UUID.randomUUID() + ".png";
+        Path orphanImage = evidenceDirectory.resolve(orphanName);
+        Files.write(orphanImage, new byte[] {4});
+        Path abandonedStage = evidenceDirectory.resolve(".staging/interrupted.stage");
+        Files.write(abandonedStage, new byte[] {5});
+
+        ApplicationContext reopened = ApplicationContext.create(temporaryDirectory);
+
+        assertTrue(Files.exists(legacyImage));
+        assertTrue(reopened.damageEvidenceStore().find(reference).isPresent());
+        assertFalse(Files.exists(orphanImage));
+        assertFalse(Files.exists(abandonedStage));
+        assertNotNull(reopened.managedDamageImageStore());
+    }
+
+    private static void insertPendingDamageReport(ApplicationContext context,
+            DamageImageReference imageReference) {
+        Clock clock = Clock.fixed(Instant.parse("2026-09-25T12:00:00Z"), ZoneOffset.UTC);
+        MemberId memberId = new MemberId("member-recovery");
+        EquipmentTypeId typeId = new EquipmentTypeId("type-recovery");
+        EquipmentId equipmentId = new EquipmentId("item-recovery");
+        LoanRequestId requestId = new LoanRequestId("request-recovery");
+        LoanId loanId = new LoanId("loan-recovery");
+        EquipmentType type = EquipmentType.create(typeId, new EquipmentTypeName("Rackets"));
+        type.offer();
+        EquipmentItem item = EquipmentItem.create(equipmentId, typeId);
+        item.release();
+        item.allocate();
+        item.holdForVerification();
+        LoanRequest request = LoanRequest.submit(requestId, memberId, typeId, 1,
+                LocalDate.of(2026, 9, 25), LocalDate.of(2026, 10, 1), null, clock);
+        request.approve(1);
+        Loan loan = Loan.start(loanId, requestId, memberId, equipmentId,
+                LocalDate.of(2026, 10, 1), clock);
+        loan.submitReturn(ReportedReturnCondition.DAMAGED);
+        DamageReport report = DamageReport.create(loanId, imageReference, "Damaged handle");
+
+        context.transactionManager().write(unit -> {
+            unit.members().insert(Member.create(memberId, "Recovery Member",
+                    new PasswordHash("test-hash")));
+            unit.equipmentTypes().insert(type);
+            unit.equipmentItems().insert(item);
+            unit.loanRequests().insert(request);
+            unit.loans().insert(loan);
+            unit.damageReports().insert(report);
+            return null;
+        });
     }
 }
