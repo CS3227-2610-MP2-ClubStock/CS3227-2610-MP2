@@ -45,6 +45,8 @@ import clubstock.domain.report.DamageImageReference;
  */
 public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
     private static final long MAX_SIZE_BYTES = 5L * 1024 * 1024;
+    private static final int MAX_IMAGE_DIMENSION = 10_000;
+    private static final long MAX_IMAGE_PIXELS = 16_000_000L;
     private static final String STAGING_DIRECTORY_NAME = ".staging";
     private static final String OPERATION_LOCK_FILENAME = ".image-operations.lock";
     private static final ConcurrentMap<Path, ReentrantLock> JVM_OPERATION_LOCKS =
@@ -245,8 +247,12 @@ public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
             if (Files.size(imagePath) != reference.sizeBytes()) {
                 return Optional.empty();
             }
-            byte[] imageBytes = Files.readAllBytes(imagePath);
-            if (imageBytes.length != reference.sizeBytes()) {
+            byte[] imageBytes;
+            try (InputStream input = Files.newInputStream(imagePath)) {
+                imageBytes = input.readNBytes((int) reference.sizeBytes() + 1);
+            }
+            if (imageBytes.length != reference.sizeBytes()
+                    || decodeFormat(imageBytes) != reference.format()) {
                 return Optional.empty();
             }
             return Optional.of(new DamageEvidence(imageBytes, reference.format()));
@@ -356,8 +362,19 @@ public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
                     return null;
                 }
 
+                int imageWidth = reader.getWidth(0);
+                int imageHeight = reader.getHeight(0);
+                long pixelCount = (long) imageWidth * imageHeight;
+                if (imageWidth < 1 || imageHeight < 1
+                        || imageWidth > MAX_IMAGE_DIMENSION
+                        || imageHeight > MAX_IMAGE_DIMENSION
+                        || pixelCount > MAX_IMAGE_PIXELS) {
+                    return null;
+                }
+
                 BufferedImage decodedImage = reader.read(0);
-                return decodedImage == null ? null : format;
+                return decodedImage == null || decodedImage.getWidth() != imageWidth
+                        || decodedImage.getHeight() != imageHeight ? null : format;
             } finally {
                 reader.dispose();
             }
@@ -482,7 +499,8 @@ public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
      */
     private static ApplicationException invalidImage(Throwable cause) {
         return new ApplicationException(ApplicationErrorCode.VALIDATION_FAILED,
-                "Select a valid JPEG or PNG image between 1 byte and 5 MiB.", cause);
+                "Select a valid JPEG or PNG image between 1 byte and 5 MiB, with dimensions up to "
+                        + "10,000 pixels per side and 16 megapixels total.", cause);
     }
 
     /**

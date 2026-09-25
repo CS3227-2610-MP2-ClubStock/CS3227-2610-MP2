@@ -132,6 +132,65 @@ class FileDamageEvidenceStoreTest {
     }
 
     @Test
+    void stageRejectsImagesWithExcessivePixelCountOrDimension() throws IOException {
+        FileDamageEvidenceStore store = new FileDamageEvidenceStore(
+                temporaryDirectory.resolve("damage-evidence"));
+        Path oversizedRaster = temporaryDirectory.resolve("oversized-raster.png");
+        byte[] oversizedRasterBytes = imageBytes(4_001, 4_000, BufferedImage.TYPE_BYTE_GRAY);
+        assertTrue(oversizedRasterBytes.length < MAX_IMAGE_SIZE_BYTES);
+        Files.write(oversizedRaster, oversizedRasterBytes);
+
+        Path oversizedDimension = temporaryDirectory.resolve("oversized-dimension.png");
+        byte[] oversizedDimensionBytes = imageBytes(10_001, 1, BufferedImage.TYPE_BYTE_GRAY);
+        assertTrue(oversizedDimensionBytes.length < MAX_IMAGE_SIZE_BYTES);
+        Files.write(oversizedDimension, oversizedDimensionBytes);
+
+        assertApplicationError(ApplicationErrorCode.VALIDATION_FAILED,
+                () -> store.stage(oversizedRaster));
+        assertApplicationError(ApplicationErrorCode.VALIDATION_FAILED,
+                () -> store.stage(oversizedDimension));
+    }
+
+    @Test
+    void findRejectsOversizedLegacyImagesAndPreservesTheirFiles() throws IOException {
+        Path root = temporaryDirectory.resolve("damage-evidence");
+        FileDamageEvidenceStore store = new FileDamageEvidenceStore(root);
+        Files.createDirectories(root.resolve("archive"));
+        for (String format : List.of("png", "jpeg")) {
+            byte[] bytes = imageBytes(format, 4_001, 4_000, BufferedImage.TYPE_BYTE_GRAY);
+            assertTrue(bytes.length < MAX_IMAGE_SIZE_BYTES);
+            String key = "archive/large." + format;
+            Files.write(root.resolve(key), bytes);
+            DamageImageFormat imageFormat = format.equals("png")
+                    ? DamageImageFormat.PNG : DamageImageFormat.JPEG;
+            assertTrue(store.find(new DamageImageReference(key, imageFormat, bytes.length)).isEmpty());
+            assertArrayEquals(bytes, Files.readAllBytes(root.resolve(key)));
+        }
+        byte[] tallImage = imageBytes(1, 10_001, BufferedImage.TYPE_BYTE_GRAY);
+        Files.write(root.resolve("archive/tall.png"), tallImage);
+        assertTrue(store.find(new DamageImageReference("archive/tall.png",
+                DamageImageFormat.PNG, tallImage.length)).isEmpty());
+    }
+
+    @Test
+    void findValidatesStoredContentAndFormatOnEveryRead() throws IOException {
+        Path root = temporaryDirectory.resolve("damage-evidence");
+        FileDamageEvidenceStore store = new FileDamageEvidenceStore(root);
+        byte[] bytes = imageBytes("png");
+        Path storedImage = root.resolve("legacy.png");
+        Files.write(storedImage, bytes);
+        DamageImageReference reference = new DamageImageReference("legacy.png",
+                DamageImageFormat.PNG, bytes.length);
+        assertArrayEquals(bytes, store.find(reference).orElseThrow().bytes());
+        assertTrue(store.find(new DamageImageReference("legacy.png",
+                DamageImageFormat.JPEG, bytes.length)).isEmpty());
+
+        Files.write(storedImage, new byte[bytes.length]);
+        assertTrue(store.find(reference).isEmpty());
+        assertTrue(Files.exists(storedImage));
+    }
+
+    @Test
     void failedFinalizationAndDiscardLeaveNoFinalImage() throws IOException {
         Path evidenceDirectory = temporaryDirectory.resolve("damage-evidence");
         FileDamageEvidenceStore store = new FileDamageEvidenceStore(evidenceDirectory);
@@ -245,6 +304,18 @@ class FileDamageEvidenceStoreTest {
 
     private static byte[] imageBytes(String format) throws IOException {
         BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        assertTrue(ImageIO.write(image, format, output));
+        return output.toByteArray();
+    }
+
+    private static byte[] imageBytes(int width, int height, int imageType) throws IOException {
+        return imageBytes("PNG", width, height, imageType);
+    }
+
+    private static byte[] imageBytes(String format, int width, int height, int imageType)
+            throws IOException {
+        BufferedImage image = new BufferedImage(width, height, imageType);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         assertTrue(ImageIO.write(image, format, output));
         return output.toByteArray();

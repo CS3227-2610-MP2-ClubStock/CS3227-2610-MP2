@@ -309,3 +309,7 @@
 ## 2026-09-26 — Windows test path portability
 
 - Requested that the Windows `FileDamageEvidenceStoreTest` path failure be fixed, logged, and committed. The relative image fixture now lives under `build/tmp/test` and is cleaned up after the test. `$commit` groups this test fix and its log entry in one commit. Files: `src/test/java/clubstock/infrastructure/file/FileDamageEvidenceStoreTest.java` and `logs/keith/keith-log-temp.md`.
+
+## 2026-09-26 — Commit damage evidence validation safeguards
+
+- Requested logging for Keith and committing the current image-validation changes. `$commit` groups the decode dimension limits, validation of stored evidence before Exco display, bounded stored-file reads, updated image fixtures, and regression tests into one fix commit. Files: `src/main/java/clubstock/application/port/DamageEvidenceStore.java`, `src/main/java/clubstock/infrastructure/file/FileDamageEvidenceStore.java`, `src/test/java/clubstock/ApplicationContextTest.java`, `src/test/java/clubstock/application/verification/VerificationServiceTest.java`, `src/test/java/clubstock/infrastructure/file/FileDamageEvidenceStoreTest.java`, `logs/session/session-log-temp.md`, and this log. The full `./gradlew test` suite passed after the implementation; earlier unattributed entries remain in their original session log.

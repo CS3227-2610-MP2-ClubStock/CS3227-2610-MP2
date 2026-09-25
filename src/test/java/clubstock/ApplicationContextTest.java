@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -17,6 +20,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -84,7 +89,7 @@ class ApplicationContextTest {
         Path legacyDirectory = evidenceDirectory.resolve("archive");
         Files.createDirectories(legacyDirectory);
         Path legacyImage = legacyDirectory.resolve("legacy-report.jpg");
-        byte[] imageBytes = {1, 2, 3};
+        byte[] imageBytes = imageBytes("jpeg");
         Files.write(legacyImage, imageBytes);
         DamageImageReference reference = new DamageImageReference("archive/legacy-report.jpg",
                 DamageImageFormat.JPEG, imageBytes.length);
@@ -110,7 +115,7 @@ class ApplicationContextTest {
         ApplicationContext submittingContext = ApplicationContext.create(temporaryDirectory);
         Path evidenceDirectory = temporaryDirectory.resolve("damage-evidence");
         String imageKey = UUID.randomUUID() + ".png";
-        byte[] imageBytes = {4, 5, 6};
+        byte[] imageBytes = imageBytes("png");
         Path finalizedImage = evidenceDirectory.resolve(imageKey);
         Files.write(finalizedImage, imageBytes);
         DamageImageReference reference = new DamageImageReference(imageKey,
@@ -140,6 +145,12 @@ class ApplicationContextTest {
 
         assertTrue(Files.isRegularFile(finalizedImage));
         assertTrue(reopened.damageEvidenceStore().find(reference).isPresent());
+    }
+
+    private static byte[] imageBytes(String format) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        assertTrue(ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), format, output));
+        return output.toByteArray();
     }
 
     private static void insertPendingDamageReport(ApplicationContext context,

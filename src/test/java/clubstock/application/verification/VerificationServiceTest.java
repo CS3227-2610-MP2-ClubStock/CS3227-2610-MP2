@@ -6,11 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -75,10 +79,13 @@ class VerificationServiceTest {
     void loadDamageEvidence_returnsManagedImageOnlyToExco(@TempDir java.nio.file.Path temp)
             throws java.io.IOException {
         SqliteDatabase database = database(temp);
-        addReturn(database, "return-damaged", "item-damaged", ReportedReturnCondition.DAMAGED, true);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        assertTrue(ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "jpeg", output));
+        byte[] image = output.toByteArray();
+        addReturn(database, "return-damaged", "item-damaged", ReportedReturnCondition.DAMAGED,
+                true, image.length);
         java.nio.file.Path evidenceDirectory = temp.resolve("damage-evidence");
         FileDamageEvidenceStore store = new FileDamageEvidenceStore(evidenceDirectory);
-        byte[] image = {1};
         java.nio.file.Files.write(evidenceDirectory.resolve("damage-return-damaged.jpg"), image);
         VerificationService excoService = new VerificationService(database, excoSession(), store);
 
@@ -187,6 +194,11 @@ class VerificationServiceTest {
 
     private static void addReturn(SqliteDatabase database, String loanId, String itemId,
             ReportedReturnCondition condition, boolean addDamageReport) {
+        addReturn(database, loanId, itemId, condition, addDamageReport, 1);
+    }
+
+    private static void addReturn(SqliteDatabase database, String loanId, String itemId,
+            ReportedReturnCondition condition, boolean addDamageReport, long imageSize) {
         database.write(unit -> {
             EquipmentItem item = EquipmentItem.create(new EquipmentId(itemId),
                     new EquipmentTypeId("type-1"));
@@ -201,7 +213,7 @@ class VerificationServiceTest {
             if (addDamageReport) {
                 unit.damageReports().insert(DamageReport.create(loan.loanId(),
                         new DamageImageReference("damage-" + loanId + ".jpg",
-                                DamageImageFormat.JPEG, 1),
+                                DamageImageFormat.JPEG, imageSize),
                         "Damaged item " + loanId));
             }
             return null;

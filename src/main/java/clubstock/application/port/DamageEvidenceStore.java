@@ -13,7 +13,7 @@ public interface DamageEvidenceStore {
      * Retrieves the bytes for one managed image reference.
      *
      * @param reference Validated opaque image reference.
-     * @return Evidence when the referenced managed image is still available.
+     * @return Evidence when the referenced managed image is available and passes image validation.
      */
     Optional<DamageEvidence> find(DamageImageReference reference);
 }
