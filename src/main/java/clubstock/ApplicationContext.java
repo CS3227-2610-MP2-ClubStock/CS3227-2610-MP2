@@ -132,7 +132,8 @@ public final class ApplicationContext {
                 availabilityPolicy, new UuidIdGenerator(), clock);
         LoanQueryService loanQueryService = new LoanQueryService(database, sessionManager, clock,
                 ZoneId.systemDefault());
-        MemberLoanService memberLoanService = new MemberLoanService(database, sessionManager);
+        MemberLoanService memberLoanService = new MemberLoanService(database, sessionManager,
+                managedDamageImageStore);
         VerificationService verificationService = new VerificationService(database, sessionManager,
                 managedDamageImageStore);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,

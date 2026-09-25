@@ -1,8 +1,13 @@
 package clubstock.application.loan;
 
+import java.nio.file.Path;
+
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
+import clubstock.application.TransactionOutcome;
 import clubstock.application.auth.SessionManager;
+import clubstock.application.port.ManagedDamageImageStore;
+import clubstock.application.port.StagedDamageImage;
 import clubstock.application.port.TransactionManager;
 import clubstock.application.port.UnitOfWork;
 import clubstock.domain.account.Member;
@@ -13,6 +18,8 @@ import clubstock.domain.loan.Loan;
 import clubstock.domain.loan.LoanId;
 import clubstock.domain.loan.LoanStatus;
 import clubstock.domain.loan.ReportedReturnCondition;
+import clubstock.domain.report.DamageImageReference;
+import clubstock.domain.report.DamageReport;
 import clubstock.domain.report.LossReport;
 
 /**
@@ -24,20 +31,24 @@ public final class MemberLoanService {
 
     private final TransactionManager transactions;
     private final SessionManager sessions;
+    private final ManagedDamageImageStore damageImageStore;
 
     /**
      * Creates the Member Loan workflow service.
      *
      * @param transactions Shared read/write transaction boundary.
      * @param sessions Authenticated principal source.
-     * @throws IllegalArgumentException If either dependency is null.
+     * @param damageImageStore Managed image staging, finalization, and recovery boundary.
+     * @throws IllegalArgumentException If any dependency is null.
      */
-    public MemberLoanService(TransactionManager transactions, SessionManager sessions) {
-        if (transactions == null || sessions == null) {
+    public MemberLoanService(TransactionManager transactions, SessionManager sessions,
+            ManagedDamageImageStore damageImageStore) {
+        if (transactions == null || sessions == null || damageImageStore == null) {
             throw new IllegalArgumentException("Member Loan dependencies cannot be null.");
         }
         this.transactions = transactions;
         this.sessions = sessions;
+        this.damageImageStore = damageImageStore;
     }
 
     /**
@@ -97,6 +108,233 @@ public final class MemberLoanService {
             unit.lossReports().insert(lossReport);
             return null;
         });
+    }
+
+    /**
+     * Submits one damaged return and its managed image evidence for an individual Loan.
+     *
+     * @param loanId Loan identity to return.
+     * @param description Member's description of the damage.
+     * @param sourcePath Selected image path, which may be absolute or relative.
+     * @throws ApplicationException If the session, Loan, description, image, or storage state is
+     *         invalid, or the transaction outcome cannot be confirmed.
+     */
+    public void submitDamagedReturn(String loanId, String description, Path sourcePath) {
+        MemberId memberId = sessions.requireMember();
+        LoanId validatedLoanId = validatedLoanId(loanId);
+        String validatedDescription = validateDamageDescription(description);
+        if (sourcePath == null) {
+            throw validation("Select a JPEG or PNG image for the damage report.");
+        }
+
+        transactions.read(unit -> {
+            sessions.requireMember(memberId);
+            requireActiveMember(unit, memberId);
+            Loan loan = findOwnedOnLoan(unit, memberId, validatedLoanId.value());
+            findOnLoanItem(unit, loan);
+            return null;
+        });
+
+        StagedDamageImage stagedImage = damageImageStore.stage(sourcePath);
+        DamageImageReference imageReference;
+        try {
+            imageReference = damageImageStore.finalizeImage(stagedImage);
+        } catch (RuntimeException exception) {
+            throw failureAfterStage(exception, stagedImage);
+        }
+
+        DamageReport damageReport;
+        try {
+            damageReport = DamageReport.create(validatedLoanId, imageReference,
+                    validatedDescription);
+        } catch (IllegalArgumentException exception) {
+            throw failureAfterFinalization(exception, stagedImage, imageReference,
+                    null);
+        }
+
+        try {
+            transactions.write(unit -> {
+                sessions.requireMember(memberId);
+                requireActiveMember(unit, memberId);
+                Loan loan = findOwnedOnLoan(unit, memberId, validatedLoanId.value());
+                EquipmentItem item = findOnLoanItem(unit, loan);
+
+                try {
+                    loan.submitReturn(ReportedReturnCondition.DAMAGED);
+                    item.holdForVerification();
+                } catch (IllegalStateException exception) {
+                    throw conflict("This Loan is no longer awaiting return.", exception);
+                }
+
+                unit.loans().update(loan);
+                unit.equipmentItems().update(item);
+                unit.damageReports().insert(damageReport);
+                return null;
+            });
+        } catch (RuntimeException exception) {
+            TransactionOutcome outcome = transactionOutcome(exception);
+            if (outcome == TransactionOutcome.COMMITTED
+                    && isDamagedReturnCommitted(validatedLoanId, memberId, imageReference)) {
+                discardStageOrThrow(stagedImage, exception, outcome);
+                return;
+            }
+            throw failureAfterFinalization(exception, stagedImage, imageReference, outcome);
+        }
+
+        discardStageOrThrow(stagedImage, null, TransactionOutcome.COMMITTED);
+    }
+
+    /**
+     * Returns whether the committed repositories contain the expected damaged-return state.
+     */
+    private boolean isDamagedReturnCommitted(LoanId loanId, MemberId memberId,
+            DamageImageReference imageReference) {
+        try {
+            return transactions.read(unit -> {
+                Loan loan = unit.loans().findById(loanId).orElse(null);
+                if (loan == null || !loan.memberId().equals(memberId)
+                        || loan.status() != LoanStatus.RETURN_PENDING
+                        || loan.reportedReturnCondition().orElse(null)
+                                != ReportedReturnCondition.DAMAGED) {
+                    return false;
+                }
+                EquipmentItem item = unit.equipmentItems().findById(loan.equipmentId()).orElse(null);
+                DamageReport report = unit.damageReports().findByLoanId(loanId).orElse(null);
+                return item != null && item.isVerificationPending()
+                        && item.availability() == EquipmentAvailability.UNAVAILABLE
+                        && report != null
+                        && report.imageReference().storageKey().equals(imageReference.storageKey());
+            });
+        } catch (RuntimeException exception) {
+            return false;
+        }
+    }
+
+    /**
+     * Cleans up stage storage after an operation whose finalized-file handling is already safe.
+     */
+    private void discardStageOrThrow(StagedDamageImage stagedImage, RuntimeException cause,
+            TransactionOutcome outcome) {
+        try {
+            damageImageStore.discardStaged(stagedImage);
+        } catch (RuntimeException cleanupException) {
+            if (cause != null) {
+                cleanupException.addSuppressed(cause);
+            }
+            throw imageStorageFailure(cleanupException, outcome,
+                    outcome == TransactionOutcome.COMMITTED
+                            ? "The damaged return was saved, but temporary image cleanup failed."
+                            : "Damage evidence could not be cleaned up safely.");
+        }
+    }
+
+    /**
+     * Handles finalization failure by removing only the known staged file.
+     */
+    private RuntimeException failureAfterStage(RuntimeException cause,
+            StagedDamageImage stagedImage) {
+        try {
+            damageImageStore.discardStaged(stagedImage);
+        } catch (RuntimeException cleanupException) {
+            cleanupException.addSuppressed(cause);
+            return imageStorageFailure(cleanupException, null,
+                    "Damage evidence could not be cleaned up safely.");
+        }
+        return cause;
+    }
+
+    /**
+     * Handles a failed write while retaining files whenever a committed reference is possible.
+     */
+    private RuntimeException failureAfterFinalization(RuntimeException cause,
+            StagedDamageImage stagedImage, DamageImageReference imageReference,
+            TransactionOutcome outcome) {
+        boolean mayDeleteFinalized = outcome == TransactionOutcome.CONFIRMED_ROLLBACK;
+        if (outcome != TransactionOutcome.CONFIRMED_ROLLBACK
+                && outcome != TransactionOutcome.COMMITTED) {
+            Boolean isReferenced = isImageReferenceCommitted(imageReference);
+            mayDeleteFinalized = Boolean.FALSE.equals(isReferenced);
+            if (!mayDeleteFinalized) {
+                outcome = TransactionOutcome.COMMIT_OUTCOME_UNKNOWN;
+            }
+        }
+
+        RuntimeException cleanupFailure = null;
+        if (mayDeleteFinalized) {
+            try {
+                damageImageStore.discardFinalized(imageReference);
+            } catch (RuntimeException exception) {
+                cleanupFailure = exception;
+            }
+        }
+        try {
+            damageImageStore.discardStaged(stagedImage);
+        } catch (RuntimeException exception) {
+            if (cleanupFailure == null) {
+                cleanupFailure = exception;
+            } else {
+                cleanupFailure.addSuppressed(exception);
+            }
+        }
+
+        if (cleanupFailure != null) {
+            cleanupFailure.addSuppressed(cause);
+            throw imageStorageFailure(cleanupFailure, outcome,
+                    outcome == TransactionOutcome.COMMITTED
+                            ? "The damaged return may have been saved, but image cleanup failed."
+                            : "Damage evidence could not be cleaned up safely.");
+        }
+
+        if (outcome == TransactionOutcome.COMMITTED) {
+            throw new ApplicationException(ApplicationErrorCode.PERSISTENCE_FAILURE,
+                    "The damaged return may have been saved. Refresh the Loan before retrying.",
+                    cause, TransactionOutcome.COMMITTED);
+        }
+        if (cause instanceof ApplicationException applicationException
+                && (outcome == null || applicationException.transactionOutcome().isPresent())) {
+            throw applicationException;
+        }
+        if (outcome != null) {
+            throw new ApplicationException(ApplicationErrorCode.PERSISTENCE_FAILURE,
+                    "The damaged return could not be confirmed. Refresh the Loan before retrying.",
+                    cause, outcome);
+        }
+        throw cause;
+    }
+
+    /**
+     * Independently checks all committed reports before compensating an uncertain write.
+     *
+     * @return True/false when the scan succeeds, or null when its result is uncertain.
+     */
+    private Boolean isImageReferenceCommitted(DamageImageReference imageReference) {
+        try {
+            return transactions.read(unit -> unit.damageReports().findAll().stream()
+                    .anyMatch(report -> report.imageReference().storageKey()
+                            .equals(imageReference.storageKey())));
+        } catch (RuntimeException exception) {
+            return null;
+        }
+    }
+
+    private static TransactionOutcome transactionOutcome(RuntimeException exception) {
+        if (exception instanceof ApplicationException applicationException) {
+            return applicationException.transactionOutcome().orElse(null);
+        }
+        return null;
+    }
+
+    private static ApplicationException imageStorageFailure(Throwable cause,
+            TransactionOutcome outcome, String message) {
+        return new ApplicationException(ApplicationErrorCode.IMAGE_STORAGE_FAILURE,
+                message, cause, outcome);
+    }
+
+    private static String validateDamageDescription(String description) {
+        if (description == null || description.isBlank()) {
+            throw validation("Enter a description for the damage report.");
+        }
+        return description.strip();
     }
 
     /**
