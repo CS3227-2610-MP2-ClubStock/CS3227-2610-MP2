@@ -305,3 +305,7 @@
 ## 2026-09-26 — Member return choice visibility
 
 - Confirmed the Member return option text looks correct after the radio-button color fix, and requested this outcome be logged and committed. `$commit` groups the Member-scoped text-color rule and this entry in one commit. `git diff --check` passed. Files: `src/main/resources/clubstock/ui/clubstock.css` and `logs/keith/keith-log-temp.md`.
+
+## 2026-09-26 — Windows test path portability
+
+- Requested that the Windows `FileDamageEvidenceStoreTest` path failure be fixed, logged, and committed. The relative image fixture now lives under `build/tmp/test` and is cleaned up after the test. `$commit` groups this test fix and its log entry in one commit. Files: `src/test/java/clubstock/infrastructure/file/FileDamageEvidenceStoreTest.java` and `logs/keith/keith-log-temp.md`.

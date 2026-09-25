@@ -45,18 +45,25 @@ class FileDamageEvidenceStoreTest {
         assertTrue(Files.isRegularFile(evidenceDirectory.resolve(".staging")
                 .resolve(stagedAbsolute.stagingToken() + ".stage")));
 
-        Path relativeSource = temporaryDirectory.resolve("selected-photo.png");
-        Files.write(relativeSource, pngBytes);
-        Path relativePath = Path.of("").toAbsolutePath().normalize().relativize(relativeSource);
-        StagedDamageImage stagedRelative = store.stage(relativePath);
-        DamageImageReference reference = store.finalizeImage(stagedRelative);
+        Path testDirectory = Path.of("build", "tmp", "test");
+        Files.createDirectories(testDirectory);
+        Path relativeDirectory = Files.createTempDirectory(testDirectory, "evidence-");
+        Path relativeSource = relativeDirectory.resolve("selected-photo.png");
+        try {
+            Files.write(relativeSource, pngBytes);
+            StagedDamageImage stagedRelative = store.stage(relativeSource);
+            DamageImageReference reference = store.finalizeImage(stagedRelative);
 
-        assertTrue(reference.storageKey().matches(
-                "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.png"));
-        assertFalse(reference.storageKey().contains("original-photo"));
-        assertArrayEquals(pngBytes, store.find(reference).orElseThrow().bytes());
-        assertFalse(Files.exists(evidenceDirectory.resolve(".staging")
-                .resolve(stagedRelative.stagingToken() + ".stage")));
+            assertTrue(reference.storageKey().matches(
+                    "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.png"));
+            assertFalse(reference.storageKey().contains("original-photo"));
+            assertArrayEquals(pngBytes, store.find(reference).orElseThrow().bytes());
+            assertFalse(Files.exists(evidenceDirectory.resolve(".staging")
+                    .resolve(stagedRelative.stagingToken() + ".stage")));
+        } finally {
+            Files.deleteIfExists(relativeSource);
+            Files.deleteIfExists(relativeDirectory);
+        }
     }
 
     @Test
