@@ -17,6 +17,7 @@ import clubstock.application.member.MemberAccountService;
 import clubstock.application.request.ExcoRequestService;
 import clubstock.application.request.ApprovalService;
 import clubstock.application.loan.LoanQueryService;
+import clubstock.application.verification.VerificationService;
 import clubstock.application.port.TransactionManager;
 import clubstock.infrastructure.id.UuidIdGenerator;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
@@ -42,13 +43,14 @@ public final class ApplicationContext {
     private final ExcoRequestService excoRequestService;
     private final ApprovalService approvalService;
     private final LoanQueryService loanQueryService;
+    private final VerificationService verificationService;
 
     private ApplicationContext(Path dataDirectory, Clock clock, ZoneId zoneId,
             TransactionManager transactionManager, SessionManager sessionManager,
             AuthenticationGateway authentication, MemberAccountService memberAccountService,
             AvailabilityPolicy availabilityPolicy, InventoryService inventoryService,
             MemberCatalogService memberCatalogService, ExcoRequestService excoRequestService,
-            ApprovalService approvalService, LoanQueryService loanQueryService) {
+            ApprovalService approvalService, LoanQueryService loanQueryService, VerificationService verificationService) {
         this.dataDirectory = dataDirectory;
         this.clock = clock;
         this.zoneId = zoneId;
@@ -62,6 +64,7 @@ public final class ApplicationContext {
         this.excoRequestService = excoRequestService;
         this.approvalService = approvalService;
         this.loanQueryService = loanQueryService;
+        this.verificationService = verificationService;
     }
 
     /**
@@ -106,9 +109,10 @@ public final class ApplicationContext {
                 availabilityPolicy, new UuidIdGenerator(), clock);
         LoanQueryService loanQueryService = new LoanQueryService(database, sessionManager, clock,
                 ZoneId.systemDefault());
+        VerificationService verificationService = new VerificationService(database, sessionManager);
         return new ApplicationContext(normalizedDirectory, clock, ZoneId.systemDefault(), database,
                 sessionManager, authentication, memberAccountService, availabilityPolicy,
-                inventoryService, memberCatalogService, excoRequestService, approvalService, loanQueryService);
+                inventoryService, memberCatalogService, excoRequestService, approvalService, loanQueryService, verificationService);
     }
 
     /**
@@ -216,6 +220,7 @@ public final class ApplicationContext {
     }
 
     public LoanQueryService loanQueryService() { return loanQueryService; }
+    public VerificationService verificationService() { return verificationService; }
 
     private static Path resolveDataDirectory() {
         String configuredDirectory = System.getProperty(DATA_DIRECTORY_PROPERTY);

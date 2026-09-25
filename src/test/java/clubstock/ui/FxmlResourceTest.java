@@ -23,6 +23,7 @@ import clubstock.ui.controller.ExcoHomeController;
 import clubstock.ui.controller.ExcoLoginController;
 import clubstock.ui.controller.ExcoRequestQueueController;
 import clubstock.ui.controller.ExcoActiveLoansController;
+import clubstock.ui.controller.ExcoReportVerificationController;
 import clubstock.ui.controller.ExcoSetupController;
 import clubstock.ui.controller.InventoryAdministrationController;
 import clubstock.ui.controller.MemberAdministrationController;
@@ -34,17 +35,18 @@ import clubstock.ui.navigation.Route;
 class FxmlResourceTest {
     private static final String FXML_NAMESPACE = "http://javafx.com/fxml/1";
     private static final String STYLESHEET = "/clubstock/ui/clubstock.css";
-    private static final Map<Route, Class<?>> CONTROLLERS = Map.of(
-            Route.ROLE_SELECTION, RoleSelectionController.class,
-            Route.EXCO_SETUP, ExcoSetupController.class,
-            Route.EXCO_LOGIN, ExcoLoginController.class,
-            Route.MEMBER_LOGIN, MemberLoginController.class,
-            Route.EXCO_HOME, ExcoHomeController.class,
-            Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class,
-            Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class,
-            Route.EXCO_REQUEST_QUEUE, ExcoRequestQueueController.class,
-            Route.EXCO_ACTIVE_LOANS, ExcoActiveLoansController.class,
-            Route.MEMBER_HOME, MemberHomeController.class);
+    private static final Map<Route, Class<?>> CONTROLLERS = Map.ofEntries(
+            Map.entry(Route.ROLE_SELECTION, RoleSelectionController.class),
+            Map.entry(Route.EXCO_SETUP, ExcoSetupController.class),
+            Map.entry(Route.EXCO_LOGIN, ExcoLoginController.class),
+            Map.entry(Route.MEMBER_LOGIN, MemberLoginController.class),
+            Map.entry(Route.EXCO_HOME, ExcoHomeController.class),
+            Map.entry(Route.MEMBER_ADMINISTRATION, MemberAdministrationController.class),
+            Map.entry(Route.INVENTORY_ADMINISTRATION, InventoryAdministrationController.class),
+            Map.entry(Route.EXCO_REQUEST_QUEUE, ExcoRequestQueueController.class),
+            Map.entry(Route.EXCO_ACTIVE_LOANS, ExcoActiveLoansController.class),
+            Map.entry(Route.EXCO_REPORT_VERIFICATION, ExcoReportVerificationController.class),
+            Map.entry(Route.MEMBER_HOME, MemberHomeController.class));
 
     @Test
     void everyRouteHasWellFormedFxmlWithTheRegisteredController()
@@ -165,6 +167,22 @@ class FxmlResourceTest {
         assertTrue(fxml.contains("fx:id=\"equipmentIdColumn\""));
         assertTrue(fxml.contains("fx:id=\"overdueColumn\""));
         assertTrue(fxml.contains("onAction=\"#refresh\""));
+    }
+
+    @Test
+    void excoReportVerificationRouteContainsEvidenceAndResolutionControls() throws IOException {
+        String fxml = routeText(Route.EXCO_REPORT_VERIFICATION);
+
+        assertTrue(fxml.contains("fx:id=\"reportsTable\""));
+        assertTrue(fxml.contains("fx:id=\"conditionColumn\""));
+        assertTrue(fxml.contains("fx:id=\"imageReferenceColumn\""));
+        assertTrue(fxml.contains("fx:id=\"evidenceColumn\""));
+        assertTrue(fxml.contains("onAction=\"#verifyGood\""));
+        assertTrue(fxml.contains("onAction=\"#verifyDamagedAvailable\""));
+        assertTrue(fxml.contains("onAction=\"#verifyDamagedUnavailable\""));
+        assertTrue(fxml.contains("onAction=\"#confirmLost\""));
+        assertTrue(fxml.contains("onAction=\"#refresh\""));
+        assertTrue(fxml.contains("fx:id=\"statusLabel\""));
     }
 
     private static void assertCredentialLabelBindings(Route route, String labelId,

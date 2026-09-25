@@ -55,4 +55,5 @@ public final class ExcoHomeController {
     }
 
     @FXML private void manageLoans() { navigation.show(Route.EXCO_ACTIVE_LOANS); }
+    @FXML private void verifyReports() { navigation.show(Route.EXCO_REPORT_VERIFICATION); }
 }
