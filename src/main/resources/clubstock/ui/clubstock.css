@@ -234,3 +234,32 @@
 .exco-shell .shell-role {
     -fx-text-fill: #315a9a;
 }
+
+.dialog-pane {
+    -fx-background-color: #f3f6fb;
+    -fx-padding: 16px;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #ffffff;
+    -fx-padding: 12px 16px;
+}
+
+.dialog-pane .content.label {
+    -fx-text-fill: #27364e;
+}
+
+.dialog-pane .button-bar .button {
+    -fx-min-width: 96px;
+}
+
+.table-view .column-header-background,
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: #e5ebf4;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #172033;
+    -fx-font-weight: 700;
+}

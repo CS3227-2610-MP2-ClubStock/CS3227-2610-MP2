@@ -10,6 +10,7 @@ import clubstock.application.request.ExcoRequestService;
 import clubstock.application.request.ApprovalService;
 import clubstock.application.request.ApprovalSelection;
 import clubstock.application.request.PendingRequestSelection;
+import clubstock.ui.DialogStyling;
 import clubstock.ui.navigation.NavigationService;
 import clubstock.ui.navigation.Route;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
@@ -65,6 +66,8 @@ public final class ExcoRequestQueueController {
     private Label emptyQueueLabel;
     @FXML
     private Label statusLabel;
+    @FXML
+    private Label requestDetailsLabel;
     private ExcoPendingRequest selectedRequest;
 
     /**
@@ -125,6 +128,7 @@ public final class ExcoRequestQueueController {
         }
         ButtonType reject = new ButtonType("Reject request", ButtonData.OK_DONE);
         Alert confirmation = new Alert(AlertType.CONFIRMATION);
+        DialogStyling.apply(confirmation);
         confirmation.setTitle("Reject LoanRequest");
         confirmation.setHeaderText("Reject the selected pending request?");
         confirmation.setContentText("This changes the request to REJECTED. It cannot be approved later.");
@@ -151,6 +155,7 @@ public final class ExcoRequestQueueController {
             items.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             items.setPrefHeight(220.0);
             Alert dialog = new Alert(AlertType.CONFIRMATION);
+            DialogStyling.apply(dialog);
             ButtonType approve = new ButtonType("Approve selected items", ButtonData.OK_DONE);
             dialog.setTitle("Approve LoanRequest");
             dialog.setHeaderText("Select up to " + selectedRequest.requestedQuantity()
@@ -183,14 +188,17 @@ public final class ExcoRequestQueueController {
             emptyQueueLabel.setVisible(requests.isEmpty());
             emptyQueueLabel.setManaged(requests.isEmpty());
             selectedRequest = null;
+            requestDetailsLabel.setText("Select a request to see its dates, details, and ID.");
             rejectRequestButton.setDisable(true);
             approveRequestButton.setDisable(true);
             clearStatus();
             return true;
         } catch (ApplicationException exception) {
+            clearQueueAfterFailure();
             showError(exception.displayMessage());
             return false;
         } catch (RuntimeException exception) {
+            clearQueueAfterFailure();
             showError(UNEXPECTED_ERROR);
             return false;
         }
@@ -234,6 +242,21 @@ public final class ExcoRequestQueueController {
         selectedRequest = request;
         rejectRequestButton.setDisable(request == null);
         approveRequestButton.setDisable(request == null);
+        requestDetailsLabel.setText(request == null
+                ? "Select a request to see its dates, details, and ID."
+                : "Request ID: " + request.loanRequestId()
+                        + "   •   Start: " + request.requestedStartDate()
+                        + "   •   End: " + request.requestedEndDate()
+                        + "\nDetails: " + request.details().filter(value -> !value.isBlank())
+                                .orElse("None provided"));
+    }
+
+    private void clearQueueAfterFailure() {
+        requestsTable.getItems().clear();
+        requestsTable.getSelectionModel().clearSelection();
+        selectRequest(null);
+        emptyQueueLabel.setVisible(false);
+        emptyQueueLabel.setManaged(false);
     }
 
     private void showError(String message) {

@@ -5,6 +5,7 @@ import java.util.List;
 import clubstock.application.ApplicationException;
 import clubstock.application.member.MemberAccountService;
 import clubstock.application.member.MemberSummary;
+import clubstock.ui.DialogStyling;
 import clubstock.ui.navigation.NavigationService;
 import clubstock.ui.navigation.Route;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -226,6 +227,7 @@ public final class MemberAdministrationController {
 
     private static Dialog<ButtonType> newDialog(String title) {
         Dialog<ButtonType> dialog = new Dialog<>();
+        DialogStyling.apply(dialog);
         dialog.setTitle(title);
         dialog.setHeaderText(title);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);

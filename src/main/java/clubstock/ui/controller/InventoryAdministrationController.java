@@ -4,6 +4,7 @@ import clubstock.application.ApplicationException;
 import clubstock.application.inventory.EquipmentItemSummary;
 import clubstock.application.inventory.EquipmentTypeSummary;
 import clubstock.application.inventory.InventoryService;
+import clubstock.ui.DialogStyling;
 import clubstock.ui.navigation.NavigationService;
 import clubstock.ui.navigation.Route;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
@@ -336,6 +337,7 @@ public final class InventoryAdministrationController {
 
     private static Dialog<ButtonType> newDialog(String title) {
         Dialog<ButtonType> dialog = new Dialog<>();
+        DialogStyling.apply(dialog);
         dialog.setTitle(title);
         dialog.setHeaderText(title);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);

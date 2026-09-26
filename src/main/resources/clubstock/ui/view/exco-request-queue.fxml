@@ -39,32 +39,40 @@
                            text="Current availability is informational and does not reserve equipment or determine rejection." />
                     <Label fx:id="emptyQueueLabel" managed="false" visible="false"
                            styleClass="catalog-empty-text" text="No LoanRequests are currently pending." />
-                    <TableView fx:id="requestsTable" prefHeight="410.0">
+                    <TableView fx:id="requestsTable" prefHeight="245.0">
                         <columns>
-                            <TableColumn fx:id="requestIdColumn" prefWidth="150.0" text="Request ID" />
-                            <TableColumn fx:id="memberColumn" prefWidth="180.0" text="Member" />
-                            <TableColumn fx:id="equipmentTypeColumn" prefWidth="210.0" text="Equipment type" />
-                            <TableColumn fx:id="requestedQuantityColumn" prefWidth="105.0" text="Requested" />
-                            <TableColumn fx:id="availableQuantityColumn" prefWidth="105.0" text="Available" />
-                            <TableColumn fx:id="startDateColumn" prefWidth="120.0" text="Start date" />
-                            <TableColumn fx:id="endDateColumn" prefWidth="120.0" text="End date" />
+                            <TableColumn fx:id="requestIdColumn" visible="false" text="Request ID" />
+                            <TableColumn fx:id="memberColumn" prefWidth="185.0" text="Member" />
+                            <TableColumn fx:id="equipmentTypeColumn" prefWidth="215.0" text="Equipment type" />
+                            <TableColumn fx:id="requestedQuantityColumn" prefWidth="100.0" text="Requested" />
+                            <TableColumn fx:id="availableQuantityColumn" prefWidth="100.0" text="Available" />
+                            <TableColumn fx:id="startDateColumn" visible="false" text="Start date" />
+                            <TableColumn fx:id="endDateColumn" visible="false" text="End date" />
                             <TableColumn fx:id="requestedAtColumn" prefWidth="190.0" text="Submitted" />
-                            <TableColumn fx:id="detailsColumn" prefWidth="220.0" text="Details" />
+                            <TableColumn fx:id="detailsColumn" visible="false" text="Details" />
                         </columns>
                     </TableView>
-                    <HBox alignment="CENTER_LEFT" spacing="12.0">
-                        <Button fx:id="approveRequestButton" mnemonicParsing="true"
-                                onAction="#approveSelectedRequest" styleClass="primary-button"
-                                text="_Approve selected request" />
-                        <Button fx:id="rejectRequestButton" mnemonicParsing="true"
-                                onAction="#rejectSelectedRequest" styleClass="danger-button"
-                                text="_Reject selected request" />
-                        <Button mnemonicParsing="true" onAction="#refreshRequests"
-                                styleClass="secondary-button" text="_Refresh" />
-                        <Label fx:id="statusLabel" styleClass="error-text" wrapText="true" />
-                    </HBox>
+                    <VBox spacing="6.0" styleClass="account-form-card">
+                        <Label styleClass="section-title" text="Selected request" />
+                        <Label fx:id="requestDetailsLabel" styleClass="supporting-text" wrapText="true"
+                               text="Select a request to see its dates, details, and ID." />
+                    </VBox>
                 </VBox>
             </content>
         </ScrollPane>
     </center>
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="shell-bar">
+            <padding><Insets bottom="12.0" left="24.0" right="24.0" top="12.0" /></padding>
+            <Button fx:id="approveRequestButton" mnemonicParsing="true"
+                    onAction="#approveSelectedRequest" styleClass="primary-button"
+                    text="_Approve selected request" />
+            <Button fx:id="rejectRequestButton" mnemonicParsing="true"
+                    onAction="#rejectSelectedRequest" styleClass="danger-button"
+                    text="_Reject selected request" />
+            <Button mnemonicParsing="true" onAction="#refreshRequests"
+                    styleClass="secondary-button" text="_Refresh" />
+            <Label fx:id="statusLabel" styleClass="error-text" wrapText="true" />
+        </HBox>
+    </bottom>
 </BorderPane>

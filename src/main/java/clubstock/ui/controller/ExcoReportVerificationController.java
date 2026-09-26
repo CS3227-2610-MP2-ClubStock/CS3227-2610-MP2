@@ -7,12 +7,15 @@ import clubstock.application.ApplicationException;
 import clubstock.application.verification.DamageEvidence;
 import clubstock.application.verification.PendingVerification;
 import clubstock.application.verification.VerificationService;
+import clubstock.ui.DialogStyling;
 import clubstock.ui.navigation.NavigationService;
 import clubstock.ui.navigation.Route;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -58,6 +61,8 @@ public final class ExcoReportVerificationController {
     private Button viewImageButton;
     @FXML
     private Label statusLabel;
+    @FXML
+    private Label reportDetailsLabel;
 
     /**
      * Creates the controller with the service and navigation boundaries.
@@ -115,6 +120,7 @@ public final class ExcoReportVerificationController {
         } catch (RuntimeException exception) {
             statusLabel.setText("Reports could not be refreshed. Please try again.");
         }
+        reportsTable.getItems().clear();
         reportsTable.getSelectionModel().clearSelection();
         updateActions(null);
         return false;
@@ -122,24 +128,26 @@ public final class ExcoReportVerificationController {
 
     @FXML
     private void verifyGood() {
-        resolveSelected(report -> service.verifyGood(report.loanId()), "Return verified as good.");
+        resolveSelected(report -> service.verifyGood(report.loanId()), "Return verified as good.",
+                "GOOD and AVAILABLE");
     }
 
     @FXML
     private void verifyDamagedAvailable() {
         resolveSelected(report -> service.verifyDamaged(report.loanId(), true),
-                "Return verified as damaged and available.");
+                "Return verified as damaged and available.", "DAMAGED and AVAILABLE");
     }
 
     @FXML
     private void verifyDamagedUnavailable() {
         resolveSelected(report -> service.verifyDamaged(report.loanId(), false),
-                "Return verified as damaged and unavailable.");
+                "Return verified as damaged and unavailable.", "DAMAGED and UNAVAILABLE");
     }
 
     @FXML
     private void confirmLost() {
-        resolveSelected(report -> service.confirmLost(report.loanId()), "Loss report confirmed.");
+        resolveSelected(report -> service.confirmLost(report.loanId()), "Loss report confirmed.",
+                "LOST and UNAVAILABLE");
     }
 
     @FXML
@@ -160,8 +168,21 @@ public final class ExcoReportVerificationController {
         navigation.show(Route.EXCO_HOME);
     }
 
-    private void resolveSelected(ReportResolution resolution, String successMessage) {
+    private void resolveSelected(ReportResolution resolution, String successMessage,
+            String finalItemState) {
         selected().ifPresent(report -> {
+            Alert confirmation = new Alert(AlertType.CONFIRMATION);
+            DialogStyling.apply(confirmation);
+            confirmation.setTitle("Confirm verification");
+            confirmation.setHeaderText("Resolve " + report.equipmentId() + " as "
+                    + finalItemState + "?");
+            confirmation.setContentText("Member: " + report.memberName()
+                    + "\nEquipment: " + report.equipmentTypeName()
+                    + "\nThis completes the Loan and changes the item's authoritative state.");
+            confirmation.getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+            if (confirmation.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+                return;
+            }
             try {
                 resolution.resolve(report);
                 if (refreshReports()) {
@@ -191,6 +212,12 @@ public final class ExcoReportVerificationController {
         damagedUnavailableButton.setDisable(!returnReport);
         lostButton.setDisable(!lossReport);
         viewImageButton.setDisable(report == null || !report.hasDamageImage());
+        reportDetailsLabel.setText(report == null
+                ? "Select a report to review its advisory details."
+                : "Loan ID: " + report.loanId()
+                        + "   •   Reported condition: " + blankAsDash(report.reportedCondition())
+                        + "   •   Damage image: " + (report.hasDamageImage() ? "Available" : "None")
+                        + "\nDescription: " + blankAsDash(report.description()));
     }
 
     private void showDamageImage(DamageEvidence evidence) {
@@ -205,6 +232,7 @@ public final class ExcoReportVerificationController {
         imageView.setFitHeight(450);
 
         Dialog<Void> dialog = new Dialog<>();
+        DialogStyling.apply(dialog);
         dialog.setTitle("Submitted damage image");
         dialog.setHeaderText("Review this evidence before resolving the return.");
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
