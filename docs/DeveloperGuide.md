@@ -37,6 +37,7 @@ Exco-created Members can then sign in.
 
 Follow the [parallel implementation roadmap](plans/parallel-role-implementation.md)
 for ownership and delivery. The [shared application design](plans/shared-application-design.md)
-defines authentication, evidence storage and packaging verification. The noninteractive
-`--verify-install` mode and comprehensive cross-platform packaging checks remain future work and
-must not be treated as available until implemented.
+defines authentication, evidence storage and packaging verification. Run
+`java -jar build/libs/ClubStock-0.1.0-all.jar --verify-install` to validate the packaged SQLite
+driver, migration, FXML/CSS resources, and temporary persistence store without starting JavaFX or
+using the normal ClubStock data directory. `verifyInstall` runs the same command for CI.

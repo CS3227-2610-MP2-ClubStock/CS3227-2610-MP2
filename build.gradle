@@ -43,13 +43,41 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'display'
+    }
     systemProperty 'clubstock.testRuntimeClasspath', sourceSets.test.runtimeClasspath.asPath
+}
+
+tasks.register('javafxDisplaySmoke', Test) {
+    group = 'verification'
+    description = 'Runs the display-backed JavaFX/FXML smoke test.'
+    dependsOn tasks.named('testClasses')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'display'
+    }
 }
 
 tasks.named('shadowJar') {
     archiveBaseName = 'ClubStock'
     mergeServiceFiles()
+}
+
+def verificationJava = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(25)
+}
+
+tasks.register('verifyInstall', Exec) {
+    group = 'verification'
+    description = 'Runs the packaged fat JAR in its isolated noninteractive verification mode.'
+    dependsOn tasks.named('shadowJar')
+    doFirst {
+        commandLine verificationJava.get().executablePath.asFile.absolutePath,
+                '-jar', tasks.named('shadowJar').get().archiveFile.get().asFile.absolutePath,
+                '--verify-install'
+    }
 }
 
 application {

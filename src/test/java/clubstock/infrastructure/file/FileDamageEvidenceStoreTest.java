@@ -45,33 +45,32 @@ class FileDamageEvidenceStoreTest {
         CountDownLatch allowFirstToExit = new CountDownLatch(1);
         CountDownLatch secondStarted = new CountDownLatch(1);
         CountDownLatch secondEntered = new CountDownLatch(1);
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-
-        try {
-            Future<?> firstOperation = executor.submit(() -> firstStore.withExclusiveAccess(() -> {
-                firstEntered.countDown();
-                await(allowFirstToExit);
-                return null;
-            }));
-            assertTrue(firstEntered.await(5, TimeUnit.SECONDS));
-
-            Future<?> secondOperation = executor.submit(() -> {
-                secondStarted.countDown();
-                return secondStore.withExclusiveAccess(() -> {
-                    secondEntered.countDown();
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            try {
+                Future<?> firstOperation = executor.submit(() -> firstStore.withExclusiveAccess(() -> {
+                    firstEntered.countDown();
+                    await(allowFirstToExit);
                     return null;
-                });
-            });
-            assertTrue(secondStarted.await(5, TimeUnit.SECONDS));
-            assertFalse(secondEntered.await(100, TimeUnit.MILLISECONDS));
+                }));
+                assertTrue(firstEntered.await(5, TimeUnit.SECONDS));
 
-            allowFirstToExit.countDown();
-            firstOperation.get(5, TimeUnit.SECONDS);
-            secondOperation.get(5, TimeUnit.SECONDS);
-            assertEquals(0, secondEntered.getCount());
-        } finally {
-            allowFirstToExit.countDown();
-            executor.shutdownNow();
+                Future<?> secondOperation = executor.submit(() -> {
+                    secondStarted.countDown();
+                    return secondStore.withExclusiveAccess(() -> {
+                        secondEntered.countDown();
+                        return null;
+                    });
+                });
+                assertTrue(secondStarted.await(5, TimeUnit.SECONDS));
+                assertFalse(secondEntered.await(100, TimeUnit.MILLISECONDS));
+
+                allowFirstToExit.countDown();
+                firstOperation.get(5, TimeUnit.SECONDS);
+                secondOperation.get(5, TimeUnit.SECONDS);
+                assertEquals(0, secondEntered.getCount());
+            } finally {
+                allowFirstToExit.countDown();
+            }
         }
     }
 
@@ -257,7 +256,8 @@ class FileDamageEvidenceStoreTest {
         Path stagedSymbolicLink = stagingDirectory.resolve("nested/external-link");
         Files.createDirectories(externalDirectory);
         Files.writeString(externalMarker, "keep");
-        Files.createSymbolicLink(stagedSymbolicLink, externalDirectory);
+        boolean symbolicLinkCreated = createSymbolicLinkWhenSupported(stagedSymbolicLink,
+                externalDirectory);
         Files.write(committedLegacyImage, new byte[] {1});
         Files.write(unreferencedLegacyImage, new byte[] {2});
         Files.write(committedGeneratedImage, new byte[] {3});
@@ -273,7 +273,9 @@ class FileDamageEvidenceStoreTest {
         assertTrue(Files.exists(committedGeneratedImage));
         assertFalse(Files.exists(orphanGeneratedImage));
         assertFalse(Files.exists(abandonedStage));
-        assertFalse(Files.exists(stagedSymbolicLink));
+        if (symbolicLinkCreated) {
+            assertFalse(Files.exists(stagedSymbolicLink));
+        }
         assertTrue(Files.exists(externalMarker));
         assertTrue(Files.isDirectory(stagingDirectory));
     }
@@ -327,6 +329,18 @@ class FileDamageEvidenceStoreTest {
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new AssertionError(exception);
+        }
+    }
+
+    private static boolean createSymbolicLinkWhenSupported(Path symbolicLink, Path target)
+            throws IOException {
+        try {
+            Files.createSymbolicLink(symbolicLink, target);
+            return true;
+        } catch (UnsupportedOperationException | SecurityException exception) {
+            return false;
+        } catch (IOException exception) {
+            return false;
         }
     }
 
