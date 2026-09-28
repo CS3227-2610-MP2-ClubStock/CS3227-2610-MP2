@@ -34,11 +34,15 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           chmod +x gradlew
-          ./gradlew build
+          ./gradlew build verifyInstall
 
       - name: Build with Gradle Wrapper
         if: runner.os == 'Windows'
-        run: .\gradlew.bat build
+        run: .\gradlew.bat build verifyInstall
+
+      - name: JavaFX FXML display smoke
+        if: runner.os == 'Linux'
+        run: xvfb-run -a ./gradlew javafxDisplaySmoke
 
   package:
     name: Package ${{ matrix.variant }}

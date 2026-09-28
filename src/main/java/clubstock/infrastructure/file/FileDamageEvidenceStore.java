@@ -221,7 +221,11 @@ public final class FileDamageEvidenceStore implements ManagedDamageImageStore {
         clearStagingDirectory();
         try (var files = Files.newDirectoryStream(root)) {
             for (Path file : files) {
-                String storageKey = file.getFileName().toString();
+                Path filename = file.getFileName();
+                if (filename == null) {
+                    continue;
+                }
+                String storageKey = filename.toString();
                 if (isGeneratedImageKey(storageKey) && !referencedKeys.contains(storageKey)) {
                     deleteUnreferencedGeneratedFile(file);
                 }

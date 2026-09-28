@@ -106,10 +106,9 @@ class MemberLoanServiceTest {
         };
         MemberLoanService submittingService = new MemberLoanService(transactions,
                 memberSession(MEMBER_ID), fixture.imageStore());
-        ExecutorService executor = Executors.newFixedThreadPool(2);
         Process startup = null;
         Path processErrors = temporaryDirectory.resolve("startup-errors.txt");
-        try {
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
             Future<?> submission = executor.submit(() -> submittingService.submitDamagedReturn(
                     "loan-race", "Damaged handle", source));
             assertTrue(finalized.await(5, TimeUnit.SECONDS));
@@ -125,32 +124,31 @@ class MemberLoanServiceTest {
                     DamageEvidenceReconciliationProcess.class.getName(),
                     temporaryDirectory.toString())
                     .redirectError(processErrors.toFile()).start();
-            var output = startup.inputReader();
-            assertEquals("LOCKED", executor.submit(output::readLine).get(10, TimeUnit.SECONDS),
-                    () -> readProcessErrors(processErrors));
-            assertFalse(startup.waitFor(250, TimeUnit.MILLISECONDS),
-                    "Startup must wait while the submission is paused before commit.");
+            try (var output = startup.inputReader()) {
+                assertEquals("LOCKED", executor.submit(output::readLine).get(10, TimeUnit.SECONDS),
+                        () -> readProcessErrors(processErrors));
+                assertFalse(startup.waitFor(250, TimeUnit.MILLISECONDS),
+                        "Startup must wait while the submission is paused before commit.");
 
-            allowCommit.countDown();
-            submission.get(5, TimeUnit.SECONDS);
-            assertTrue(startup.waitFor(10, TimeUnit.SECONDS));
-            assertEquals(0, startup.exitValue(), () -> readProcessErrors(processErrors));
-            assertEquals("RECONCILED", output.readLine());
-            DamageReport report = fixture.database().read(unit -> unit.damageReports()
-                    .findByLoanId(new LoanId("loan-race")).orElseThrow());
-            assertArrayEquals(expectedBytes,
-                    fixture.imageStore().find(report.imageReference()).orElseThrow().bytes());
-            assertLoanState(fixture.database(), "loan-race", "item-race", LoanStatus.RETURN_PENDING,
-                    ReportedReturnCondition.DAMAGED, EquipmentAvailability.UNAVAILABLE,
-                    EquipmentCondition.GOOD, true);
+                allowCommit.countDown();
+                submission.get(5, TimeUnit.SECONDS);
+                assertTrue(startup.waitFor(10, TimeUnit.SECONDS));
+                assertEquals(0, startup.exitValue(), () -> readProcessErrors(processErrors));
+                assertEquals("RECONCILED", output.readLine());
+                DamageReport report = fixture.database().read(unit -> unit.damageReports()
+                        .findByLoanId(new LoanId("loan-race")).orElseThrow());
+                assertArrayEquals(expectedBytes,
+                        fixture.imageStore().find(report.imageReference()).orElseThrow().bytes());
+                assertLoanState(fixture.database(), "loan-race", "item-race", LoanStatus.RETURN_PENDING,
+                        ReportedReturnCondition.DAMAGED, EquipmentAvailability.UNAVAILABLE,
+                        EquipmentCondition.GOOD, true);
+            }
         } finally {
             allowCommit.countDown();
             if (startup != null && startup.isAlive()) {
                 startup.destroyForcibly();
                 startup.waitFor(5, TimeUnit.SECONDS);
             }
-            executor.shutdownNow();
-            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
         }
     }
 
@@ -818,12 +816,17 @@ class MemberLoanServiceTest {
         private int finalizedCount() {
             try (var files = Files.list(root)) {
                 return (int) files.filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().endsWith(".png")
-                                || path.getFileName().toString().endsWith(".jpg"))
+                        .filter(TestDamageImageStore::isFinalizedImage)
                         .count();
             } catch (Exception exception) {
                 throw new AssertionError(exception);
             }
+        }
+
+        private static boolean isFinalizedImage(Path path) {
+            Path filename = path.getFileName();
+            return filename != null && (filename.toString().endsWith(".png")
+                    || filename.toString().endsWith(".jpg"));
         }
 
         private static int countFiles(Path directory) {

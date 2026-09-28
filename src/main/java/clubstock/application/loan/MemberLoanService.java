@@ -264,8 +264,8 @@ public final class MemberLoanService {
         boolean mayDeleteFinalized = outcome == TransactionOutcome.CONFIRMED_ROLLBACK;
         if (outcome != TransactionOutcome.CONFIRMED_ROLLBACK
                 && outcome != TransactionOutcome.COMMITTED) {
-            Boolean isReferenced = isImageReferenceCommitted(imageReference);
-            mayDeleteFinalized = Boolean.FALSE.equals(isReferenced);
+            ReferenceState referenceState = isImageReferenceCommitted(imageReference);
+            mayDeleteFinalized = referenceState == ReferenceState.UNREFERENCED;
             if (!mayDeleteFinalized) {
                 outcome = TransactionOutcome.COMMIT_OUTCOME_UNKNOWN;
             }
@@ -317,16 +317,23 @@ public final class MemberLoanService {
     /**
      * Independently checks all committed reports before compensating an uncertain write.
      *
-     * @return True/false when the scan succeeds, or null when its result is uncertain.
+     * @return The reference state, including an explicit unknown state when the scan fails.
      */
-    private Boolean isImageReferenceCommitted(DamageImageReference imageReference) {
+    private ReferenceState isImageReferenceCommitted(DamageImageReference imageReference) {
         try {
             return transactions.read(unit -> unit.damageReports().findAll().stream()
                     .anyMatch(report -> report.imageReference().storageKey()
-                            .equals(imageReference.storageKey())));
+                            .equals(imageReference.storageKey()))
+                    ? ReferenceState.REFERENCED : ReferenceState.UNREFERENCED);
         } catch (RuntimeException exception) {
-            return null;
+            return ReferenceState.UNKNOWN;
         }
+    }
+
+    private enum ReferenceState {
+        REFERENCED,
+        UNREFERENCED,
+        UNKNOWN
     }
 
     private static TransactionOutcome transactionOutcome(RuntimeException exception) {
