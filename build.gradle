@@ -49,6 +49,7 @@ tasks.named('test') {
 
 tasks.named('shadowJar') {
     archiveBaseName = 'ClubStock'
+    archiveClassifier = macJavaFxPlatform == 'mac' ? 'desktop' : 'apple-silicon'
     mergeServiceFiles()
 }
 
