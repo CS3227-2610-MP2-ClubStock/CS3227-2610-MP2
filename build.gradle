@@ -62,6 +62,7 @@ tasks.register('javafxDisplaySmoke', Test) {
 
 tasks.named('shadowJar') {
     archiveBaseName = 'ClubStock'
+    archiveClassifier = macJavaFxPlatform == 'mac' ? 'desktop' : 'apple-silicon'
     mergeServiceFiles()
 }
 

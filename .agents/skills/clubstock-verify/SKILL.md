@@ -34,7 +34,7 @@ Run commands from the repository root with the committed wrapper. Check current 
 - Do not run every command in the table automatically. Use compilation for Java wiring, relevant tests for rules, and packaging/launch checks for resource or distribution changes.
 - Check the build's current archive name under build/libs. Launch that artifact with java -jar when packaged runtime behavior matters; compilation alone cannot catch missing FXML, CSS, images, or launcher errors.
 - Preserve the configured non-Application Launcher entry point. Check it and classpath resource loading when Gradle run works but the JAR fails.
-- In the current build, macJavaFxPlatform selects mac or mac-aarch64. Build only one macOS native variant into an artifact; alternate variants overwrite the same output path, so preserve an artifact before creating another.
+- In the current build, macJavaFxPlatform selects mac (desktop classifier) or mac-aarch64 (apple-silicon classifier). Build only one macOS native variant into an artifact. The distinct ClubStock-<version>-desktop.jar and ClubStock-<version>-apple-silicon.jar filenames can coexist under build/libs; do not run clean between builds because it removes both outputs.
 - A local launch validates only that OS/architecture. Do not infer Windows, Linux, and both macOS variants work from a single host.
 - Distinguish source failures from a missing JDK, dependency/network failures, or unavailable GUI access. Use --stacktrace for an unexplained Gradle failure; report the actionable cause without changing unrelated environment settings.
 

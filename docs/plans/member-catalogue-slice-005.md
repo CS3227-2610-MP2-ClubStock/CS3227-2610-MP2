@@ -204,17 +204,22 @@ that database in one command:
 ./gradlew runCatalogDemoJar
 ```
 
-To launch the packaged JAR manually, seed the database and build the artifact first:
+To launch the packaged JAR manually, use the matching build and launch commands below.
+Keep the working directory at the repository root so the isolated fixture path resolves
+to `build/clubstock-demo`. On Windows, replace `./gradlew` with `.\gradlew.bat`.
+
+For Windows x64, Linux x64, or Intel Mac:
 
 ```sh
-./gradlew seedCatalogDemo shadowJar
+./gradlew seedCatalogDemo shadowJar -PmacJavaFxPlatform=mac
+java -Dclubstock.dataDir=build/clubstock-demo -jar build/libs/ClubStock-0.1.0-desktop.jar
 ```
 
-Launch the shaded JAR against the seeded fixture directory (keep the working directory at the
-repository root so the relative data path resolves there):
+For Apple Silicon Mac:
 
 ```sh
-java -Dclubstock.dataDir=build/clubstock-demo -jar build/libs/ClubStock-0.1.0-all.jar
+./gradlew seedCatalogDemo shadowJar -PmacJavaFxPlatform=mac-aarch64
+java -Dclubstock.dataDir=build/clubstock-demo -jar build/libs/ClubStock-0.1.0-apple-silicon.jar
 ```
 
 Sign in with Member ID `demo-member` and password `demo-password`. To launch directly from the
@@ -253,6 +258,12 @@ fixture with `./gradlew clean` or remove only
   #25/#26 remains open; the isolated demo fixture alone is not joint acceptance.
 
 ### Verification recorded on 2026-09-24
+
+The records below retain the historical `-all.jar` filename used on that date.
+Current builds use `ClubStock-0.1.0-desktop.jar` for Windows x64, Linux x64, and Intel
+Mac, or `ClubStock-0.1.0-apple-silicon.jar` for Apple Silicon. Use the matching current
+filename for archive inspection (`jar tf`) and the launch commands above; these records
+do not establish verification of the renamed artifacts.
 
 - `./gradlew test --tests clubstock.application.catalog.MemberCatalogIntegrationTest` — passed.
 - `./gradlew test` — passed.

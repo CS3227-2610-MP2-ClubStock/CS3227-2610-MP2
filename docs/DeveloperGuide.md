@@ -7,7 +7,7 @@ The build uses JavaFX 25.0.3 and Gradle 9.1.0 through the committed wrapper.
 
 Import the repository as a Gradle project and select JDK 25 as the Gradle JVM.
 Run `./gradlew build` to build and `./gradlew shadowJar` to package dependencies
-into `build/libs/ClubStock-0.1.0-all.jar`. On Windows, use `gradlew.bat`.
+into a versioned JAR under `build/libs/`. On Windows, use `gradlew.bat`.
 The first build requires network access to download Gradle and dependencies.
 
 Dependencies follow the [SE-EDU JavaFX Part 1 guide](https://se-education.org/guides/tutorials/javaFxPart1.html),
@@ -16,8 +16,43 @@ and one macOS architecture per artifact, because macOS native filenames overlap.
 The macOS classifier defaults to `mac-aarch64` on ARM hosts and `mac` otherwise.
 Use `./gradlew shadowJar -PmacJavaFxPlatform=mac` for Intel macOS or
 `./gradlew shadowJar -PmacJavaFxPlatform=mac-aarch64` for Apple Silicon.
-These commands overwrite the same output JAR, so copy it before building another variant.
+The output classifier follows the selected macOS architecture:
+
+| Output (version from `build.gradle`) | Target platforms |
+| --- | --- |
+| `ClubStock-0.1.0-desktop.jar` | Windows x64, Linux x64, Intel Mac |
+| `ClubStock-0.1.0-apple-silicon.jar` | Apple Silicon Mac; also contains Windows x64 and Linux x64 libraries |
+
+Run both commands above to produce both variants. Their filenames are distinct, so
+they can coexist; do not run `clean` between them because it deletes both outputs.
 Other architectures require matching native libraries.
+
+The JARs bundle application dependencies, including JavaFX, but do not bundle Java.
+Install Java 25 for the target architecture, then run, for example:
+
+```sh
+java -jar build/libs/ClubStock-0.1.0-desktop.jar
+```
+
+On Apple Silicon, use the `apple-silicon` JAR and an ARM64 Java 25 installation.
+
+## Downloadable CI builds
+
+Pull requests and pushes to `master` run the existing Windows, Linux and macOS
+build/test matrix. After every build job succeeds on a push to `master`, a separate
+packaging matrix builds both explicit macOS variants and uploads their JARs.
+Pull requests do not upload distribution artifacts.
+
+In GitHub, open **Actions → Java CI with Gradle → the successful master run → Artifacts**.
+Download the desired variant and extract the ZIP before running the JAR with Java 25.
+Artifact names are `ClubStock-<variant>-<full commit SHA>-<run attempt>`, linking each
+download to its source and avoiding collisions when a workflow is rerun. They are
+retained for 30 days. Missing JARs cause the upload step to fail.
+
+These are development builds, not published GitHub Releases. Packaging runs on Linux
+and includes the selected native libraries; it does not establish that the actual
+JAR launches on every target platform. Packaged smoke checks and a manually gated
+release workflow are subsequent pipeline stages.
 
 ## Current implementation and roadmap
 
