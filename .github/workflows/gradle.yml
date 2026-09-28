@@ -128,6 +128,7 @@ jobs:
           architecture: ${{ matrix.architecture }}
 
       - name: Download candidate distribution
+        id: candidate
         uses: actions/download-artifact@v8
         with:
           name: candidate-ClubStock-${{ matrix.variant }}-${{ github.sha }}
@@ -146,6 +147,7 @@ jobs:
           VARIANT: ${{ matrix.variant }}
         run: |
           set -euo pipefail
+          mkdir -p diagnostics
           shopt -s nullglob
           jars=(candidate/ClubStock-*-${VARIANT}.jar)
           if [ "${#jars[@]}" -ne 1 ]; then
@@ -153,11 +155,54 @@ jobs:
             exit 1
           fi
           if [ "$RUNNER_OS" = "Linux" ]; then
-            xvfb-run --auto-servernum java -jar "${jars[0]}" --verify-install | tee verification.log
+            xvfb-run --auto-servernum java -Dprism.verbose=true -XX:ErrorFile=diagnostics/hs_err_pid%p.log \
+              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-default.log
           else
-            java -jar "${jars[0]}" --verify-install | tee verification.log
+            java -Dprism.verbose=true -XX:ErrorFile=diagnostics/hs_err_pid%p.log \
+              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-default.log
           fi
-          grep -Fx 'INSTALL_VERIFICATION_OK' verification.log
+          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-default.log
+
+      - name: Compare Intel Mac software rendering
+        if: always() && matrix.platform == 'Intel Mac' && steps.candidate.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          shopt -s nullglob
+          jars=(candidate/ClubStock-*-desktop.jar)
+          if [ "${#jars[@]}" -ne 1 ]; then
+            echo "Expected exactly one desktop candidate JAR" >&2
+            exit 1
+          fi
+          java -Dprism.verbose=true -Dprism.order=sw -XX:ErrorFile=diagnostics/sw_hs_err_pid%p.log \
+            -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-software.log
+          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-software.log
+
+      - name: Collect macOS crash reports
+        if: always() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          mkdir -p diagnostics/macos
+          # macOS can write its native crash report shortly after Java exits.
+          sleep 5
+          shopt -s nullglob
+          for report in "$HOME/Library/Logs/DiagnosticReports/"java*; do
+            if [ -f "$report" ]; then
+              cp "$report" diagnostics/macos/
+            fi
+          done
+
+      - name: Upload verification diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: verification-${{ matrix.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: diagnostics/
+          if-no-files-found: warn
+          retention-days: 7
 
   retain:
     name: Retain verified ${{ matrix.variant }}

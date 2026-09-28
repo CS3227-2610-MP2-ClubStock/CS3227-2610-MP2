@@ -58,6 +58,16 @@ Four smoke jobs download those exact candidates and run `--verify-install` using
 Verification must exit successfully and print `INSTALL_VERIFICATION_OK`. Each command has
 a two-minute step timeout, in addition to the application's 60-second watchdog, and each
 smoke job has a ten-minute timeout. All four jobs run even if another platform fails.
+Smoke jobs capture stdout/stderr and verbose Prism pipeline output in
+`verification-<runner>-<full commit SHA>-<run attempt>` diagnostic artifacts retained for
+seven days, including JVM fatal-error logs and macOS Java crash reports when generated.
+Uploads run even after verification fails. Startup markers identify screen loading,
+window creation, CSS, layout, snapshot, window closure, and toolkit shutdown.
+Intel Mac also runs a separate software-rendering comparison (`-Dprism.order=sw`) even
+if its default-rendering check fails. This comparison is diagnostic only: its success
+cannot override a failed default check, and its failure does not block an otherwise
+successful default check.
+
 Only after all four pass on a push to `master` are the same candidate binaries uploaded
 as final distribution artifacts. Pull requests never upload final distribution artifacts.
 

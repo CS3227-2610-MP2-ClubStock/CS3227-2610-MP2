@@ -45,18 +45,35 @@ public final class InstallVerificationApplication extends Application {
                     (title, message) -> {
                         throw new IllegalStateException(title + ": " + message);
                     });
+            phase = "screen loading";
+            System.out.println("Checking " + phase);
             navigator.show(Route.ROLE_SELECTION);
+            System.out.println("Completed " + phase);
+            phase = "stage show";
+            System.out.println("Checking " + phase);
             stage.show();
+            System.out.println("Completed " + phase);
+            phase = "CSS application";
+            System.out.println("Checking " + phase);
             stage.getScene().getRoot().applyCss();
+            System.out.println("Completed " + phase);
+            phase = "layout";
+            System.out.println("Checking " + phase);
             stage.getScene().getRoot().layout();
+            System.out.println("Completed " + phase);
+            phase = "scene snapshot";
+            System.out.println("Checking " + phase);
             stage.getScene().snapshot(null);
+            System.out.println("Completed " + phase);
             exitCode = 0;
         } catch (Exception | LinkageError exception) {
             System.err.println("Installation verification failed during " + phase);
             exception.printStackTrace(System.err);
         } finally {
             try {
+                System.out.println("Checking stage close");
                 stage.close();
+                System.out.println("Completed stage close");
             } finally {
                 if (verifier != null) {
                     try {
@@ -67,7 +84,9 @@ public final class InstallVerificationApplication extends Application {
                         exception.printStackTrace(System.err);
                     }
                 }
+                System.out.println("Checking Platform.exit");
                 Platform.exit();
+                System.out.println("Completed Platform.exit request");
             }
         }
     }

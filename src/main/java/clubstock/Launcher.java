@@ -46,6 +46,7 @@ public final class Launcher {
         try {
             System.out.println("Checking JavaFX initialization");
             Application.launch(InstallVerificationApplication.class, args);
+            System.out.println("Completed JavaFX application shutdown");
             result = InstallVerificationApplication.exitCode();
         } catch (Exception | LinkageError exception) {
             System.err.println("Installation verification failed during JavaFX startup or shutdown");
