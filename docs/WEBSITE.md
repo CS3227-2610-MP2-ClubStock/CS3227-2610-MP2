@@ -40,7 +40,10 @@ Edit `index.md` for the introduction and the existing `UserGuide.md` and
 `header_pages` controls the top navigation. Other Markdown documents are rendered
 using the same theme through the optional-front-matter plugin and layout defaults.
 
-Mermaid blocks in the Developer Guide remain source code under the standard theme;
-GitHub's repository Markdown viewer renders those diagrams.
+Fenced `mermaid` blocks render in the browser through `_layouts/document.html`
+and `assets/js/mermaid.js`. The script loads pinned Mermaid 11.4.1 from jsDelivr
+only on pages containing diagrams. JavaScript and access to that CDN are required;
+if loading or rendering fails, the original code remains readable. The layout
+inherits Minima's default layout, preserving its navigation and styling.
 
 This maintenance file is excluded from the published site.

@@ -17,7 +17,7 @@ defaults:
   - scope:
       path: ""
     values:
-      layout: default
+      layout: document
 
 # Add an actual application screenshot under docs/assets/images/, then set its path.
 # screenshot: /assets/images/clubstock.png
