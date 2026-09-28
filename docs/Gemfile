@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+
+# Version 228 and later use Liquid 4.0.4, which supports Ruby without taint APIs.
+gem "github-pages", ">= 228", group: :jekyll_plugins
+
+# Older Jekyll versions expect libraries that newer Ruby versions package separately.
+gem "csv"
+gem "base64"
+gem "bigdecimal"
+gem "webrick"

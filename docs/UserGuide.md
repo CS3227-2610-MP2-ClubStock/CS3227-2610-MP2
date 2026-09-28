@@ -1,3 +1,7 @@
+---
+title: User Guide
+---
+
 # ClubStock User Guide
 
 ClubStock is a desktop application for managing club equipment on one computer. Members
