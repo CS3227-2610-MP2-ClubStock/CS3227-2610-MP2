@@ -232,7 +232,8 @@ Open **My loans** and select an item whose status is `ON_LOAN`.
 
 - **Good return:** Select **Return**, choose **Good condition**, and select **Submit Return**.
 - **Damaged return:** Select **Return**, choose **Damaged**, enter a description, and choose
-  a JPEG or PNG image no larger than 5 MiB. Select **Submit Return**.
+  a JPEG or PNG image from 1 byte through 5 MiB. Neither side may exceed 10,000 pixels, and
+  the image may contain at most 16 million pixels total. Select **Submit Return**.
 - **Lost item:** Select **Report Lost**, enter a description, and select **Submit Lost Report**.
 
 Handle each item separately, even when several items came from the same request. A return
@@ -356,8 +357,11 @@ availability are set. Submitting a report alone does not make the item available
 
 ### Why is my damage image rejected?
 
-Choose a valid, non-empty JPEG or PNG file no larger than 5 MiB and provide a damage
-description. Renaming another file format to `.jpg` or `.png` does not convert it.
+Choose a valid, non-empty JPEG or PNG file from 1 byte through 5 MiB. Neither side may exceed
+10,000 pixels, and the image may contain at most 16 million pixels total. Provide a damage
+description. Resize high-resolution images to meet both dimension limits; reducing file size
+alone does not lower the pixel count. Renaming another file format to `.jpg` or `.png` does
+not convert it.
 
 ### Can I extend a loan or cancel an active loan?
 
