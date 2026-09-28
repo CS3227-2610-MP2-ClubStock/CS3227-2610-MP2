@@ -111,6 +111,7 @@ jobs:
             os: macos-15-intel
             architecture: x64
             variant: desktop
+            prism-order: sw
           - platform: Apple Silicon
             os: macos-15
             architecture: aarch64
@@ -145,6 +146,7 @@ jobs:
         timeout-minutes: 2
         env:
           VARIANT: ${{ matrix.variant }}
+          PRISM_ORDER: ${{ matrix.prism-order }}
         run: |
           set -euo pipefail
           mkdir -p diagnostics
@@ -154,16 +156,20 @@ jobs:
             echo "Expected exactly one candidate JAR for ${VARIANT}" >&2
             exit 1
           fi
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            xvfb-run --auto-servernum java -Dprism.verbose=true -XX:ErrorFile=diagnostics/hs_err_pid%p.log \
-              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-default.log
-          else
-            java -Dprism.verbose=true -XX:ErrorFile=diagnostics/hs_err_pid%p.log \
-              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-default.log
+          java_options=(-Dprism.verbose=true -XX:ErrorFile=diagnostics/hs_err_pid%p.log)
+          if [ -n "$PRISM_ORDER" ]; then
+            java_options+=("-Dprism.order=$PRISM_ORDER")
           fi
-          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-default.log
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run --auto-servernum java "${java_options[@]}" \
+              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-required.log
+          else
+            java "${java_options[@]}" \
+              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-required.log
+          fi
+          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-required.log
 
-      - name: Compare Intel Mac software rendering
+      - name: Compare Intel Mac default rendering
         if: always() && matrix.platform == 'Intel Mac' && steps.candidate.outcome == 'success'
         continue-on-error: true
         shell: bash
@@ -177,9 +183,9 @@ jobs:
             echo "Expected exactly one desktop candidate JAR" >&2
             exit 1
           fi
-          java -Dprism.verbose=true -Dprism.order=sw -XX:ErrorFile=diagnostics/sw_hs_err_pid%p.log \
-            -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-software.log
-          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-software.log
+          java -Dprism.verbose=true -XX:ErrorFile=diagnostics/default_hs_err_pid%p.log \
+            -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-default.log
+          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-default.log
 
       - name: Collect macOS crash reports
         if: always() && runner.os == 'macOS'

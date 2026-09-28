@@ -63,10 +63,13 @@ Smoke jobs capture stdout/stderr and verbose Prism pipeline output in
 seven days, including JVM fatal-error logs and macOS Java crash reports when generated.
 Uploads run even after verification fails. Startup markers identify screen loading,
 window creation, CSS, layout, snapshot, window closure, and toolkit shutdown.
-Intel Mac also runs a separate software-rendering comparison (`-Dprism.order=sw`) even
-if its default-rendering check fails. This comparison is diagnostic only: its success
-cannot override a failed default check, and its failure does not block an otherwise
-successful default check.
+The required Intel Mac check uses software rendering (`-Dprism.order=sw`) because the
+hosted runner aborts in Metal during the scene snapshot after OpenGL initialization fails.
+The snapshot and success-marker checks still run. Other platforms use default rendering.
+Intel Mac also runs a separate default-rendering comparison, even if its required check
+fails. This comparison is diagnostic only and cannot override the required check's result.
+`verification-required.log` records the required check; `verification-default.log` records
+the Intel comparison. Accelerated rendering on physical Intel Macs needs separate validation.
 
 Only after all four pass on a push to `master` are the same candidate binaries uploaded
 as final distribution artifacts. Pull requests never upload final distribution artifacts.
