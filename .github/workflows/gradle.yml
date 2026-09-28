@@ -43,8 +43,8 @@ jobs:
   package:
     name: Package ${{ matrix.variant }}
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     strategy:
       matrix:
@@ -75,11 +75,112 @@ jobs:
           chmod +x gradlew
           ./gradlew shadowJar -PmacJavaFxPlatform=${{ matrix.mac-platform }}
 
-      - name: Retain distribution
+      - name: Upload candidate distribution
+        uses: actions/upload-artifact@v7
+        with:
+          name: candidate-ClubStock-${{ matrix.variant }}-${{ github.sha }}
+          path: build/libs/ClubStock-*-${{ matrix.variant }}.jar
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          overwrite: true
+
+  smoke:
+    name: Verify ${{ matrix.platform }}
+    needs: package
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Windows x64
+            os: windows-2025
+            architecture: x64
+            variant: desktop
+          - platform: Linux x64
+            os: ubuntu-24.04
+            architecture: x64
+            variant: desktop
+          - platform: Intel Mac
+            os: macos-15-intel
+            architecture: x64
+            variant: desktop
+          - platform: Apple Silicon
+            os: macos-15
+            architecture: aarch64
+            variant: apple-silicon
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          architecture: ${{ matrix.architecture }}
+
+      - name: Download candidate distribution
+        uses: actions/download-artifact@v8
+        with:
+          name: candidate-ClubStock-${{ matrix.variant }}-${{ github.sha }}
+          path: candidate
+
+      - name: Install Linux display dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb libgtk-3-0t64 libasound2t64
+
+      - name: Verify packaged installation
+        shell: bash
+        timeout-minutes: 2
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          jars=(candidate/ClubStock-*-${VARIANT}.jar)
+          if [ "${#jars[@]}" -ne 1 ]; then
+            echo "Expected exactly one candidate JAR for ${VARIANT}" >&2
+            exit 1
+          fi
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run --auto-servernum java -jar "${jars[0]}" --verify-install | tee verification.log
+          else
+            java -jar "${jars[0]}" --verify-install | tee verification.log
+          fi
+          grep -Fx 'INSTALL_VERIFICATION_OK' verification.log
+
+  retain:
+    name: Retain verified ${{ matrix.variant }}
+    needs: [package, smoke]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    strategy:
+      matrix:
+        variant: [desktop, apple-silicon]
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download verified candidate
+        uses: actions/download-artifact@v8
+        with:
+          name: candidate-ClubStock-${{ matrix.variant }}-${{ github.sha }}
+          path: candidate
+
+      - name: Retain verified distribution
         uses: actions/upload-artifact@v7
         with:
           name: ClubStock-${{ matrix.variant }}-${{ github.sha }}-${{ github.run_attempt }}
-          path: build/libs/ClubStock-*-${{ matrix.variant }}.jar
+          path: candidate/ClubStock-*-${{ matrix.variant }}.jar
           if-no-files-found: error
           retention-days: 30
           compression-level: 0

@@ -29,6 +29,7 @@ import clubstock.ui.controller.MemberOwnRequestsController;
 import clubstock.ui.controller.RequestEntryController;
 import clubstock.ui.controller.RoleSelectionController;
 import clubstock.ui.navigation.ControllerFactory;
+import clubstock.ui.navigation.ErrorPresenter;
 import clubstock.ui.navigation.FxmlViewLoader;
 import clubstock.ui.navigation.JavaFxErrorPresenter;
 import clubstock.ui.navigation.JavaFxNavigator;
@@ -63,18 +64,46 @@ public final class UiComposition {
             ExcoRequestService excoRequestService, MemberRequestService memberRequestService,
             ApprovalService approvalService, LoanQueryService loanQueryService,
             MemberLoanService memberLoanService, VerificationService verificationService) {
+        return createNavigator(stage, authentication, memberAccountService, inventoryService,
+                memberCatalogService, excoRequestService, memberRequestService, approvalService,
+                loanQueryService, memberLoanService, verificationService, new JavaFxErrorPresenter(stage));
+    }
+
+    /**
+     * Creates the primary navigator and registers all current controllers.
+     *
+     * @param stage Primary stage.
+     * @param authentication Authentication/session boundary.
+     * @param memberAccountService Exco Member-account administration service.
+     * @param inventoryService Exco inventory administration service.
+     * @param memberCatalogService Context-owned Member catalogue query.
+     * @param excoRequestService Context-owned Exco request query and decision service.
+     * @param memberRequestService Context-owned Member request service.
+     * @param approvalService Context-owned Exco approval service.
+     * @param loanQueryService Context-owned active-loan query service.
+     * @param memberLoanService Context-owned Member return and report service.
+     * @param verificationService Context-owned Exco report verification service.
+     * @param errorPresenter Navigation error handler.
+     * @return Configured navigator.
+     */
+    public static JavaFxNavigator createNavigator(Stage stage,
+            AuthenticationGateway authentication, MemberAccountService memberAccountService,
+            InventoryService inventoryService, MemberCatalogService memberCatalogService,
+            ExcoRequestService excoRequestService, MemberRequestService memberRequestService,
+            ApprovalService approvalService, LoanQueryService loanQueryService,
+            MemberLoanService memberLoanService, VerificationService verificationService,
+            ErrorPresenter errorPresenter) {
         if (stage == null || authentication == null || memberAccountService == null
                 || inventoryService == null || memberCatalogService == null
                 || excoRequestService == null || memberRequestService == null
                 || approvalService == null || loanQueryService == null || memberLoanService == null
-                || verificationService == null) {
+                || verificationService == null || errorPresenter == null) {
             throw new IllegalArgumentException("UI composition dependencies cannot be null.");
         }
 
         ControllerFactory controllerFactory = new ControllerFactory();
         FxmlViewLoader viewLoader = new FxmlViewLoader(controllerFactory);
-        JavaFxNavigator navigator = new JavaFxNavigator(stage, authentication, viewLoader,
-                new JavaFxErrorPresenter(stage));
+        JavaFxNavigator navigator = new JavaFxNavigator(stage, authentication, viewLoader, errorPresenter);
         ExcoAuthenticationAction excoAction =
                 new ExcoAuthenticationAction(authentication, navigator);
         LogoutAction logoutAction = new LogoutAction(authentication, navigator);
