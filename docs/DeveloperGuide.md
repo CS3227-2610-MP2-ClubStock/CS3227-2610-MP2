@@ -39,20 +39,52 @@ On Apple Silicon, use the `apple-silicon` JAR and an ARM64 Java 25 installation.
 ## Downloadable CI builds
 
 Pull requests and pushes to `master` run the existing Windows, Linux and macOS
-build/test matrix. After every build job succeeds on a push to `master`, a separate
-packaging matrix builds both explicit macOS variants and uploads their JARs.
-Pull requests do not upload distribution artifacts.
+build/test matrix. After all build jobs succeed, packaging produces both JAR variants
+and uploads intermediate `candidate-ClubStock-<variant>-<full commit SHA>` artifacts
+for seven days. These candidates also appear on pull requests and are not verified
+release downloads. Candidate names are stable within a workflow run so rerunning failed
+jobs can reuse successful packaging outputs; rerunning packaging replaces its candidate.
+If candidates have expired, rerun all jobs.
+
+Four smoke jobs download those exact candidates and run `--verify-install` using Java 25:
+
+| Platform | Runner | JAR variant |
+| --- | --- | --- |
+| Windows x64 | `windows-2025` | `desktop` |
+| Linux x64 | `ubuntu-24.04` with Xvfb | `desktop` |
+| Intel Mac | `macos-15-intel` | `desktop` |
+| Apple Silicon | `macos-15` (ARM64) | `apple-silicon` |
+
+Verification must exit successfully and print `INSTALL_VERIFICATION_OK`. Each command has
+a two-minute step timeout, in addition to the application's 60-second watchdog, and each
+smoke job has a ten-minute timeout. All four jobs run even if another platform fails.
+Smoke jobs capture stdout/stderr and verbose Prism pipeline output in
+`verification-<runner>-<full commit SHA>-<run attempt>` diagnostic artifacts retained for
+seven days, including JVM fatal-error logs and macOS Java crash reports when generated.
+Uploads run even after verification fails. Startup markers identify screen loading,
+window creation, CSS, layout, snapshot, window closure, and toolkit shutdown.
+The required Intel Mac check uses software rendering (`-Dprism.order=sw`) because the
+hosted runner aborts in Metal during the scene snapshot after OpenGL initialization fails.
+The snapshot and success-marker checks still run. Other platforms use default rendering.
+Intel Mac also runs a separate default-rendering comparison, even if its required check
+fails. This comparison is diagnostic only and cannot override the required check's result.
+`verification-required.log` records the required check; `verification-default.log` records
+the Intel comparison. Accelerated rendering on physical Intel Macs needs separate validation.
+
+Only after all four pass on a push to `master` are the same candidate binaries uploaded
+as final distribution artifacts. Pull requests never upload final distribution artifacts.
 
 In GitHub, open **Actions → Java CI with Gradle → the successful master run → Artifacts**.
-Download the desired variant and extract the ZIP before running the JAR with Java 25.
+Download the final artifact without the `candidate-` prefix and extract the ZIP before
+running the JAR with Java 25.
 Artifact names are `ClubStock-<variant>-<full commit SHA>-<run attempt>`, linking each
 download to its source and avoiding collisions when a workflow is rerun. They are
 retained for 30 days. Missing JARs cause the upload step to fail.
 
-These are development builds, not published GitHub Releases. Packaging runs on Linux
-and includes the selected native libraries; it does not establish that the actual
-JAR launches on every target platform. Packaged smoke checks and a manually gated
-release workflow are subsequent pipeline stages.
+These are development builds, not published GitHub Releases. Packaging runs on Linux,
+then the actual JARs are checked on all four target platforms. Smoke checks cover startup
+and installation dependencies, not complete business workflows. A manually gated release
+workflow remains a subsequent pipeline stage.
 
 ## Current implementation and roadmap
 
@@ -72,7 +104,45 @@ Exco-created Members can then sign in.
 
 Follow the [parallel implementation roadmap](plans/parallel-role-implementation.md)
 for ownership and delivery. The [shared application design](plans/shared-application-design.md)
-defines authentication, evidence storage and packaging verification. Run
-`java -jar build/libs/ClubStock-0.1.0-all.jar --verify-install` to validate the packaged SQLite
-driver, migration, FXML/CSS resources, and temporary persistence store without starting JavaFX or
-using the normal ClubStock data directory. `verifyInstall` runs the same command for CI.
+defines authentication, evidence storage and packaging verification. The noninteractive
+`--verify-install` mode is described below and is run by the separate packaged smoke matrix
+after the build/test matrix succeeds.
+
+
+## Verify a packaged installation
+
+With Java 25 installed for the host architecture, run the matching packaged JAR:
+
+```sh
+java -jar build/libs/ClubStock-0.1.0-desktop.jar --verify-install
+```
+
+On Apple Silicon:
+
+```sh
+java -jar build/libs/ClubStock-0.1.0-apple-silicon.jar --verify-install
+```
+
+Verification requires a working graphical display and may briefly show the startup window.
+It is noninteractive, not display-free. Linux CI uses Xvfb to supply its virtual display.
+
+The command creates disposable storage, ignoring `clubstock.dataDir` and the normal user
+application directory. It initializes SQLite, commits Exco setup using a disposable credential,
+reopens the context to verify persistence, reads every routed FXML and the shared CSS, and
+loads and snapshots the real role-selection screen. It does not load every role screen or
+verify complete Member/Exco workflows.
+
+Progress is printed by phase. Success prints `INSTALL_VERIFICATION_OK` only after cleanup
+and JavaFX shutdown. Failures print diagnostics to stderr without blocking error dialogs.
+
+| Exit status | Meaning |
+| --- | --- |
+| `0` | All checks and cleanup succeeded |
+| `1` | Startup, verification, or cleanup failed |
+| `2` | Extra arguments accompanied `--verify-install` |
+| `3` | The 60-second verification timeout expired |
+
+Temporary storage is removed after normal success or failure. Cleanup errors report the
+remaining directory; timeout or forced termination may leave temporary files behind. A passing
+local run validates only that host platform. Check the four CI smoke-job results for
+cross-platform evidence; changing the workflow locally does not establish those results.

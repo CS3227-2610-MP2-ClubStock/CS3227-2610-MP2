@@ -34,11 +34,11 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           chmod +x gradlew
-          ./gradlew build verifyInstall
+          ./gradlew build
 
       - name: Build with Gradle Wrapper
         if: runner.os == 'Windows'
-        run: .\gradlew.bat build verifyInstall
+        run: .\gradlew.bat build
 
       - name: JavaFX FXML display smoke
         if: runner.os == 'Linux'
@@ -47,8 +47,8 @@ jobs:
   package:
     name: Package ${{ matrix.variant }}
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     strategy:
       matrix:
@@ -79,11 +79,163 @@ jobs:
           chmod +x gradlew
           ./gradlew shadowJar -PmacJavaFxPlatform=${{ matrix.mac-platform }}
 
-      - name: Retain distribution
+      - name: Upload candidate distribution
+        uses: actions/upload-artifact@v7
+        with:
+          name: candidate-ClubStock-${{ matrix.variant }}-${{ github.sha }}
+          path: build/libs/ClubStock-*-${{ matrix.variant }}.jar
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          overwrite: true
+
+  smoke:
+    name: Verify ${{ matrix.platform }}
+    needs: package
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Windows x64
+            os: windows-2025
+            architecture: x64
+            variant: desktop
+          - platform: Linux x64
+            os: ubuntu-24.04
+            architecture: x64
+            variant: desktop
+          - platform: Intel Mac
+            os: macos-15-intel
+            architecture: x64
+            variant: desktop
+            prism-order: sw
+          - platform: Apple Silicon
+            os: macos-15
+            architecture: aarch64
+            variant: apple-silicon
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          architecture: ${{ matrix.architecture }}
+
+      - name: Download candidate distribution
+        id: candidate
+        uses: actions/download-artifact@v8
+        with:
+          name: candidate-ClubStock-${{ matrix.variant }}-${{ github.sha }}
+          path: candidate
+
+      - name: Install Linux display dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb libgtk-3-0t64 libasound2t64
+
+      - name: Verify packaged installation
+        shell: bash
+        timeout-minutes: 2
+        env:
+          VARIANT: ${{ matrix.variant }}
+          PRISM_ORDER: ${{ matrix.prism-order }}
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          shopt -s nullglob
+          jars=(candidate/ClubStock-*-${VARIANT}.jar)
+          if [ "${#jars[@]}" -ne 1 ]; then
+            echo "Expected exactly one candidate JAR for ${VARIANT}" >&2
+            exit 1
+          fi
+          java_options=(-Dprism.verbose=true -XX:ErrorFile=diagnostics/hs_err_pid%p.log)
+          if [ -n "$PRISM_ORDER" ]; then
+            java_options+=("-Dprism.order=$PRISM_ORDER")
+          fi
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run --auto-servernum java "${java_options[@]}" \
+              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-required.log
+          else
+            java "${java_options[@]}" \
+              -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-required.log
+          fi
+          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-required.log
+
+      - name: Compare Intel Mac default rendering
+        if: always() && matrix.platform == 'Intel Mac' && steps.candidate.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          shopt -s nullglob
+          jars=(candidate/ClubStock-*-desktop.jar)
+          if [ "${#jars[@]}" -ne 1 ]; then
+            echo "Expected exactly one desktop candidate JAR" >&2
+            exit 1
+          fi
+          java -Dprism.verbose=true -XX:ErrorFile=diagnostics/default_hs_err_pid%p.log \
+            -jar "${jars[0]}" --verify-install 2>&1 | tee diagnostics/verification-default.log
+          grep -Fx 'INSTALL_VERIFICATION_OK' diagnostics/verification-default.log
+
+      - name: Collect macOS crash reports
+        if: always() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          mkdir -p diagnostics/macos
+          # macOS can write its native crash report shortly after Java exits.
+          sleep 5
+          shopt -s nullglob
+          for report in "$HOME/Library/Logs/DiagnosticReports/"java*; do
+            if [ -f "$report" ]; then
+              cp "$report" diagnostics/macos/
+            fi
+          done
+
+      - name: Upload verification diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: verification-${{ matrix.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: diagnostics/
+          if-no-files-found: warn
+          retention-days: 7
+
+  retain:
+    name: Retain verified ${{ matrix.variant }}
+    needs: [package, smoke]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    strategy:
+      matrix:
+        variant: [desktop, apple-silicon]
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download verified candidate
+        uses: actions/download-artifact@v8
+        with:
+          name: candidate-ClubStock-${{ matrix.variant }}-${{ github.sha }}
+          path: candidate
+
+      - name: Retain verified distribution
         uses: actions/upload-artifact@v7
         with:
           name: ClubStock-${{ matrix.variant }}-${{ github.sha }}-${{ github.run_attempt }}
-          path: build/libs/ClubStock-*-${{ matrix.variant }}.jar
+          path: candidate/ClubStock-*-${{ matrix.variant }}.jar
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
