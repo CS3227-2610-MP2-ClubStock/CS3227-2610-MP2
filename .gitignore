@@ -3,8 +3,13 @@ build/
 *.class
 .vscode/
 
+# Generated Jekyll site and local caches
+/docs/_site/
+/docs/.jekyll-cache/
+/docs/.jekyll-metadata
+/docs/.bundle/
+
 # Local ClubStock Codex workflow
 /.agents/skills/implement/
 /.agents/skills/clubstock-quality-review/
 /.clubstock-workflow/
-

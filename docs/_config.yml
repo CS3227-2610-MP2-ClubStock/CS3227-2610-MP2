@@ -1,0 +1,28 @@
+title: ClubStock
+description: Equipment requests, loans, and inventory management for clubs.
+url: "https://cs3227-2610-mp2-clubstock.github.io"
+baseurl: "/CS3227-2610-MP2"
+theme: minima
+
+header_pages:
+  - index.md
+  - UserGuide.md
+  - DeveloperGuide.md
+
+plugins:
+  - jekyll-relative-links
+  - jekyll-optional-front-matter
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: document
+
+# Add an actual application screenshot under docs/assets/images/, then set its path.
+# screenshot: /assets/images/clubstock.png
+
+exclude:
+  - WEBSITE.md
+  - Gemfile
+  - Gemfile.lock

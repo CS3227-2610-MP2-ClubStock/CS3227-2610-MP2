@@ -1,3 +1,7 @@
+---
+title: Developer Guide
+---
+
 # ClubStock Developer Guide
 
 This guide describes the current desktop implementation and the steps needed to prepare a
@@ -31,8 +35,8 @@ or external application service is required. A graphical desktop is required for
 operation and JavaFX smoke verification.
 
 The versions below are the repository's pinned configuration, not a claim about the latest
-upstream releases. See [build.gradle](../build.gradle) and the
-[Gradle wrapper properties](../gradle/wrapper/gradle-wrapper.properties).
+upstream releases. See [build.gradle](https://github.com/CS3227-2610-MP2-ClubStock/CS3227-2610-MP2/blob/master/build.gradle) and the
+[Gradle wrapper properties](https://github.com/CS3227-2610-MP2-ClubStock/CS3227-2610-MP2/blob/master/gradle/wrapper/gradle-wrapper.properties).
 
 | Software or dependency | Version | Purpose |
 | --- | --- | --- |
@@ -214,7 +218,7 @@ platform types, not custom repository ports.
 ### 2.2 Packages and responsibilities
 
 All package names below are relative to `clubstock` in
-[`src/main/java/clubstock`](../src/main/java/clubstock).
+[`src/main/java/clubstock`](https://github.com/CS3227-2610-MP2-ClubStock/CS3227-2610-MP2/blob/master/src/main/java/clubstock).
 
 | Package / location | Responsibility and principal classes |
 | --- | --- |
@@ -317,7 +321,7 @@ the default active-Loan views exclude them.
 
 ### 2.4 Approval sequence and transaction boundary
 
-[`ApprovalService`](../src/main/java/clubstock/application/request/ApprovalService.java)
+[`ApprovalService`](https://github.com/CS3227-2610-MP2-ClubStock/CS3227-2610-MP2/blob/master/src/main/java/clubstock/application/request/ApprovalService.java)
 rechecks the selection inside one write transaction. A list previously displayed in the UI
 is not sufficient authority to allocate an item.
 
@@ -1028,8 +1032,8 @@ explicitly requested.
 
 AI assistance is part of the repository's documented workflow: agent guidance and prompt
 logs support requirements clarification, design, implementation, review and verification.
-See [AGENTS.md](../AGENTS.md), [Darryl's log](../logs/darryl/darryl-log-temp.md), and
-[Keith's log](../logs/keith/keith-log-temp.md). Developers remain responsible for reviewing
+See [AGENTS.md](https://github.com/CS3227-2610-MP2-ClubStock/CS3227-2610-MP2/blob/master/AGENTS.md), [Darryl's log](https://github.com/CS3227-2610-MP2-ClubStock/CS3227-2610-MP2/blob/master/logs/darryl/darryl-log-temp.md), and
+[Keith's log](https://github.com/CS3227-2610-MP2-ClubStock/CS3227-2610-MP2/blob/master/logs/keith/keith-log-temp.md). Developers remain responsible for reviewing
 changes against the specifications and checking observed behavior. Generated code, tests,
 or prose is not itself proof of correctness.
 
