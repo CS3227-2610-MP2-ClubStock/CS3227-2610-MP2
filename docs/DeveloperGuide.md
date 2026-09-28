@@ -20,8 +20,8 @@ The output classifier follows the selected macOS architecture:
 
 | Output (version from `build.gradle`) | Target platforms |
 | --- | --- |
-| `ClubStock-0.1.0-desktop.jar` | Windows x64, Linux x64, Intel Mac |
-| `ClubStock-0.1.0-apple-silicon.jar` | Apple Silicon Mac; also contains Windows x64 and Linux x64 libraries |
+| `ClubStock-0.4.0-desktop.jar` | Windows x64, Linux x64, Intel Mac |
+| `ClubStock-0.4.0-apple-silicon.jar` | Apple Silicon Mac; also contains Windows x64 and Linux x64 libraries |
 
 Run both commands above to produce both variants. Their filenames are distinct, so
 they can coexist; do not run `clean` between them because it deletes both outputs.
@@ -31,7 +31,7 @@ The JARs bundle application dependencies, including JavaFX, but do not bundle Ja
 Install Java 25 for the target architecture, then run, for example:
 
 ```sh
-java -jar build/libs/ClubStock-0.1.0-desktop.jar
+java -jar build/libs/ClubStock-0.4.0-desktop.jar
 ```
 
 On Apple Silicon, use the `apple-silicon` JAR and an ARM64 Java 25 installation.
@@ -81,10 +81,25 @@ Artifact names are `ClubStock-<variant>-<full commit SHA>-<run attempt>`, linkin
 download to its source and avoiding collisions when a workflow is rerun. They are
 retained for 30 days. Missing JARs cause the upload step to fail.
 
-These are development builds, not published GitHub Releases. Packaging runs on Linux,
-then the actual JARs are checked on all four target platforms. Smoke checks cover startup
-and installation dependencies, not complete business workflows. A manually gated release
-workflow remains a subsequent pipeline stage.
+Packaging runs on Linux, then the actual JARs are checked on all four target platforms.
+Smoke checks cover startup and installation dependencies, not complete business workflows.
+
+## Draft GitHub Releases
+
+To stage a release, set the Gradle `version` to the intended release version, merge that
+change to `master`, and wait for its full CI run to pass. Push a matching `v<major>.<minor>.<patch>`
+tag to that commit, for example `v0.4.0`. Pushing the tag starts the draft release workflow.
+It accepts a tag only when its version matches `build.gradle` and a successful `master`
+push run exists for the same commit. It downloads the verified JARs retained by that run,
+checks that both expected files are present, and attaches them with a `SHA256SUMS.txt`
+file and generated release notes. If staging is rerun after an interrupted upload, it
+updates the existing draft and replaces assets with the same names.
+
+The workflow creates a **draft** in GitHub Releases. It does not publish the release or
+make the files public; review the notes and assets, then publish the draft manually when
+ready. The source CI artifacts are retained for 30 days, so rerun the successful `master`
+workflow before tagging if those artifacts have expired. Draft creation is described in
+the [GitHub CLI release documentation](https://cli.github.com/manual/gh_release_create).
 
 ## Current implementation and roadmap
 
@@ -114,13 +129,13 @@ after the build/test matrix succeeds.
 With Java 25 installed for the host architecture, run the matching packaged JAR:
 
 ```sh
-java -jar build/libs/ClubStock-0.1.0-desktop.jar --verify-install
+java -jar build/libs/ClubStock-0.4.0-desktop.jar --verify-install
 ```
 
 On Apple Silicon:
 
 ```sh
-java -jar build/libs/ClubStock-0.1.0-apple-silicon.jar --verify-install
+java -jar build/libs/ClubStock-0.4.0-apple-silicon.jar --verify-install
 ```
 
 Verification requires a working graphical display and may briefly show the startup window.
