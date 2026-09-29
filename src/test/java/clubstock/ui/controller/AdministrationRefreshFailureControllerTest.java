@@ -33,6 +33,7 @@ import clubstock.application.port.TransactionManager;
 import clubstock.application.port.UnitOfWorkOperation;
 import clubstock.domain.account.PasswordHash;
 import clubstock.infrastructure.sqlite.SqliteDatabase;
+import clubstock.ui.JavaFxTestSupport;
 import clubstock.ui.navigation.NavigationService;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -49,13 +50,7 @@ class AdministrationRefreshFailureControllerTest {
 
     @BeforeAll
     static void startJavaFxToolkit() throws InterruptedException {
-        CountDownLatch ready = new CountDownLatch(1);
-        try {
-            Platform.startup(ready::countDown);
-        } catch (IllegalStateException exception) {
-            Platform.runLater(ready::countDown);
-        }
-        assertTrue(ready.await(10, TimeUnit.SECONDS), "JavaFX toolkit did not start.");
+        JavaFxTestSupport.start();
     }
 
     @Test

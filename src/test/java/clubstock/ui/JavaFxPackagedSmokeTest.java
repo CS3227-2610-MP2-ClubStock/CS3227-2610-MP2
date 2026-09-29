@@ -29,13 +29,7 @@ class JavaFxPackagedSmokeTest {
 
     @BeforeAll
     static void startJavaFxToolkit() throws InterruptedException {
-        CountDownLatch ready = new CountDownLatch(1);
-        try {
-            Platform.startup(ready::countDown);
-        } catch (IllegalStateException exception) {
-            Platform.runLater(ready::countDown);
-        }
-        assertTrue(ready.await(10, TimeUnit.SECONDS), "JavaFX toolkit did not start.");
+        JavaFxTestSupport.start();
     }
 
     @Test
