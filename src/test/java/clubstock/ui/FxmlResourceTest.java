@@ -124,6 +124,19 @@ class FxmlResourceTest {
     }
 
     @Test
+    void excoHomeRouteRetainsAllWorkflowActions() throws IOException {
+        String excoHome = routeText(Route.EXCO_HOME);
+
+        assertTrue(excoHome.contains("onAction=\"#manageMembers\""));
+        assertTrue(excoHome.contains("onAction=\"#manageInventory\""));
+        assertTrue(excoHome.contains("onAction=\"#manageRequests\""));
+        assertTrue(excoHome.contains("onAction=\"#manageLoans\""));
+        assertTrue(excoHome.contains("onAction=\"#verifyReports\""));
+        assertTrue(excoHome.contains("styleClass=\"dashboard-grid\""));
+        assertTrue(excoHome.contains("styleClass=\"dashboard-card"));
+    }
+
+    @Test
     void memberRequestRoutesContainTheirMemberSafeActions() throws IOException {
         String requestEntry = routeText(Route.MEMBER_REQUEST_ENTRY);
         assertTrue(requestEntry.contains("fx:id=\"equipmentTypeComboBox\""));

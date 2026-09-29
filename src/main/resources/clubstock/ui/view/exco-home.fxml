@@ -5,8 +5,9 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
 
 <BorderPane xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -30,29 +31,99 @@
         </HBox>
     </top>
     <center>
-        <StackPane fx:id="contentHost" styleClass="content-host">
-            <padding>
-                <Insets top="32" right="32" bottom="32" left="32"/>
-            </padding>
-            <children>
-                <VBox alignment="CENTER_LEFT" maxWidth="720" spacing="12" styleClass="surface-card">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="content-scroll">
+            <content>
+                <VBox maxWidth="1080" spacing="24" styleClass="dashboard-content">
+                    <padding>
+                        <Insets top="36" right="32" bottom="40" left="32"/>
+                    </padding>
                     <children>
-                        <Label text="Exco home" styleClass="screen-title"/>
-                        <Label text="Manage Member accounts, equipment inventory, and pending requests. Review active loans and verify Member return or loss reports here."
-                               styleClass="supporting-text" wrapText="true"/>
-                        <Button text="Manage _Members" mnemonicParsing="true" onAction="#manageMembers"
-                                styleClass="primary-button"/>
-                        <Button text="Manage _inventory" mnemonicParsing="true" onAction="#manageInventory"
-                                styleClass="secondary-button"/>
-                        <Button text="Manage pending _requests" mnemonicParsing="true"
-                                onAction="#manageRequests" styleClass="secondary-button"/>
-                        <Button text="View active _loans" mnemonicParsing="true"
-                                onAction="#manageLoans" styleClass="secondary-button"/>
-                        <Button text="Verify pending _reports" mnemonicParsing="true"
-                                onAction="#verifyReports" styleClass="secondary-button"/>
+                        <VBox spacing="8" styleClass="dashboard-header">
+                            <children>
+                                <Label text="EXCO ADMINISTRATION" styleClass="eyebrow"/>
+                                <Label text="Exco home" styleClass="dashboard-title"/>
+                                <Label text="Manage Member accounts and equipment operations from one place."
+                                       styleClass="supporting-text" wrapText="true"/>
+                            </children>
+                        </VBox>
+                        <TilePane hgap="16" prefColumns="3" prefTileHeight="168" prefTileWidth="330"
+                                  tileAlignment="TOP_LEFT" vgap="16" styleClass="dashboard-grid">
+                            <children>
+                                <Button accessibleText="Manage Members. Create, edit, or remove Member accounts."
+                                        maxHeight="Infinity" maxWidth="Infinity" mnemonicParsing="false"
+                                        onAction="#manageMembers" styleClass="dashboard-card, dashboard-card-primary">
+                                    <graphic>
+                                        <VBox alignment="TOP_LEFT" spacing="8">
+                                            <children>
+                                                <Label text="👥" styleClass="dashboard-card-icon"/>
+                                                <Label text="Manage Members" styleClass="dashboard-card-title"/>
+                                                <Label text="Create, edit, or remove Member accounts."
+                                                       styleClass="dashboard-card-description" wrapText="true"/>
+                                            </children>
+                                        </VBox>
+                                    </graphic>
+                                </Button>
+                                <Button accessibleText="Manage Inventory. Maintain equipment types and physical items."
+                                        maxHeight="Infinity" maxWidth="Infinity" mnemonicParsing="false"
+                                        onAction="#manageInventory" styleClass="dashboard-card">
+                                    <graphic>
+                                        <VBox alignment="TOP_LEFT" spacing="8">
+                                            <children>
+                                                <Label text="▦" styleClass="dashboard-card-icon"/>
+                                                <Label text="Manage Inventory" styleClass="dashboard-card-title"/>
+                                                <Label text="Maintain equipment types and physical items."
+                                                       styleClass="dashboard-card-description" wrapText="true"/>
+                                            </children>
+                                        </VBox>
+                                    </graphic>
+                                </Button>
+                                <Button accessibleText="Manage Pending Requests. Review and allocate pending loan requests."
+                                        maxHeight="Infinity" maxWidth="Infinity" mnemonicParsing="false"
+                                        onAction="#manageRequests" styleClass="dashboard-card">
+                                    <graphic>
+                                        <VBox alignment="TOP_LEFT" spacing="8">
+                                            <children>
+                                                <Label text="↗" styleClass="dashboard-card-icon"/>
+                                                <Label text="Manage Pending Requests" styleClass="dashboard-card-title"/>
+                                                <Label text="Review and allocate pending loan requests."
+                                                       styleClass="dashboard-card-description" wrapText="true"/>
+                                            </children>
+                                        </VBox>
+                                    </graphic>
+                                </Button>
+                                <Button accessibleText="View Active Loans. Check current and overdue equipment loans."
+                                        maxHeight="Infinity" maxWidth="Infinity" mnemonicParsing="false"
+                                        onAction="#manageLoans" styleClass="dashboard-card">
+                                    <graphic>
+                                        <VBox alignment="TOP_LEFT" spacing="8">
+                                            <children>
+                                                <Label text="◷" styleClass="dashboard-card-icon"/>
+                                                <Label text="View Active Loans" styleClass="dashboard-card-title"/>
+                                                <Label text="Check current and overdue equipment loans."
+                                                       styleClass="dashboard-card-description" wrapText="true"/>
+                                            </children>
+                                        </VBox>
+                                    </graphic>
+                                </Button>
+                                <Button accessibleText="Verify Pending Reports. Resolve submitted return and loss reports."
+                                        maxHeight="Infinity" maxWidth="Infinity" mnemonicParsing="false"
+                                        onAction="#verifyReports" styleClass="dashboard-card">
+                                    <graphic>
+                                        <VBox alignment="TOP_LEFT" spacing="8">
+                                            <children>
+                                                <Label text="✓" styleClass="dashboard-card-icon"/>
+                                                <Label text="Verify Pending Reports" styleClass="dashboard-card-title"/>
+                                                <Label text="Resolve submitted return and loss reports."
+                                                       styleClass="dashboard-card-description" wrapText="true"/>
+                                            </children>
+                                        </VBox>
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </TilePane>
                     </children>
                 </VBox>
-            </children>
-        </StackPane>
+            </content>
+        </ScrollPane>
     </center>
 </BorderPane>
