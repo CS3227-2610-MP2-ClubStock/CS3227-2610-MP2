@@ -3,9 +3,11 @@ package clubstock.ui.controller;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
@@ -39,9 +41,14 @@ public final class MemberActiveLoansController {
     /** Safe message shown when a Member action cannot be completed. */
     private static final String ACTION_FAILURE_TEXT =
             "Your action could not be completed. Refresh your Loans and try again.";
-    /** Local date-time format for the loan start instant. */
+    /**
+     * Local date-time format for the loan start instant.
+     */
     private static final DateTimeFormatter STARTED_AT_FORMAT =
-            DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm").withZone(ZoneId.systemDefault());
+            DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm", Locale.ENGLISH)
+                    .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd MMM uuuu", Locale.ENGLISH);
 
     private final LoanQueryService loanQueryService;
     private final MemberLoanService memberLoanService;
@@ -154,7 +161,10 @@ public final class MemberActiveLoansController {
         startedAtColumn.setCellValueFactory(loan -> new ReadOnlyStringWrapper(
                 formatStartedAt(loan.getValue().startedAt())));
         endDateColumn.setCellValueFactory(loan ->
-                new ReadOnlyStringWrapper(loan.getValue().endDate().toString()));
+                new ReadOnlyStringWrapper(DATE_FORMAT.format(loan.getValue().endDate())));
+        endDateColumn.setComparator((first, second) ->
+                LocalDate.parse(first, DATE_FORMAT)
+                        .compareTo(LocalDate.parse(second, DATE_FORMAT)));
         overdueColumn.setCellValueFactory(loan -> new ReadOnlyStringWrapper(
                 loan.getValue().overdue() ? "Overdue" : "—"));
 
