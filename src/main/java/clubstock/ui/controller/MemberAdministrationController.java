@@ -245,7 +245,8 @@ public final class MemberAdministrationController {
         dialog.setTitle(title);
         dialog.setHeaderText(title);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dialog.getDialogPane().setMinWidth(430);
+        dialog.getDialogPane().setMinWidth(460);
+        dialog.getDialogPane().setMinHeight(360);
         dialog.setResizable(true);
         return dialog;
     }

@@ -37,8 +37,6 @@ public final class InventoryAdministrationController {
     @FXML
     private TableView<EquipmentTypeSummary> typesTable;
     @FXML
-    private TableColumn<EquipmentTypeSummary, String> typeIdColumn;
-    @FXML
     private TableColumn<EquipmentTypeSummary, String> typeNameColumn;
     @FXML
     private TableColumn<EquipmentTypeSummary, String> typeOfferedColumn;
@@ -87,8 +85,6 @@ public final class InventoryAdministrationController {
      */
     @FXML
     private void initialize() {
-        typeIdColumn.setCellValueFactory(type ->
-                new ReadOnlyStringWrapper(type.getValue().equipmentTypeId()));
         typeNameColumn.setCellValueFactory(type -> new ReadOnlyStringWrapper(type.getValue().name()));
         typeOfferedColumn.setCellValueFactory(type -> new ReadOnlyStringWrapper(
                 type.getValue().offered() ? "Offered" : "Unoffered"));
@@ -104,6 +100,8 @@ public final class InventoryAdministrationController {
                 new ReadOnlyStringWrapper(item.getValue().availability()));
         itemRetiredColumn.setCellValueFactory(item -> new ReadOnlyStringWrapper(
                 item.getValue().retired() ? "Retired" : "Active"));
+        typesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
+        itemsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         typesTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, previous, current) -> selectType(current));
         itemsTable.getSelectionModel().selectedItemProperty().addListener(
@@ -147,8 +145,6 @@ public final class InventoryAdministrationController {
             return;
         }
         Dialog<ButtonType> dialog = newDialog("Manage equipment type");
-        Label idLabel = new Label(type.equipmentTypeId());
-        idLabel.getStyleClass().add("selected-member-id");
         TextField nameField = new TextField(type.name());
         Label feedback = newFeedbackLabel();
         Button renameButton = secondaryButton("Save name");
@@ -184,8 +180,8 @@ public final class InventoryAdministrationController {
             }
         });
         VBox content = formContent();
-        content.getChildren().addAll(new Label("Equipment type ID"), idLabel,
-                labelFor("Equipment type name", nameField), nameField, renameButton, offerButton,
+        content.getChildren().addAll(labelFor("Equipment type name", nameField), nameField,
+                renameButton, offerButton,
                 deleteConfirmation, deleteButton, feedback);
         dialog.getDialogPane().setContent(content);
         dialog.showAndWait();
@@ -201,7 +197,7 @@ public final class InventoryAdministrationController {
             return;
         }
         Dialog<ButtonType> dialog = newDialog("Add equipment item");
-        Label typeLabel = new Label(type.name() + " (" + type.equipmentTypeId() + ")");
+        Label typeLabel = new Label(type.name());
         typeLabel.setWrapText(true);
         TextField itemIdField = new TextField();
         itemIdField.setPromptText("Physical Equipment ID");
