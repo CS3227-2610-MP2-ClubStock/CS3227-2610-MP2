@@ -103,7 +103,7 @@ folder, including its database and damage images, to a separate backup location.
 
 ## Overview of Interface
 
-The screenshot placeholders below describe the images to add when preparing the final guide.
+The following figures illustrate the key ClubStock screens and workflows.
 
 ### Role selection and sign-in screens
 
