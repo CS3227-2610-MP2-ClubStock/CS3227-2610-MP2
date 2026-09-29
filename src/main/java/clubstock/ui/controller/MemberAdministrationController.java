@@ -29,6 +29,9 @@ import javafx.scene.layout.VBox;
 public final class MemberAdministrationController {
     private static final String UNEXPECTED_ERROR =
             "Member administration could not be completed. Please try again.";
+    private static final String STALE_LIST_AFTER_COMMIT =
+            "The Member account change was saved, but the list could not be refreshed. "
+                    + "Use Refresh before making another change.";
     private final MemberAccountService memberAccountService;
     private final NavigationService navigation;
     @FXML
@@ -174,16 +177,23 @@ public final class MemberAdministrationController {
      */
     @FXML
     private void refreshMembers() {
+        reloadMembers();
+    }
+
+    private boolean reloadMembers() {
         try {
             List<MemberSummary> members = memberAccountService.listMembers();
             membersTable.setItems(FXCollections.observableArrayList(members));
             selectedMember = null;
             editMemberButton.setDisable(true);
             clearStatus();
+            return true;
         } catch (ApplicationException exception) {
             showError(exception.displayMessage());
+            return false;
         } catch (RuntimeException exception) {
             showError(UNEXPECTED_ERROR);
+            return false;
         }
     }
 
@@ -199,8 +209,12 @@ public final class MemberAdministrationController {
         clearStatus();
         try {
             operation.run();
-            refreshMembers();
-            showSuccess(successMessage);
+            if (reloadMembers()) {
+                showSuccess(successMessage);
+            } else {
+                showDialogError(dialogFeedback, STALE_LIST_AFTER_COMMIT);
+                showError(STALE_LIST_AFTER_COMMIT);
+            }
             return true;
         } catch (ApplicationException exception) {
             showDialogError(dialogFeedback, exception.displayMessage());

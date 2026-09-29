@@ -29,6 +29,9 @@ import javafx.scene.layout.VBox;
 public final class InventoryAdministrationController {
     private static final String UNEXPECTED_ERROR =
             "Inventory administration could not be completed. Please try again.";
+    private static final String STALE_LIST_AFTER_COMMIT =
+            "The inventory change was saved, but the list could not be refreshed. "
+                    + "Use Refresh before making another change.";
     private final InventoryService inventoryService;
     private final NavigationService navigation;
     @FXML
@@ -268,6 +271,10 @@ public final class InventoryAdministrationController {
      */
     @FXML
     private void refreshInventory() {
+        reloadInventory();
+    }
+
+    private boolean reloadInventory() {
         try {
             typesTable.setItems(FXCollections.observableArrayList(inventoryService.listTypes()));
             itemsTable.setItems(FXCollections.observableArrayList(inventoryService.listItems()));
@@ -277,10 +284,13 @@ public final class InventoryAdministrationController {
             addItemButton.setDisable(true);
             manageItemButton.setDisable(true);
             clearStatus();
+            return true;
         } catch (ApplicationException exception) {
             showError(exception.displayMessage());
+            return false;
         } catch (RuntimeException exception) {
             showError(UNEXPECTED_ERROR);
+            return false;
         }
     }
 
@@ -296,8 +306,12 @@ public final class InventoryAdministrationController {
         clearStatus();
         try {
             operation.run();
-            refreshInventory();
-            showSuccess(successMessage);
+            if (reloadInventory()) {
+                showSuccess(successMessage);
+            } else {
+                showDialogError(dialogFeedback, STALE_LIST_AFTER_COMMIT);
+                showError(STALE_LIST_AFTER_COMMIT);
+            }
             return true;
         } catch (ApplicationException exception) {
             showDialogError(dialogFeedback, exception.displayMessage());

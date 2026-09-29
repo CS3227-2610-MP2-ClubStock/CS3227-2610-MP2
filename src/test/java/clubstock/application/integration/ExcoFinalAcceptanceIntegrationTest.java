@@ -281,6 +281,12 @@ class ExcoFinalAcceptanceIntegrationTest {
         context.authentication().logout();
         authenticateExco(context);
         assertEquals(4, context.verificationService().listPending().size());
+        assertError(ApplicationErrorCode.CONFLICT,
+                () -> context.inventoryService().retireItem("good-racket"));
+        assertError(ApplicationErrorCode.CONFLICT,
+                () -> context.inventoryService().retireItem("damage-available-racket"));
+        assertError(ApplicationErrorCode.CONFLICT,
+                () -> context.inventoryService().retireItem("lost-racket"));
         assertFalse(context.verificationService().loadDamageEvidence(
                 loanIdsByItem.get("damage-available-racket")).bytes().length == 0);
         context.verificationService().verifyGood(loanIdsByItem.get("good-racket"));
@@ -302,31 +308,60 @@ class ExcoFinalAcceptanceIntegrationTest {
     }
 
     @Test
-    void restartPreservesMemberVisibleSharedOutcomes(@TempDir Path dataDirectory) {
+    void restartPreservesMemberVisibleVerifiedOutcomes(@TempDir Path dataDirectory) throws Exception {
         ApplicationContext initial = initializedExcoContext(dataDirectory);
         createMember(initial, MEMBER_A);
         EquipmentTypeId typeId = offeredType(initial, "Persistent bags");
-        addAndRelease(initial, "persistent-bag", typeId);
-        LoanRequestId requestId = submitAs(initial, MEMBER_A, typeId, 1, false);
+        List<String> itemIds = List.of("persistent-good", "persistent-damaged-available",
+                "persistent-damaged-unavailable", "persistent-lost");
+        for (String itemId : itemIds) {
+            addAndRelease(initial, itemId, typeId);
+        }
+        LoanRequestId requestId = submitAs(initial, MEMBER_A, typeId, itemIds.size(), false);
         initial.authentication().logout();
         authenticateExco(initial);
-        initial.approvalService().approve(new ApprovalSelection(requestId.value(),
-                List.of("persistent-bag")));
+        initial.approvalService().approve(new ApprovalSelection(requestId.value(), itemIds));
+        initial.authentication().logout();
+        authenticateMember(initial, MEMBER_A);
+        Map<String, String> loanIdsByItem = initial.loanQueryService().listActiveForMember().stream()
+                .collect(java.util.stream.Collectors.toMap(MemberActiveLoan::equipmentId,
+                        MemberActiveLoan::loanId));
+        Path image = writePng(dataDirectory.resolve("persistent-damage-evidence.png"));
+        initial.memberLoanService().submitGoodReturn(loanIdsByItem.get("persistent-good"));
+        initial.memberLoanService().submitDamagedReturn(
+                loanIdsByItem.get("persistent-damaged-available"), "Scuffed", image);
+        initial.memberLoanService().submitDamagedReturn(
+                loanIdsByItem.get("persistent-damaged-unavailable"), "Cracked", image);
+        initial.memberLoanService().submitLost(loanIdsByItem.get("persistent-lost"), "Missing");
+        initial.authentication().logout();
+        authenticateExco(initial);
+        initial.verificationService().verifyGood(loanIdsByItem.get("persistent-good"));
+        initial.verificationService().verifyDamaged(
+                loanIdsByItem.get("persistent-damaged-available"), true);
+        initial.verificationService().verifyDamaged(
+                loanIdsByItem.get("persistent-damaged-unavailable"), false);
+        initial.verificationService().confirmLost(loanIdsByItem.get("persistent-lost"));
         initial.authentication().logout();
 
         ApplicationContext reopened = ApplicationContext.create(dataDirectory);
         authenticateMember(reopened, MEMBER_A);
         OwnRequest request = reopened.memberRequestService().listOwnRequests().getFirst();
-        MemberActiveLoan loan = reopened.loanQueryService().listActiveForMember().getFirst();
         assertEquals(LoanRequestStatus.APPROVED, request.status());
-        assertEquals(1, request.approvedQuantity().orElseThrow());
-        assertEquals("persistent-bag", loan.equipmentId());
+        assertEquals(itemIds.size(), request.approvedQuantity().orElseThrow());
+        assertTrue(reopened.loanQueryService().listActiveForMember().isEmpty());
+        assertEquals(2, catalog(reopened, typeId).availableQuantity());
 
         reopened.authentication().logout();
         authenticateExco(reopened);
-        assertEquals(1, reopened.loanQueryService().listActiveForExco().size());
-        assertEquals(EquipmentAvailability.ON_LOAN.name(),
-                item(reopened, "persistent-bag").availability());
+        assertTrue(reopened.loanQueryService().listActiveForExco().isEmpty());
+        assertItemState(reopened, "persistent-good", EquipmentCondition.GOOD,
+                EquipmentAvailability.AVAILABLE);
+        assertItemState(reopened, "persistent-damaged-available", EquipmentCondition.DAMAGED,
+                EquipmentAvailability.AVAILABLE);
+        assertItemState(reopened, "persistent-damaged-unavailable", EquipmentCondition.DAMAGED,
+                EquipmentAvailability.UNAVAILABLE);
+        assertItemState(reopened, "persistent-lost", EquipmentCondition.LOST,
+                EquipmentAvailability.UNAVAILABLE);
     }
 
     private static ApplicationContext initializedExcoContext(Path dataDirectory) {
