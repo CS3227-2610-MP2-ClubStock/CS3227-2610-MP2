@@ -5,8 +5,8 @@ title: Developer Guide
 # ClubStock Developer Guide
 
 This guide describes the current desktop implementation and the steps needed to prepare a
-v1 deployment. The checked-in build version is **0.4.0**; this document does not declare v1
-released or certify that release checks have passed. Requirement status below means that
+v1 deployment. The checked-in build version and JAR examples target **1.0.0**; this document
+does not declare v1 released or certify that release checks have passed. Requirement status below means that
 implementation and relevant tests exist in the repository, not that those tests were run
 as part of this documentation update.
 
@@ -85,8 +85,8 @@ The output classifier follows the selected macOS architecture:
 
 | Output (version from `build.gradle`) | Target platforms |
 | --- | --- |
-| `ClubStock-0.4.0-desktop.jar` | Windows x64, Linux x64, Intel Mac |
-| `ClubStock-0.4.0-apple-silicon.jar` | Apple Silicon Mac; also contains Windows x64 and Linux x64 libraries |
+| `ClubStock-1.0.0-desktop.jar` | Windows x64, Linux x64, Intel Mac |
+| `ClubStock-1.0.0-apple-silicon.jar` | Apple Silicon Mac; also contains Windows x64 and Linux x64 libraries |
 
 Run both commands above to produce both variants. Their filenames are distinct, so
 they can coexist; do not run `clean` between them because it deletes both outputs.
@@ -96,7 +96,7 @@ The JARs bundle application dependencies, including JavaFX, but do not bundle Ja
 Install Java 25 for the target architecture, then run, for example:
 
 ```sh
-java -jar build/libs/ClubStock-0.4.0-desktop.jar
+java -jar build/libs/ClubStock-1.0.0-desktop.jar
 ```
 
 On Apple Silicon, use the `apple-silicon` JAR and an ARM64 Java 25 installation.
@@ -128,10 +128,10 @@ and Linux). `user.home` is the Java user's home directory, including on Windows.
 Override the directory by placing the JVM property **before** `-jar`:
 
 ```sh
-java -Dclubstock.dataDir="/absolute/path/clubstock-v1-data" -jar build/libs/ClubStock-0.4.0-desktop.jar
+java -Dclubstock.dataDir="/absolute/path/clubstock-v1-data" -jar build/libs/ClubStock-1.0.0-desktop.jar
 ```
 
-On Apple Silicon, substitute `ClubStock-0.4.0-apple-silicon.jar`. On Windows, use an
+On Apple Silicon, substitute `ClubStock-1.0.0-apple-silicon.jar`. On Windows, use an
 absolute Windows path, for example `-Dclubstock.dataDir="C:\ClubStock\data"`.
 A relative override is resolved against the working directory. Use an absolute path for
 repeatable deployment. Do not assume a property passed to the Gradle JVM reaches `run`;
@@ -833,7 +833,7 @@ requirements above.
 | Requirement / decomposition | Full requirement or refinement | Implementation status | Implementation / existing test evidence |
 | --- | --- | --- | --- |
 | v1 deployment acceptance | Test the exact commit; verify both JARs on all four target platforms; execute the manual scenarios and a backup/restore rehearsal. | Release verification pending | Workflow definitions and tests exist; record results for the release artifact before sign-off. |
-| v1 release metadata | Set the intended build version, pass master CI, stage the matching tag, and review draft assets. | Not completed | `build.gradle` currently specifies `0.4.0`; see section 4.6. |
+| v1 release metadata | Set the intended build version, pass master CI, stage the matching tag, and review draft assets. | Release verification pending | `build.gradle` specifies `1.0.0`; CI, tag, and draft asset review remain release gates; see section 4.6. |
 
 No quantified performance, accessibility, or concurrent-user target is specified in the
 source requirements. Reservations, extensions, active-Loan cancellation, automatic fines
@@ -1113,7 +1113,7 @@ Smoke checks cover startup and installation dependencies, not complete business 
 
 To stage a release, set the Gradle `version` to the intended release version, merge that
 change to `master`, and wait for its full CI run to pass. Push a matching `v<major>.<minor>.<patch>`
-tag to that commit, for example `v0.4.0`. Pushing the tag starts the draft release workflow.
+tag to that commit, for example `v1.0.0`. Pushing the tag starts the draft release workflow.
 It accepts a tag only when its version matches `build.gradle` and a successful `master`
 push run exists for the same commit. It downloads the verified JARs retained by that run,
 checks that both expected files are present, and attaches them with a `SHA256SUMS.txt`
@@ -1239,8 +1239,8 @@ did not execute them.
 | Display smoke on Linux CI | `xvfb-run -a ./gradlew javafxDisplaySmoke` | Requires installed Xvfb and JavaFX native prerequisites |
 | Build and verify packaged JAR | `./gradlew verifyInstall` | Depends on `shadowJar`; launches matching JAR using Java 25; requires a display |
 | Packaged verification on Linux CI | `xvfb-run -a ./gradlew verifyInstall` | Disposable storage and virtual graphical display |
-| Package Intel Mac / Windows / Linux variant | `./gradlew shadowJar -PmacJavaFxPlatform=mac` | `build/libs/ClubStock-0.4.0-desktop.jar` |
-| Package Apple Silicon variant | `./gradlew shadowJar -PmacJavaFxPlatform=mac-aarch64` | `build/libs/ClubStock-0.4.0-apple-silicon.jar` |
+| Package Intel Mac / Windows / Linux variant | `./gradlew shadowJar -PmacJavaFxPlatform=mac` | `build/libs/ClubStock-1.0.0-desktop.jar` |
+| Package Apple Silicon variant | `./gradlew shadowJar -PmacJavaFxPlatform=mac-aarch64` | `build/libs/ClubStock-1.0.0-apple-silicon.jar` |
 
 Gradle can report tasks as `UP-TO-DATE`. Use `--rerun-tasks` when fresh execution is required
 for acceptance evidence. XML test results live under `build/test-results/<task>/`.
@@ -1253,13 +1253,13 @@ ran; each provides different evidence.
 With Java 25 installed for the host architecture, run the matching packaged JAR:
 
 ```sh
-java -jar build/libs/ClubStock-0.4.0-desktop.jar --verify-install
+java -jar build/libs/ClubStock-1.0.0-desktop.jar --verify-install
 ```
 
 On Apple Silicon:
 
 ```sh
-java -jar build/libs/ClubStock-0.4.0-apple-silicon.jar --verify-install
+java -jar build/libs/ClubStock-1.0.0-apple-silicon.jar --verify-install
 ```
 
 Verification requires a working graphical display and may briefly show the startup window.
