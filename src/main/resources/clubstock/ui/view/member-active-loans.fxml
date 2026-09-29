@@ -35,7 +35,7 @@
         </HBox>
     </top>
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="AS_NEEDED" styleClass="content-scroll">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="content-scroll">
             <content>
                 <VBox maxWidth="1180" spacing="18" styleClass="admin-content">
                     <padding>
@@ -59,7 +59,7 @@
                                    wrapText="true" />
                             <Label fx:id="errorLabel" text="" styleClass="error-text"
                                    visible="false" managed="false" wrapText="true" />
-                            <TableView fx:id="loansTable" prefHeight="380" minWidth="850"
+                            <TableView fx:id="loansTable" prefHeight="380"
                                        accessibleText="Your unresolved individual loans and overdue status"
                                        visible="false" managed="false" VBox.vgrow="ALWAYS">
                                 <columns>
