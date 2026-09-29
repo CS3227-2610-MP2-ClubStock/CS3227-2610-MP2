@@ -52,8 +52,8 @@ itself is not included in the JAR.
 3. Download the JAR variant from the table above. Do not choose the source-code ZIP or TAR archive.
 4. Save the JAR in a folder you can easily locate, such as a `ClubStock` folder in Downloads.
 
-The current repository version is `0.4.0`, whose package names are
-`ClubStock-0.4.0-desktop.jar` and `ClubStock-0.4.0-apple-silicon.jar`. Release availability
+The `1.0.0` release package names are
+`ClubStock-1.0.0-desktop.jar` and `ClubStock-1.0.0-apple-silicon.jar`. Release availability
 may differ from the repository version. If no suitable JAR is published, obtain the packaged
 JAR from the project team. Developers can use the [Developer Guide](DeveloperGuide.md) to
 build one.
@@ -64,13 +64,13 @@ Open Terminal or PowerShell in the folder containing the downloaded JAR. For Win
 Linux x64, or Intel macOS, run:
 
 ```sh
-java -jar ClubStock-0.4.0-desktop.jar
+java -jar ClubStock-1.0.0-desktop.jar
 ```
 
 For Apple Silicon macOS, run:
 
 ```sh
-java -jar ClubStock-0.4.0-apple-silicon.jar
+java -jar ClubStock-1.0.0-apple-silicon.jar
 ```
 
 Replace the filename with the exact name of your downloaded JAR if its version differs.
