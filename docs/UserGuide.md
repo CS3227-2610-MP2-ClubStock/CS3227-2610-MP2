@@ -103,16 +103,24 @@ folder, including its database and damage images, to a separate backup location.
 
 ## Overview of Interface
 
-The screenshot placeholders below describe the images to add when preparing the final guide.
+The following figures illustrate the key ClubStock screens and workflows.
 
 ### Role selection and sign-in screens
 
 Choose **Member** or **Exco**. Members sign in using a Member ID and password; Exco signs in
 using its password. The Exco screen prompts for password setup on first use.
 
-> **Screenshot placeholder:** Role-selection screen showing the Member and Exco buttons.
+![Role selection screen with Member and Exco options](images/user-guide/ug-01-role-selection.png)
 
-> **Screenshot placeholder:** Member sign-in screen and Exco first-time password setup.
+*Figure 1. Choose the workspace for the current session.*
+
+![Member sign-in screen](images/user-guide/ug-02-member-sign-in.png)
+
+*Figure 2. Members sign in with their Member ID and password.*
+
+![Exco first-time password setup](images/user-guide/ug-02-exco-password-setup.png)
+
+*Figure 3. Exco sets its password on first use.*
 
 ### Member home: Equipment catalogue
 
@@ -120,8 +128,9 @@ The catalogue shows equipment types offered for borrowing and their available qu
 Use **New request**, **My requests**, or **My loans** to open the corresponding screen.
 **Refresh** reloads the catalogue, and **Log out** ends the session.
 
-> **Screenshot placeholder:** Member catalogue with equipment types, available quantities,
-> and the navigation buttons, including a type with zero available stock.
+![Member equipment catalogue with available quantities](images/user-guide/ug-03-member-catalogue.png)
+
+*Figure 4. The catalogue shows available quantities, including an unavailable type.*
 
 ### Member menu: New loan request
 
@@ -129,7 +138,13 @@ Choose an equipment type, enter a quantity and dates, and optionally add details
 request** displays a summary before **Confirm and submit**. A zero-stock request includes
 an acknowledgement checkbox.
 
-> **Screenshot placeholder:** New loan request form and review summary with the zero-stock warning.
+![New loan request form](images/user-guide/ug-04-new-loan-request.png)
+
+*Figure 5. Enter the equipment type, quantity, dates, and optional request details.*
+
+![Zero-stock request review warning](images/user-guide/ug-05-zero-stock-review.png)
+
+*Figure 6. A zero-stock request requires acknowledgement before it can be submitted.*
 
 ### Member menu: My requests
 
@@ -137,31 +152,44 @@ The **Your requests** screen lists your submitted requests, their dates and stat
 approved quantities where applicable. Select a pending request to use **Cancel selected
 request**. Use **Refresh** to reload the list.
 
-> **Screenshot placeholder:** Request list showing pending, approved, rejected, and cancelled
-> examples, with a pending request selected.
+![Member request history with multiple request statuses](images/user-guide/ug-06-member-requests.png)
+
+*Figure 7. Select a pending request to cancel it; other request statuses remain visible for reference.*
 
 ### Member menu: My loans
 
 Each assigned item has its own row, including its Equipment ID, loan status, dates, and
 an overdue indicator. Select an item to use **Return** or **Report Lost**.
 
-> **Screenshot placeholder:** My loans table with one overdue item and the Return and Report Lost buttons.
+![Member active loans with return and loss-report actions](images/user-guide/ug-07-member-loans.png)
 
-> **Screenshot placeholder:** Damaged-return form with image selection and the separate lost-report form.
+*Figure 8. Select an active loan to return it or report it lost. Overdue loans are identified in the table.*
+
+![Damaged-return form with image selection](images/user-guide/ug-08-damaged-return.png)
+
+*Figure 9. Describe damage and attach a JPEG or PNG image when returning a damaged item.*
+
+![Lost-item report form](images/user-guide/ug-09-lost-report.png)
+
+*Figure 10. Describe how an item was lost before submitting the report.*
 
 ### Exco home menu
 
 The Exco home screen provides **Manage Members**, **Manage inventory**, **Manage pending
 requests**, **View active loans**, and **Verify pending reports**. **Log out** ends the session.
 
-> **Screenshot placeholder:** Exco home showing all five workflow buttons.
+![Exco home menu with administration workflows](images/user-guide/ug-10-exco-home.png)
+
+*Figure 11. The Exco home menu provides all five administration workflows.*
 
 ### Exco menu: Manage Members
 
 View Member accounts and create, edit, or remove a Member. Editing supports changing the
 Member's name or replacing their password; the Member ID remains fixed.
 
-> **Screenshot placeholder:** Member administration screen and the create/edit Member dialog.
+![Create Member dialog over Member administration](images/user-guide/ug-11-member-administration.png)
+
+*Figure 12. Create a Member by entering a Member ID, name, and initial password.*
 
 ### Exco menu: Manage inventory
 
@@ -169,7 +197,9 @@ The inventory screen lists equipment types and individual physical items. It sho
 visibility and available quantities, plus each item's Equipment ID, condition, and availability.
 Select a type or item to manage it.
 
-> **Screenshot placeholder:** Inventory administration showing the equipment-type and physical-item tables.
+![Inventory administration with equipment-type and physical-item tables](images/user-guide/ug-12-inventory-administration.png)
+
+*Figure 13. Select an equipment type to manage its details and physical items.*
 
 ### Exco menu: Manage pending requests
 
@@ -177,24 +207,31 @@ The pending-request queue shows the Member, equipment type, requested quantity, 
 quantity, and submission time. Select a request to inspect its dates and details, then
 approve or reject it. Approval opens item selection.
 
-> **Screenshot placeholder:** Pending-request queue with selected request details and approval controls.
+![Pending-request queue with selected request details](images/user-guide/ug-13-pending-requests.png)
 
-> **Screenshot placeholder:** Approval dialog showing selectable available Equipment IDs.
+*Figure 14. Select a request to review its details, then approve or reject it.*
+
+![Approval dialog listing available equipment IDs](images/user-guide/ug-14-request-approval.png)
+
+*Figure 15. Choose the available Equipment IDs to allocate when approving a request.*
 
 ### Exco menu: View active loans
 
 The active-loan screen lists unresolved loans, their Members, assigned Equipment IDs,
 statuses, start times, end dates, and overdue indicators.
 
-> **Screenshot placeholder:** Exco active-loan table containing an overdue loan and a pending return.
+![Exco active-loan table with overdue and pending-return loans](images/user-guide/ug-15-exco-active-loans.png)
+
+*Figure 16. Exco can review unresolved loans, including overdue and return-pending items.*
 
 ### Exco menu: Verify pending reports
 
 Select a return or loss report to review its details and any damage image. Exco can verify
 a good return, choose availability for a damaged return, or confirm a lost item.
 
-> **Screenshot placeholder:** Report-verification screen with report details, damage-image access,
-> and verification buttons.
+![Pending report verification screen](images/user-guide/ug-16-report-verification.png)
+
+*Figure 17. Review the report details and verify a return, damaged item, or lost item.*
 
 ## Features
 
