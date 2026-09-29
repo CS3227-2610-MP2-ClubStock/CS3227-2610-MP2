@@ -48,10 +48,9 @@
                     </HBox>
                     <TableView fx:id="typesTable" prefHeight="230.0">
                         <columns>
-                            <TableColumn fx:id="typeIdColumn" prefWidth="340.0" text="Type ID" />
-                            <TableColumn fx:id="typeNameColumn" prefWidth="310.0" text="Name" />
-                            <TableColumn fx:id="typeOfferedColumn" prefWidth="140.0" text="Member visibility" />
-                            <TableColumn fx:id="availableQuantityColumn" prefWidth="150.0" text="Available" />
+                            <TableColumn fx:id="typeNameColumn" prefWidth="420.0" text="Name" />
+                            <TableColumn fx:id="typeOfferedColumn" prefWidth="260.0" text="Member visibility" />
+                            <TableColumn fx:id="availableQuantityColumn" prefWidth="220.0" text="Available" />
                         </columns>
                     </TableView>
                     <Label styleClass="section-title" text="Physical equipment items" />
@@ -67,7 +66,7 @@
                             <TableColumn fx:id="itemIdColumn" prefWidth="250.0" text="Equipment ID" />
                             <TableColumn fx:id="itemTypeColumn" prefWidth="250.0" text="Equipment type" />
                             <TableColumn fx:id="itemConditionColumn" prefWidth="130.0" text="Condition" />
-                            <TableColumn fx:id="itemAvailabilityColumn" prefWidth="150.0" text="Availability" />
+                            <TableColumn fx:id="itemAvailabilityColumn" minWidth="150.0" prefWidth="170.0" text="Availability" />
                             <TableColumn fx:id="itemRetiredColumn" prefWidth="110.0" text="State" />
                         </columns>
                     </TableView>

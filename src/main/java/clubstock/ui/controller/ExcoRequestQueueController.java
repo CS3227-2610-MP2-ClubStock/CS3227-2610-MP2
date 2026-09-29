@@ -2,6 +2,7 @@ package clubstock.ui.controller;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import clubstock.application.ApplicationException;
@@ -23,11 +24,12 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.VBox;
 
 /**
  * Presents the Exco pending LoanRequest queue and manual rejection action.
@@ -96,8 +98,7 @@ public final class ExcoRequestQueueController {
         memberColumn.setCellValueFactory(request -> new ReadOnlyStringWrapper(
                 request.getValue().memberName() + " (" + request.getValue().memberId() + ")"));
         equipmentTypeColumn.setCellValueFactory(request -> new ReadOnlyStringWrapper(
-                request.getValue().equipmentTypeName() + " ("
-                        + request.getValue().equipmentTypeId() + ")"));
+                request.getValue().equipmentTypeName()));
         requestedQuantityColumn.setCellValueFactory(request ->
                 new ReadOnlyIntegerWrapper(request.getValue().requestedQuantity()));
         availableQuantityColumn.setCellValueFactory(request ->
@@ -151,9 +152,17 @@ public final class ExcoRequestQueueController {
                 showError("No available items can be selected for this request.");
                 return;
             }
-            ListView<String> items = new ListView<>(FXCollections.observableArrayList(availableIds));
-            items.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            items.setPrefHeight(220.0);
+            List<CheckBox> itemChoices = new ArrayList<>();
+            VBox itemChoiceList = new VBox(6);
+            for (String availableId : availableIds) {
+                CheckBox itemChoice = new CheckBox(availableId);
+                itemChoices.add(itemChoice);
+                itemChoiceList.getChildren().add(itemChoice);
+            }
+            ScrollPane itemChoiceScroll = new ScrollPane(itemChoiceList);
+            itemChoiceScroll.setFitToWidth(true);
+            itemChoiceScroll.setPrefViewportHeight(220.0);
+            Label selectionSummary = new Label();
             Alert dialog = new Alert(AlertType.CONFIRMATION);
             DialogStyling.apply(dialog);
             ButtonType approve = new ButtonType("Approve selected items", ButtonData.OK_DONE);
@@ -161,11 +170,27 @@ public final class ExcoRequestQueueController {
             dialog.setHeaderText("Select up to " + selectedRequest.requestedQuantity()
                     + " available item(s)");
             dialog.setContentText("The request closes after approval, including partial approval.");
-            dialog.getDialogPane().setContent(items);
+            dialog.getDialogPane().setContent(new VBox(10, selectionSummary, itemChoiceScroll));
             dialog.getButtonTypes().setAll(ButtonType.CANCEL, approve);
+            Button approveButton = (Button) dialog.getDialogPane().lookupButton(approve);
+            Runnable updateSelectionSummary = () -> {
+                int selectedCount = selectedEquipmentIds(itemChoices).size();
+                selectionSummary.setText(selectedCount + " of " + selectedRequest.requestedQuantity()
+                        + " item(s) selected");
+                approveButton.setDisable(selectedCount == 0);
+            };
+            for (CheckBox itemChoice : itemChoices) {
+                itemChoice.setOnAction(event -> {
+                    if (selectedEquipmentIds(itemChoices).size() > selectedRequest.requestedQuantity()) {
+                        itemChoice.setSelected(false);
+                    }
+                    updateSelectionSummary.run();
+                });
+            }
+            updateSelectionSummary.run();
             dialog.showAndWait().filter(response -> response == approve).ifPresent(response ->
                     approve(new ApprovalSelection(selectedRequest.loanRequestId(),
-                            List.copyOf(items.getSelectionModel().getSelectedItems()))));
+                            selectedEquipmentIds(itemChoices))));
         } catch (ApplicationException exception) {
             showError(exception.displayMessage());
         } catch (RuntimeException exception) {
@@ -236,6 +261,10 @@ public final class ExcoRequestQueueController {
         } catch (RuntimeException exception) {
             showError(UNEXPECTED_ERROR);
         }
+    }
+
+    private static List<String> selectedEquipmentIds(List<CheckBox> itemChoices) {
+        return itemChoices.stream().filter(CheckBox::isSelected).map(CheckBox::getText).toList();
     }
 
     private void selectRequest(ExcoPendingRequest request) {
