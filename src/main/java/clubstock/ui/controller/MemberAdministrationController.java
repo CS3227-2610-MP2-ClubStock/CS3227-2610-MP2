@@ -68,6 +68,7 @@ public final class MemberAdministrationController {
      */
     @FXML
     private void initialize() {
+        membersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         memberIdColumn.setCellValueFactory(member ->
                 new ReadOnlyStringWrapper(member.getValue().memberId()));
         memberNameColumn.setCellValueFactory(member ->

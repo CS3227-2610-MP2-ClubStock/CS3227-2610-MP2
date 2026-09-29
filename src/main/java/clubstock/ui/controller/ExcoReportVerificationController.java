@@ -81,6 +81,7 @@ public final class ExcoReportVerificationController {
 
     @FXML
     private void initialize() {
+        reportsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         memberColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(
                 value.getValue().memberName()));
         typeColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(

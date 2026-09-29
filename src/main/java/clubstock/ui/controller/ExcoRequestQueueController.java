@@ -93,6 +93,7 @@ public final class ExcoRequestQueueController {
      */
     @FXML
     private void initialize() {
+        requestsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         requestIdColumn.setCellValueFactory(request ->
                 new ReadOnlyStringWrapper(request.getValue().loanRequestId()));
         memberColumn.setCellValueFactory(request -> new ReadOnlyStringWrapper(

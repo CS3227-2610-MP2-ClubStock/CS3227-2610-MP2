@@ -111,6 +111,7 @@ public final class MemberOwnRequestsController {
     /** Configures request columns and loads the initial Member-only snapshot. */
     @FXML
     private void initialize() {
+        requestsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         equipmentTypeColumn.setCellValueFactory(request ->
                 new ReadOnlyStringWrapper(request.getValue().equipmentTypeName()));
         requestedQuantityColumn.setCellValueFactory(request ->

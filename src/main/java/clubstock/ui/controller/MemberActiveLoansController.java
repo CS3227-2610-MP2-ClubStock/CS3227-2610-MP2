@@ -152,6 +152,7 @@ public final class MemberActiveLoansController {
      */
     @FXML
     private void initialize() {
+        loansTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         equipmentTypeColumn.setCellValueFactory(loan ->
                 new ReadOnlyStringWrapper(loan.getValue().equipmentTypeName()));
         equipmentIdColumn.setCellValueFactory(loan ->
