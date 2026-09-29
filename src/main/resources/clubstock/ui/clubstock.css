@@ -129,6 +129,25 @@
     -fx-border-width: 2px;
 }
 
+.date-picker {
+    -fx-padding: 0;
+}
+
+.date-picker > .text-field,
+.date-picker > .text-field:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0 12px;
+    -fx-cursor: hand;
+}
+
 .button {
     -fx-background-radius: 9px;
     -fx-border-radius: 9px;

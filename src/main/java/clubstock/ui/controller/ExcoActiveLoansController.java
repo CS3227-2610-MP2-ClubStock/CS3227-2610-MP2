@@ -74,6 +74,7 @@ public final class ExcoActiveLoansController {
 
     @FXML
     private void initialize() {
+        loansTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         memberColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(value.getValue().memberName()));
         typeColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(value.getValue().equipmentTypeName()));
         equipmentIdColumn.setCellValueFactory(value -> new ReadOnlyStringWrapper(value.getValue().equipmentId()));

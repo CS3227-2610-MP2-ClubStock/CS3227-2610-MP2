@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 import clubstock.application.ApplicationErrorCode;
 import clubstock.application.ApplicationException;
@@ -23,6 +24,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
@@ -36,7 +38,10 @@ public final class MemberOwnRequestsController {
             "We could not confirm whether the request was cancelled. "
                     + "Check its current status before trying again.";
     private static final DateTimeFormatter REQUESTED_AT_FORMAT =
-            DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm").withZone(ZoneId.systemDefault());
+            DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm", Locale.ENGLISH)
+                    .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd MMM uuuu", Locale.ENGLISH);
 
     private final MemberRequestService requestService;
     private final NavigationService navigation;
@@ -90,9 +95,23 @@ public final class MemberOwnRequestsController {
         this.navigation = navigation;
     }
 
+    /**
+     * Creates a formatted date cell while preserving chronological column sorting.
+     */
+    private static TableCell<OwnRequest, LocalDate> createDateCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDate date, boolean isEmpty) {
+                super.updateItem(date, isEmpty);
+                setText(isEmpty || date == null ? null : DATE_FORMAT.format(date));
+            }
+        };
+    }
+
     /** Configures request columns and loads the initial Member-only snapshot. */
     @FXML
     private void initialize() {
+        requestsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_NEXT_COLUMN);
         equipmentTypeColumn.setCellValueFactory(request ->
                 new ReadOnlyStringWrapper(request.getValue().equipmentTypeName()));
         requestedQuantityColumn.setCellValueFactory(request ->
@@ -101,6 +120,8 @@ public final class MemberOwnRequestsController {
                 new ReadOnlyObjectWrapper<>(request.getValue().requestedStartDate()));
         endDateColumn.setCellValueFactory(request ->
                 new ReadOnlyObjectWrapper<>(request.getValue().requestedEndDate()));
+        startDateColumn.setCellFactory(column -> createDateCell());
+        endDateColumn.setCellFactory(column -> createDateCell());
         statusColumn.setCellValueFactory(request ->
                 new ReadOnlyStringWrapper(request.getValue().status().name()));
         requestedAtColumn.setCellValueFactory(request -> new ReadOnlyStringWrapper(
